@@ -16,22 +16,29 @@ const one = (v: string | string[] | undefined) => (Array.isArray(v) ? v[0] : v);
 const positive = (v: string | undefined) => (v !== undefined && /^[1-9]\d*$/.test(v) ? Number(v) : undefined);
 
 /**
+ * The reader's `with`, `view` and `tradition`, passed on as they came (the chapter page checks them), the
+ * commas of `with` kept literal: "" or "?…".
+ */
+function passOn(search: Search): string {
+  const qs = (["with", "view", "tradition"] as const)
+    .map((k) => [k, one(search[k])] as const)
+    .filter(([, v]) => v)
+    .map(([k, v]) => `${k}=${encodeURIComponent(v!).replace(/%2C/gi, ",")}`)
+    .join("&");
+  return qs ? `?${qs}` : "";
+}
+
+/**
  * The chapter the reader was on in another edition (`?book={bookNum}&chapter=`, from the reader bar's edition
- * switch), in this one: its path, with `with`, `view` and `tradition` passed on (the chapter page checks them), or null
- * when this edition lacks the book (a deuterocanonical book in a Protestant canon) or the chapter.
+ * switch), in this one: its path, with the reader's choices passed on, or null when this edition lacks the
+ * book (a deuterocanonical book in a Protestant canon) or the chapter.
  */
 function sameChapter(base: string, books: Book[], search: Search): string | null {
   const bookNum = positive(one(search.book));
   const chapter = positive(one(search.chapter));
   const b = bookNum === undefined ? undefined : books.find((x) => x.bookNum === bookNum);
   if (!b || chapter === undefined || chapter > b.chapters) return null;
-  // Passed on as they came (the chapter page checks them), the commas of `with` kept literal.
-  const qs = (["with", "view", "tradition"] as const)
-    .map((k) => [k, one(search[k])] as const)
-    .filter(([, v]) => v)
-    .map(([k, v]) => `${k}=${encodeURIComponent(v!).replace(/%2C/gi, ",")}`)
-    .join("&");
-  return `${base}/${slugFor(b, books)}/${chapter}${qs ? `?${qs}` : ""}`;
+  return `${base}/${slugFor(b, books)}/${chapter}${passOn(search)}`;
 }
 
 export default async function BooksPage({ params, searchParams }: { params: Promise<{ locale: string; edition: string }>; searchParams?: Promise<Search> }) {
@@ -50,8 +57,11 @@ export default async function BooksPage({ params, searchParams }: { params: Prom
   }
 
   const base = `/read/${editionSlug(edition.sigla)}`;
-  const target = sameChapter(base, books, (await searchParams) ?? {});
+  const search = (await searchParams) ?? {};
+  const target = sameChapter(base, books, search);
   if (target) redirect(`/${locale}${target}`);
+  // Where the edition lacks the chapter, its chapters keep the comparison too.
+  const query = passOn(search);
 
   const t = await getTranslations("Books");
   const groups = [
@@ -77,7 +87,7 @@ export default async function BooksPage({ params, searchParams }: { params: Prom
                   {Array.from({ length: b.chapters }, (_, i) => i + 1).map((n) => (
                     <li key={n}>
                       <Link
-                        href={`${base}/${slugFor(b, books)}/${n}`}
+                        href={`${base}/${slugFor(b, books)}/${n}${query}`}
                         className="block min-w-9 rounded border border-slate-200 px-2 py-1 text-center text-sm hover:border-slate-400 dark:border-slate-800 dark:hover:border-slate-600"
                       >
                         {n}

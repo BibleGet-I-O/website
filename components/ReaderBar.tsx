@@ -1,6 +1,7 @@
 "use client";
 
 import { useTranslations } from "next-intl";
+import { useRef } from "react";
 import { useRouter } from "next/navigation";
 import { ReaderSettings, type SettingsChange } from "@/components/ReaderSettings";
 import { compareQuery, type View } from "@/lib/compare";
@@ -31,13 +32,22 @@ export function ReaderBar(p: ReaderBarProps) {
   const t = useTranslations("Reader");
   const router = useRouter();
   const current = p.books.find((b) => b.slug === p.book);
+  const routeKey = [p.edition, p.book, p.chapter, p.withSiglas.join(","), p.view, p.tradition ?? ""].join("|");
+  // What a navigation still on its way asked for: a second change made before the new page's props arrive
+  // builds on it (the Interlinear toggle, then a third edition, keeps the interlinear view). It applies only
+  // while the props are those it was asked from.
+  const pending = useRef<{ from: string; with?: string[]; view?: View; tradition?: Tradition }>({ from: "" });
 
   const go = (o: SettingsChange & { book?: string; chapter?: number }) => {
+    const was = pending.current.from === routeKey ? pending.current : { from: routeKey };
     const book = o.book ?? p.book;
     const chapter = o.chapter ?? p.chapter;
     // The tradition belongs to Esther: kept only while the book stays the same; Greek is the default.
-    const tradition = o.tradition ?? (book === p.book ? p.tradition : undefined);
-    const qs = compareQuery({ with: o.with ?? p.withSiglas, view: o.view ?? p.view, tradition: p.esther ? tradition : undefined });
+    const tradition = o.tradition ?? (book === p.book ? (was.tradition ?? p.tradition) : undefined);
+    const w = o.with ?? was.with ?? p.withSiglas;
+    const view = o.view ?? was.view ?? p.view;
+    pending.current = { from: routeKey, with: w, view, tradition };
+    const qs = compareQuery({ with: w, view, tradition: p.esther ? tradition : undefined });
     router.push(`/${p.locale}/read/${editionSlug(p.edition)}/${book}/${chapter}${qs}`);
   };
 
@@ -95,7 +105,7 @@ export function ReaderBar(p: ReaderBarProps) {
           view={p.view}
           esther={p.esther}
           tradition={p.tradition}
-          routeKey={[p.edition, p.book, p.chapter, p.withSiglas.join(","), p.view, p.tradition ?? ""].join("|")}
+          routeKey={routeKey}
           onChange={go}
         />
       </span>

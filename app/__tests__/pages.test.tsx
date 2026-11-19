@@ -252,6 +252,12 @@ describe("books", () => {
         unmount();
       }
     });
+
+    it("theBooksListKeepsTheComparisonOnItsChapterLinks", async () => {
+      // Luzzi lacks Tobit: the list opens, and choosing a chapter keeps the compared editions and the view.
+      render(wrap(await BooksPage(params("luzzi", { book: "17", chapter: "1", with: "DRB,NABRE", view: "interlinear" }))));
+      expect(screen.getByRole("link", { name: "12" })).toHaveAttribute("href", "/en/read/luzzi/genesi/12?with=DRB,NABRE&view=interlinear");
+    });
   });
 
   it("booksPageUsesTheEditionsOwnNames", async () => {

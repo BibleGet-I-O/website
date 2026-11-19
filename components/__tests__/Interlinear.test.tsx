@@ -122,6 +122,8 @@ describe("Interlinear", () => {
     });
     expect(screen.getAllByTestId("column-name").map((e) => e.textContent)).toEqual(["New American Bible", "Vulgata Clementina"]);
     expect(screen.getByRole("note")).toHaveTextContent(/Douay-Rheims could not be loaded/);
+    // Another compared edition is shown, so the note does not claim that only the main one is.
+    expect(screen.getByRole("note")).not.toHaveTextContent(/only/);
   });
 
   it("allUnavailableShowsTheBookViewWithANotePerEdition", async () => {

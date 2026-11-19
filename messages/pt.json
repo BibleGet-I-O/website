@@ -53,7 +53,7 @@
     "secondNoBook": "{second} não tem {book}.",
     "dividedNoChapter": "{main} e {second} dividem os capítulos deste livro de forma diferente: {second} não tem o capítulo {chapter}.",
     "estherAdditions": "{second} imprime o texto destes capítulos como acréscimos dentro dos capítulos 1–10 de Ester.",
-    "secondUnavailable": "Não foi possível carregar {second}, por isso só é mostrada {main}. Tente novamente mais tarde.",
+    "secondUnavailable": "Não foi possível carregar {second}. Tente novamente mais tarde.",
     "settings": "Opções de leitura",
     "compare": "Comparar com outra edição…",
     "changeSecond": "Trocar a segunda edição…",

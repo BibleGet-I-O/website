@@ -239,4 +239,15 @@ describe("ReaderBar", () => {
     expect(screen.getByRole("toolbar")).toHaveClass("flex-nowrap", "sm:flex-wrap");
     expect(screen.getByLabelText("Book")).toHaveClass("min-w-0", "max-sm:flex-1");
   });
+
+  it("aSecondActionBeforeTheNewPageArrivesKeepsTheFirstOnesChange", () => {
+    // The Interlinear toggle starts a navigation; the props still say side by side when the third is added.
+    render(wrap(<ReaderBar {...props} withSiglas={["CEI2008"]} />));
+    openMenu();
+    fireEvent.click(screen.getByLabelText("Interlinear"));
+    expect(push).toHaveBeenLastCalledWith("/en/read/nabre/tobit/3?with=CEI2008&view=interlinear");
+    fireEvent.click(item(/Add a third edition/));
+    pick("VGCL");
+    expect(push).toHaveBeenLastCalledWith("/en/read/nabre/tobit/3?with=CEI2008,VGCL&view=interlinear");
+  });
 });
