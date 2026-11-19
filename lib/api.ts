@@ -29,6 +29,8 @@ function keyFor(access: Access): string {
   return key;
 }
 
+const UNAVAILABLE_4XX = new Set([401, 403, 408, 429]);
+
 async function request(path: string, access: Access, init: FetchInit): Promise<unknown> {
   let res: Response;
   try {
@@ -41,6 +43,11 @@ async function request(path: string, access: Access, init: FetchInit): Promise<u
     throw new ApiUnavailable(e instanceof Error ? e.message : "network error");
   }
   if (res.status >= 500) throw new ApiUnavailable(`endpoint answered ${res.status}`);
+  if (UNAVAILABLE_4XX.has(res.status)) {
+    // A bad/revoked key or a rate limit is our problem, not a missing page. Log the status only, never the key.
+    console.error(`BibleGet endpoint answered ${res.status} for ${path.split("?")[0]}`);
+    throw new ApiUnavailable(`endpoint answered ${res.status}`);
+  }
   if (res.status >= 400) throw new NotFound(`endpoint answered ${res.status}`);
   try {
     return await res.json();
@@ -92,8 +99,8 @@ export function slugFor(book: Pick<Book, "name">): string {
     .normalize("NFD")
     .replace(/\p{M}/gu, "")
     .toLowerCase()
-    .trim()
-    .replace(/\s+/g, "-");
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "");
 }
 
 export function bookBySlug(index: EditionIndex, slug: string): Book | undefined {
@@ -137,22 +144,27 @@ export type ChapterParams = {
 
 export async function getChapter(p: ChapterParams): Promise<Chapter> {
   const qs = new URLSearchParams({ query: `${p.bookAbbrev}${p.chapter}`, version: p.sigla });
-  if ((p.numbering ?? "edition") === "edition") qs.set("numbering", "edition");
+  if (p.numbering !== "hebrew") qs.set("numbering", "edition");
   qs.set("return", "json");
   if (p.tradition) qs.set("text_tradition", p.tradition);
 
   const init: FetchInit = p.access === "reader" ? { cache: "no-store" } : { next: { revalidate: 3600 } };
+  const hebrew = p.numbering === "hebrew";
+  // In Hebrew mode the requested chapter is a Hebrew psalm number, which maps to a different edition chapter
+  // (or two), so the index cannot be consulted by it. The interlinear second edition is shown as returned;
+  // the cap notice belongs to the main edition.
   const [body, index] = await Promise.all([
     request(`/quote?${qs}`, p.access, init) as Promise<{ results?: RawRow[]; errors?: unknown[] }>,
-    getIndex(p.sigla),
+    hebrew ? Promise.resolve(null) : getIndex(p.sigla),
   ]);
   const results = body.results ?? [];
   if (results.length === 0) {
     throw new NotFound((body.errors?.length ?? 0) > 0 ? "the endpoint rejected the query" : "no verses returned");
   }
+  const rows = results.map(toRow);
+  if (!index) return { rows, truncated: false, expectedVerses: rows.length };
   const book = index.books.find((b) => b.abbrev === p.bookAbbrev);
   const expectedVerses = book?.versesPerChapter[p.chapter - 1];
   if (expectedVerses === undefined) throw new NotFound(`${p.bookAbbrev} ${p.chapter} is not in ${p.sigla}`);
-  const rows = results.map(toRow);
   return { rows, truncated: rows[rows.length - 1].verse < expectedVerses, expectedVerses };
 }
