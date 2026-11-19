@@ -3,6 +3,7 @@ import { getTranslations, setRequestLocale } from "next-intl/server";
 import { notFound } from "next/navigation";
 import { routing } from "@/i18n/routing";
 import { getEditions } from "@/lib/api";
+import { shelfOrder } from "@/lib/shelf";
 import type { Edition } from "@/lib/types";
 import BookCover from "@/components/BookCover";
 
@@ -44,7 +45,7 @@ export default async function HomePage({ params }: { params: Promise<{ locale: s
       code,
       id: sectionId(code),
       name: code === OTHER ? t("otherLanguage") : names.get(code)!,
-      list: [...list].sort((a, b) => a.year.localeCompare(b.year, undefined, { numeric: true }) || a.fullname.localeCompare(b.fullname, locale)),
+      list: shelfOrder(list, locale),
     }))
     .sort((a, b) => Number(a.code === OTHER) - Number(b.code === OTHER) || a.name.localeCompare(b.name, locale));
 

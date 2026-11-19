@@ -1,7 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 vi.mock("server-only", () => ({}));
-import { ApiUnavailable, NotFound, bookBySlug, getChapter, getEditions, getIndex, getVerses, slugFor } from "../api";
+import { ApiUnavailable, NotFound, bookBySlug, getApiVersion, getChapter, getEditions, getIndex, getVerses, slugFor } from "../api";
 
 const raw = (verse: number, extra: object = {}) => ({
   chapter: 11, verse, text: `v${verse}`, title1: null, title2: null, title3: null,
@@ -255,8 +255,79 @@ describe("getEditions", () => {
       validversions_fullname: { DRB: "Douay–Rheims Challoner Revision|1752|en|1|CATHOLIC|Some Holder|First line.\nSecond | line.", BARE: "Bare" },
     })));
     expect(await getEditions()).toEqual([
-      { sigla: "DRB", fullname: "Douay–Rheims Challoner Revision", year: "1752", language: "en", copyrightHolder: "Some Holder", notes: "First line.\nSecond | line.", copyright: true },
-      { sigla: "BARE", fullname: "Bare", year: "", language: "", copyrightHolder: "", notes: "", copyright: false },
+      { sigla: "DRB", fullname: "Douay–Rheims Challoner Revision", year: "1752", language: "en", canon: "CATHOLIC", copyrightHolder: "Some Holder", notes: "First line.\nSecond | line.", copyright: true, liturgical: false },
+      { sigla: "BARE", fullname: "Bare", year: "", language: "", canon: "", copyrightHolder: "", notes: "", copyright: false, liturgical: false },
     ]);
+  });
+
+  it("marksTheEditionsListedAsLiturgical", async () => {
+    vi.stubGlobal("fetch", vi.fn(async () => json({
+      validversions: ["CEI2008", "LUZZI"],
+      copyrightversions: ["CEI2008"],
+      liturgicalversions: ["CEI2008"],
+      validversions_fullname: { CEI2008: "Synthetic CEI|2008|it|1|CATHOLIC|Holder|", LUZZI: "Synthetic Luzzi|1924|it|1|PROTESTANT||" },
+    })));
+    const editions = await getEditions();
+    expect(editions.map((e) => [e.sigla, e.liturgical, e.canon])).toEqual([["CEI2008", true, "CATHOLIC"], ["LUZZI", false, "PROTESTANT"]]);
+  });
+
+  it("treatsAMissingOrMalformedLiturgicalListAsNoLiturgicalEditions", async () => {
+    for (const extra of [{}, { liturgicalversions: "CEI2008" }, { liturgicalversions: null }, { liturgicalversions: ["CEI2008", null] }]) {
+      vi.stubGlobal("fetch", vi.fn(async () => json({ validversions: ["CEI2008"], validversions_fullname: { CEI2008: "Synthetic|2008|it|1|CATHOLIC||" }, ...extra })));
+      expect((await getEditions())[0].liturgical).toBe(false);
+    }
+  });
+});
+
+describe("getApiVersion", () => {
+  const withHeader = (value?: string) =>
+    vi.fn(async () => new Response(JSON.stringify({ validversions: [] }), {
+      status: 200,
+      headers: { "content-type": "application/json", ...(value !== undefined && { "X-BibleGet-Version": value }) },
+    }));
+
+  it("readsTheHeaderOfTheCachedEditionsMetadataRequest", async () => {
+    const fn = withHeader("v3.0.1-412-g892935b");
+    vi.stubGlobal("fetch", fn);
+    expect(await getApiVersion()).toBe("v3.0.1-412-g892935b");
+    const [url, init] = fn.mock.calls[0] as unknown as [string, RequestInit & { next?: { revalidate: number } }];
+    expect(url).toBe("https://api.test/dev/metadata/bibleversions");
+    expect(init.next).toEqual({ revalidate: 86400 });
+  });
+
+  it("isNullWhenTheHeaderIsAbsentOrBlank", async () => {
+    vi.stubGlobal("fetch", withHeader());
+    expect(await getApiVersion()).toBeNull();
+    vi.stubGlobal("fetch", withHeader("   "));
+    expect(await getApiVersion()).toBeNull();
+  });
+
+  it("isNullWhenTheEndpointIsUnavailable", async () => {
+    vi.stubGlobal("fetch", vi.fn(async () => { throw new Error("down"); }));
+    expect(await getApiVersion()).toBeNull();
+    vi.stubGlobal("fetch", vi.fn(async () => new Response("", { status: 503 })));
+    expect(await getApiVersion()).toBeNull();
+  });
+
+  it("resolvesNullAfterThreeSecondsWhenTheEndpointHangs", async () => {
+    vi.useFakeTimers();
+    try {
+      const fn = vi.fn((_url: string, _init?: RequestInit) => new Promise<Response>(() => {}));
+      vi.stubGlobal("fetch", fn);
+      let settled: string | null | undefined;
+      void getApiVersion().then((v) => (settled = v));
+      await vi.advanceTimersByTimeAsync(2999);
+      expect(settled).toBeUndefined();
+      await vi.advanceTimersByTimeAsync(1);
+      expect(settled).toBeNull();
+      expect(fn.mock.calls[0][1]?.signal).toBeInstanceOf(AbortSignal);
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it("cutsAnOverlongValue", async () => {
+    vi.stubGlobal("fetch", withHeader("v".repeat(200)));
+    expect(await getApiVersion()).toBe("v".repeat(64));
   });
 });

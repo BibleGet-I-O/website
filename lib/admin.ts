@@ -7,6 +7,8 @@ export type AdminVersion = {
   language: string;
   copyright: boolean;
   reader_full_text: boolean;
+  /** Absent on an endpoint that predates the liturgical flag. */
+  liturgical?: boolean;
 };
 
 /** Absolute URL of an admin route on the endpoint, or null when BIBLEGET_API_URL is unset. */

@@ -14,7 +14,8 @@
     "rights": "Rights",
     "publicDomain": "Public domain",
     "notes": "Notes",
-    "otherLanguage": "Other languages"
+    "otherLanguage": "Other languages",
+    "liturgical": "Liturgical text"
   },
   "Auth": {
     "signIn": "Sign in",
@@ -80,6 +81,12 @@
     "forbidden": "You are not allowed to change this.",
     "switchFailed": "The change could not be saved. Try again.",
     "switchUnknown": "Could not confirm the change — reload.",
-    "back": "Home"
+    "back": "Home",
+    "liturgical": "Liturgical text",
+    "liturgicalFor": "Liturgical text for {sigla}"
+  },
+  "Footer": {
+    "apiVersion": "BibleGet API {version}",
+    "siteRelease": "Site {release}"
   }
 }

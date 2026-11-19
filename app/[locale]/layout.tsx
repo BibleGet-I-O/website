@@ -1,9 +1,11 @@
 import { hasLocale, NextIntlClientProvider } from "next-intl";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import { notFound } from "next/navigation";
+import { Suspense } from "react";
 import "../globals.css";
 import { routing } from "@/i18n/routing";
 import { AuthStatus } from "@/components/AuthStatus";
+import { SiteFooter } from "@/components/SiteFooter";
 
 export function generateStaticParams() {
   return routing.locales.map((locale) => ({ locale }));
@@ -28,6 +30,10 @@ export default async function LocaleLayout({ children, params }: { children: Rea
             <AuthStatus />
           </header>
           {children}
+          {/* Streamed: a slow endpoint must not hold back the page. */}
+          <Suspense fallback={null}>
+            <SiteFooter />
+          </Suspense>
         </NextIntlClientProvider>
       </body>
     </html>

@@ -52,7 +52,8 @@ function BackCover({ edition, name }: { edition: Edition; name: string }) {
 
 /**
  * One edition as a tooled-leather book: the cover opens the edition, and the © button beside the sigla turns
- * the book round to show its colophon on the back cover. Copyrighted editions get the darker binding.
+ * the book round to show its colophon on the back cover. Copyrighted editions get the darker binding; a
+ * liturgical text carries a small gilt "Liturgical text" stamp at the foot of the cover (part of the link's name).
  */
 export default function BookCover({ edition }: { edition: Edition }) {
   const t = useTranslations("Home");
@@ -91,6 +92,14 @@ export default function BookCover({ edition }: { edition: Edition }) {
               <>
                 <span className="sr-only">,</span>{" "}
                 <span className={styles.year}>{edition.year}</span>
+              </>
+            )}
+            {edition.liturgical && (
+              <>
+                <span className="sr-only">,</span>{" "}
+                <span className={styles.liturgical} data-marker="liturgical">
+                  {t("liturgical")}
+                </span>
               </>
             )}
           </Link>
