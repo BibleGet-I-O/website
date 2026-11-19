@@ -63,11 +63,13 @@ export async function getEditions(): Promise<Edition[]> {
   const body = (await request("/metadata/bibleversions", "visitor", METADATA)) as {
     validversions?: string[];
     validversions_fullname?: Record<string, string>;
+    copyrightversions?: string[];
   };
+  const copyrighted = new Set(body.copyrightversions ?? []);
   const names = body.validversions_fullname ?? {};
   return (body.validversions ?? []).map((sigla) => {
     const [fullname = sigla, year = "", language = "", , , copyrightHolder = ""] = (names[sigla] ?? "").split("|");
-    return { sigla, fullname, year, language, copyrightHolder };
+    return { sigla, fullname, year, language, copyrightHolder, copyright: copyrighted.has(sigla) };
   });
 }
 

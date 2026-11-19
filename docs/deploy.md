@@ -28,6 +28,8 @@ Subdomain `staging.bibleget.io` of the `bibleget.io` subscription; Node.js major
 
 The chroot needs `tar`, `gzip`, `rm`, `mkdir` and `touch`. The runner is pinned to `ubuntu-24.04` to match the VPS glibc for native addons.
 
+Each deploy replaces the whole `public/` document root, so anything Plesk puts there (such as `.well-known`) is removed; the wildcard certificate needs no HTTP challenge.
+
 ## Rollback
 
 Re-run the workflow from an earlier commit (select the branch or tag in the "Use workflow from" dropdown). Extraction is over the previous release, so stale files may remain; they are harmless.

@@ -8,9 +8,9 @@ export function VerseLine({ row, chapter }: { row: VerseRow; chapter: number }) 
   return (
     <>
       {row.titles.map((t, j) => (
-        <h3 key={j} className={j === 0 ? "mt-4 mb-1 ml-10 font-semibold" : "mb-1 ml-10 text-base font-semibold italic"}>
+        <h2 key={j} className={j === 0 ? "mt-4 mb-1 ml-10 font-semibold" : "mb-1 ml-10 text-base font-semibold italic"}>
           {t}
-        </h3>
+        </h2>
       ))}
       <p data-testid="verse-line" className="flex gap-2">
         <span className={labelClass}>{printedLabel(row, chapter)}</span>

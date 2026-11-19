@@ -33,6 +33,13 @@ describe("Interlinear", () => {
     expect(screen.queryByRole("note")).toBeNull();
   });
 
+  it("sectionTitlesAreLevelTwoHeadingsUnderThePageHeading", async () => {
+    const titled = { ...row(3, 1), titles: ["The day of the Lord"] };
+    await show({ second: { mode: "aligned", rows: [row(3, 1), row(3, 2)], truncated: false, book: joel }, rows: [titled, row(3, 2)] });
+    expect(screen.getByRole("heading", { level: 2, name: "The day of the Lord" })).toBeInTheDocument();
+    expect(screen.queryByRole("heading", { level: 3 })).toBeNull();
+  });
+
   it("wholeChapterShowsTheSecondBelowWithTheNotice", async () => {
     await show({ second: { mode: "whole-chapter", rows: [row(3, 1), row(3, 2), row(3, 3)], truncated: false, book: joel } });
     expect(screen.queryByTestId("spread")).toBeNull();

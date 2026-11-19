@@ -25,7 +25,7 @@ export function isExpired(expiresAt: number | undefined, nowMs: number): boolean
 /**
  * The issuer definitively rejected the refresh token (OAuth `invalid_grant`),
  * or there is no refresh token to try. The session cannot recover; the
- * curator has to sign in again. Safe to persist and to show on the Session.
+ * user has to sign in again. Safe to persist and to show on the Session.
  */
 export const REFRESH_REJECTED = "RefreshAccessTokenError";
 

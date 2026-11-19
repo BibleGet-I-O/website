@@ -24,7 +24,7 @@ export function FullTextSwitch({ sigla, initial }: { sigla: string; initial: boo
       }
       if (!result.ok) {
         setOn(!next);
-        setError(result.status === 403 || result.status === 401 ? t("forbidden") : t("switchFailed"));
+        setError(result.status === 401 ? t("signInAgain") : result.status === 403 ? t("forbidden") : t("switchFailed"));
       }
     });
   }

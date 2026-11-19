@@ -6,6 +6,8 @@ export type Edition = {
   year: string;
   language: string;
   copyrightHolder: string;
+  /** Listed by the API as copyrighted (`copyrightversions`): visitors get a capped chapter. */
+  copyright: boolean;
 };
 
 export type Book = {

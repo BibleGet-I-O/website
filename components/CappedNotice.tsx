@@ -8,8 +8,9 @@ export type NoticeKind = "signIn" | "verify" | "unavailable";
  * Why a chapter stops early, by who is reading. With the reader key a chapter is capped only when the
  * admin has switched the edition's full text off, which no sign-in can change.
  */
-export function noticeFor(truncated: boolean, a: AccessInfo): NoticeKind | null {
-  if (!truncated) return null;
+export function noticeFor(truncated: boolean, a: AccessInfo, copyright: boolean): NoticeKind | null {
+  // A truncated edition the API does not list as copyrighted is a data mismatch, not a cap: say nothing.
+  if (!truncated || !copyright) return null;
   if (a.access === "reader") return "unavailable";
   return a.signedIn ? "verify" : "signIn";
 }

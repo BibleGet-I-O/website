@@ -118,6 +118,15 @@ describe("setFullText", () => {
     expect(fetchMock).not.toHaveBeenCalled();
   });
 
+  it("rejects an invalid sigla or switch value with 400 before touching the token or endpoint", async () => {
+    for (const sigla of ["..", "nabre", "A".repeat(17), "A", "NA/BRE"]) {
+      expect(await actions.setFullText(sigla, false)).toEqual({ ok: false, status: 400 });
+    }
+    expect(await actions.setFullText("NABRE", "true" as unknown as boolean)).toEqual({ ok: false, status: 400 });
+    expect(getAccessToken).not.toHaveBeenCalled();
+    expect(fetchMock).not.toHaveBeenCalled();
+  });
+
   it("reports a network failure as status 0", async () => {
     fetchMock.mockRejectedValue(new Error("down"));
     expect(await actions.setFullText("NABRE", false)).toEqual({ ok: false, status: 0 });
@@ -133,6 +142,13 @@ describe("FullTextSwitch", () => {
     await waitFor(() => expect(screen.getByRole("alert")).toHaveTextContent(en.Admin.forbidden));
     expect(sw).toBeChecked();
     expect(setFullTextMock).toHaveBeenCalledWith("NABRE", false);
+  });
+
+  it("unauthorizedShowsTheSignInAgainMessage", async () => {
+    setFullTextMock.mockResolvedValue({ ok: false, status: 401 });
+    render(wrap(<FullTextSwitch sigla="NABRE" initial={true} />));
+    fireEvent.click(screen.getByRole("switch", { name: /NABRE/ }));
+    await waitFor(() => expect(screen.getByRole("alert")).toHaveTextContent(en.Admin.signInAgain));
   });
 
   it("keeps the new state after success", async () => {

@@ -12,6 +12,7 @@ export type SetFullTextResult = { ok: true } | { ok: false; status: number };
  * expired access token can be refreshed; the token never leaves this function.
  */
 export async function setFullText(sigla: string, on: boolean): Promise<SetFullTextResult> {
+  if (!/^[A-Z0-9]{2,16}$/.test(sigla) || typeof on !== "boolean") return { ok: false, status: 400 };
   const session = await auth();
   if (!session?.user || session.error || session.admin !== true) return { ok: false, status: 403 };
   const token = await getAccessToken();

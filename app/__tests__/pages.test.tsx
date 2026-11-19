@@ -43,12 +43,13 @@ const wrap = (ui: React.ReactNode) => (
   </NextIntlClientProvider>
 );
 
-const ed = (sigla: string, language: string, fullname = sigla, year = "2000", copyrightHolder = "Holder") => ({
+const ed = (sigla: string, language: string, fullname = sigla, year = "2000", copyrightHolder = "Holder", copyright = true) => ({
   sigla,
   fullname,
   year,
   language,
   copyrightHolder,
+  copyright,
 });
 const book = (bookNum: number, name: string, abbrev: string, chapters: number) => ({
   bookNum,
@@ -197,6 +198,39 @@ describe("chapter", () => {
 
     const seven = render(wrap(await ChapterPage(params("nabre", "john", "7"))));
     expect(Array.from(seven.container.querySelectorAll("sup")).map((e) => e.textContent)).toEqual(["52"]);
+  });
+
+  it("doesNotFetchThePreviousChaptersLastVerseForACappedChapter", async () => {
+    // NABRE John 8 capped at 30 verses: 7:53 would make it 31, so it is not fetched or shown.
+    const john = { sigla: "NABRE", books: [{ ...book(50, "John", "Jn", 21), versesPerChapter: [51, 25, 36, 54, 47, 71, 53, 59] }] };
+    getIndex.mockResolvedValue(john);
+    getChapter.mockResolvedValue({ rows: [verse(8, 1, { printedChapter: 8 })], truncated: true, expectedVerses: 59 });
+    getVerses.mockResolvedValue([verse(7, 53, { printedChapter: 8, label: "7:53" })]);
+    const { container } = render(wrap(await ChapterPage(params("nabre", "john", "8"))));
+    expect(getVerses).not.toHaveBeenCalled();
+    expect(Array.from(container.querySelectorAll("sup")).map((e) => e.textContent)).toEqual(["1"]);
+  });
+
+  it("aCappedPublicDomainEditionShowsNoNotice", async () => {
+    getEditions.mockResolvedValue([ed("DRB", "en", "Douay-Rheims", "1899", "", false), ed("NABRE", "en")]);
+    getIndex.mockResolvedValue(drbIndex);
+    getChapter.mockResolvedValue({ rows: [verse(11, 1)], truncated: true, expectedVerses: 48 });
+    getVerses.mockResolvedValue([]);
+    render(wrap(await ChapterPage(params("drb", "wisdom", "11"))));
+    expect(screen.queryByRole("note")).toBeNull();
+  });
+
+  it("theInterlinearSecondEditionNoticeFollowsItsCopyrightToo", async () => {
+    getEditions.mockResolvedValue([ed("DRB", "en", "Douay-Rheims", "1899", "", false), ed("NABRE", "en", "NABRE Full"), ed("LUZZI", "it", "Luzzi", "1900", "", false)]);
+    getIndex.mockResolvedValue(drbIndex);
+    getChapter.mockResolvedValue({ rows: [verse(11, 1)], truncated: true, expectedVerses: 48 });
+    getVerses.mockResolvedValue([]);
+    const copyrighted = render(wrap(await ChapterPage(params("drb", "wisdom", "11", { with: "NABRE" }))));
+    expect(copyrighted.getAllByRole("note")).toHaveLength(1);
+    expect(copyrighted.getByRole("note")).toHaveTextContent("NABRE Full");
+    copyrighted.unmount();
+    const publicDomain = render(wrap(await ChapterPage(params("drb", "wisdom", "11", { with: "LUZZI" }))));
+    expect(publicDomain.queryByRole("note")).toBeNull();
   });
 
   it("aFailedNeighbourVerseFetchStillShowsTheChapter", async () => {

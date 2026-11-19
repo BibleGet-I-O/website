@@ -74,18 +74,21 @@ export default async function ChapterPage({ params, searchParams }: { params: Pr
   // John 8) and the next chapter's first verse at the end of this one (NABRE Wis 12:1 closes Wis 11).
   const counts = tradition === "GREEK" && book.greekVersesPerChapter ? book.greekVersesPerChapter : book.versesPerChapter;
   const prevVerses = chapter > 1 ? counts[chapter - 2] : undefined;
-  const [current, prevLast]: [Chapter, VerseRow[]] = await Promise.all([
-    orNotFound(getChapter({ ...request, chapter })),
-    prevVerses ? neighbourVerse(getVerses({ ...request, chapter: chapter - 1, verse: prevVerses })) : Promise.resolve([]),
-  ]);
-  // A capped chapter stops at verse 30: the next chapter's verse would not follow it, so it is not fetched.
+  const current: Chapter = await orNotFound(getChapter({ ...request, chapter }));
+  // A capped chapter stops at verse 30: the previous chapter's last verse would make it 31 and the next
+  // chapter's would not follow it, so neither is fetched.
+  const prevLast: VerseRow[] =
+    prevVerses && !current.truncated
+      ? await neighbourVerse(getVerses({ ...request, chapter: chapter - 1, verse: prevVerses }))
+      : [];
   const nextFirst =
     chapter < book.chapters && !current.truncated
       ? await neighbourVerse(getVerses({ ...request, chapter: chapter + 1, verse: 1 }))
       : [];
   const rows = placeAsPrinted(prevLast, current.rows, nextFirst, chapter);
   const secondEdition = withSigla ? editions.find((e) => e.sigla === withSigla) : undefined;
-  // The second edition reads with the main one's access; a failure to reach it shows the error page.
+  // The second edition reads with the main one's access; one that cannot be reached degrades to the main
+  // edition with a note (it does not show the error page).
   const second: Second | null = secondEdition
     ? await loadSecond({
         mainSigla: edition.sigla, mainBookAbbrev: book.abbrev, mainIndex: index, bookNum: book.bookNum, chapter,
@@ -98,7 +101,7 @@ export default async function ChapterPage({ params, searchParams }: { params: Pr
   if (tradition === "HEBREW") query.set("tradition", tradition);
   const qs = query.size > 0 ? `?${query}` : "";
   const base = `/read/${editionSlug(edition.sigla)}`;
-  const notice = noticeFor(current.truncated, info);
+  const notice = noticeFor(current.truncated, info, edition.copyright);
   const redirectTo = `/${locale}${base}/${slugFor(book)}/${chapter}${qs}`;
   const t = await getTranslations("Reader");
 
@@ -127,7 +130,7 @@ export default async function ChapterPage({ params, searchParams }: { params: Pr
           chapter,
           truncated: current.truncated,
           // The second edition's cap, told the same way as the main one's.
-          secondNotice: second.mode === "aligned" || second.mode === "whole-chapter" ? noticeFor(second.truncated, info) : null,
+          secondNotice: second.mode === "aligned" || second.mode === "whole-chapter" ? noticeFor(second.truncated, info, secondEdition.copyright) : null,
           redirectTo,
         })
       ) : (

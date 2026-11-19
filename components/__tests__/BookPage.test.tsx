@@ -75,24 +75,30 @@ describe("CappedNotice", () => {
   const reader = { access: "reader" as const, signedIn: true, emailVerified: true };
 
   it("cappedChapterShowsTheNoticeAndSignInButton", async () => {
-    expect(noticeFor(false, visitor)).toBeNull();
-    expect(noticeFor(true, visitor)).toBe("signIn");
+    expect(noticeFor(false, visitor, true)).toBeNull();
+    expect(noticeFor(true, visitor, true)).toBe("signIn");
     render(await CappedNotice({ kind: "signIn", redirectTo: "/en/read/nabre/matthew/5" }));
     expect(screen.getByText(/Sign in to read the whole chapter/)).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Sign in" })).toBeInTheDocument();
   });
 
+  it("noNoticeForAnEditionTheApiDoesNotListAsCopyrighted", () => {
+    expect(noticeFor(true, visitor, false)).toBeNull();
+    expect(noticeFor(true, unverified, false)).toBeNull();
+    expect(noticeFor(true, reader, false)).toBeNull();
+  });
+
   it("unverifiedUserSeesTheVerifyPrompt", async () => {
-    expect(noticeFor(true, unverified)).toBe("verify");
-    expect(noticeFor(false, unverified)).toBeNull();
+    expect(noticeFor(true, unverified, true)).toBe("verify");
+    expect(noticeFor(false, unverified, true)).toBeNull();
     render(await CappedNotice({ kind: "verify", redirectTo: "/en" }));
     expect(screen.getByText(/Verify your email address/)).toBeInTheDocument();
     expect(screen.queryByRole("button", { name: "Sign in" })).toBeNull();
   });
 
   it("fullTextOffForTheEditionShowsTheUnavailableNoticeWithoutSignIn", async () => {
-    expect(noticeFor(true, reader)).toBe("unavailable");
-    expect(noticeFor(false, reader)).toBeNull();
+    expect(noticeFor(true, reader, true)).toBe("unavailable");
+    expect(noticeFor(false, reader, true)).toBeNull();
     render(await CappedNotice({ kind: "unavailable", redirectTo: "/en" }));
     expect(screen.getByText(/full text is not available for this edition/i)).toBeInTheDocument();
     expect(screen.queryByText(/Sign in to read/)).toBeNull();

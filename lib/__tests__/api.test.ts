@@ -219,11 +219,12 @@ describe("getEditions", () => {
   it("parsesTheFullnameField", async () => {
     vi.stubGlobal("fetch", vi.fn(async () => json({
       validversions: ["DRB", "BARE"],
+      copyrightversions: ["DRB"],
       validversions_fullname: { DRB: "Douay–Rheims Challoner Revision|1752|en|1|CATHOLIC|Some Holder|notes", BARE: "Bare" },
     })));
     expect(await getEditions()).toEqual([
-      { sigla: "DRB", fullname: "Douay–Rheims Challoner Revision", year: "1752", language: "en", copyrightHolder: "Some Holder" },
-      { sigla: "BARE", fullname: "Bare", year: "", language: "", copyrightHolder: "" },
+      { sigla: "DRB", fullname: "Douay–Rheims Challoner Revision", year: "1752", language: "en", copyrightHolder: "Some Holder", copyright: true },
+      { sigla: "BARE", fullname: "Bare", year: "", language: "", copyrightHolder: "", copyright: false },
     ]);
   });
 });
