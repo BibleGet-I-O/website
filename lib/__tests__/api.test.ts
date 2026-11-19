@@ -1,7 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 vi.mock("server-only", () => ({}));
-import { ApiUnavailable, NotFound, bookBySlug, getChapter, getEditions, getVerses, slugFor } from "../api";
+import { ApiUnavailable, NotFound, bookBySlug, getChapter, getEditions, getIndex, getVerses, slugFor } from "../api";
 
 const raw = (verse: number, extra: object = {}) => ({
   chapter: 11, verse, text: `v${verse}`, title1: null, title2: null, title3: null,
@@ -10,7 +10,7 @@ const raw = (verse: number, extra: object = {}) => ({
 const rows = (n: number) => Array.from({ length: n }, (_, i) => raw(i + 1));
 const quote = (results: object[], errors: object[] = []) => ({ results, errors, notices: [], info: {} });
 const index = (verses: number) => ({
-  indexes: { DRB: { abbreviations: ["Ws"], biblebooks: ["Wisdom"], chapter_limit: [11], verse_limit: [Array(10).fill(10).concat([verses])], book_num: [26] } },
+  indexes: { DRB: { abbreviations: ["Ws"], biblebooks: ["Wisdom"], chapter_limit: [11], verse_limit: [Array(10).fill(10).concat([verses])], book_num: [27] } },
 });
 const json = (body: unknown, status = 200, type = "application/json") =>
   new Response(JSON.stringify(body), { status, headers: { "content-type": type } });
@@ -122,6 +122,52 @@ describe("getChapter", () => {
   it("throwsNotFoundOnA200WithErrorsAndNoResults", async () => {
     mockFetch(() => json(quote([], [{ errNum: 13, errMessage: "A chapter in the query is out of bounds: there is no chapter <29> in the book in the requested version DRB, the last possible chapter is <28>" }])));
     await expect(getChapter({ ...base, chapter: 29 })).rejects.toBeInstanceOf(NotFound);
+  });
+});
+
+describe("Esther with both texts", () => {
+  // NABRE-shaped: versionindex reports Esther with 20 chapters, 10 Hebrew then 10 Greek.
+  const hebrew = [22, 23, 15, 17, 14, 14, 10, 17, 32, 3];
+  const greek = [22, 23, 15, 17, 14, 14, 10, 17, 32, 13];
+  const nabreIndex = {
+    indexes: {
+      NABRE: {
+        abbreviations: ["Est", "1Mc"], biblebooks: ["Esther", "1 Maccabees"], chapter_limit: [20, 16],
+        verse_limit: [hebrew.concat(greek), Array(16).fill(50)], book_num: [19, 20],
+      },
+    },
+  };
+  const vgclIndex = {
+    indexes: { VGCL: { abbreviations: ["Est"], biblebooks: ["Esther"], chapter_limit: [16], verse_limit: [Array(16).fill(20)], book_num: [19] } },
+  };
+  const stub = (idx: object, results: () => object[]) =>
+    vi.stubGlobal("fetch", vi.fn(async (url: string | URL | Request) =>
+      String(url).includes("/metadata/versionindex") ? json(idx) : json(quote(results()))));
+  const esther = (n: number) => Array.from({ length: n }, (_, i) => raw(i + 1, { chapter: 10 }));
+
+  it("splitsTheTwentyChaptersIntoTenWithBothVerseCounts", async () => {
+    stub(nabreIndex, () => []);
+    const [est, mac] = (await getIndex("NABRE")).books;
+    expect(est).toMatchObject({ bookNum: 19, chapters: 10, versesPerChapter: hebrew, greekVersesPerChapter: greek });
+    expect(mac).toMatchObject({ bookNum: 20, chapters: 16 });
+    expect(mac.greekVersesPerChapter).toBeUndefined();
+  });
+
+  it("keepsAVulgateShapedSixteenChapterEsther", async () => {
+    stub(vgclIndex, () => []);
+    const [est] = (await getIndex("VGCL")).books;
+    expect(est.chapters).toBe(16);
+    expect(est.versesPerChapter).toHaveLength(16);
+    expect(est.greekVersesPerChapter).toBeUndefined();
+  });
+
+  it("countsTheVersesOfTheRequestedText", async () => {
+    // Esther 10: 3 Hebrew verses, 13 Greek. Greek is the default.
+    stub(nabreIndex, () => esther(3));
+    const args = { sigla: "NABRE", bookAbbrev: "Est", chapter: 10, access: "visitor" as const };
+    expect(await getChapter({ ...args, tradition: "HEBREW" })).toMatchObject({ truncated: false, expectedVerses: 3 });
+    expect(await getChapter(args)).toMatchObject({ truncated: true, expectedVerses: 13 });
+    expect(await getChapter({ ...args, tradition: "GREEK" })).toMatchObject({ truncated: true, expectedVerses: 13 });
   });
 });
 

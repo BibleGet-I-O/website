@@ -23,12 +23,15 @@ export function BookPage({ heading, chapter, rows, lang }: { heading: string; ch
             </h2>
           ))}
           <p className="mb-4">
-            {s.rows.map((r, j) => (
-              <span key={j}>
-                <sup className="mr-0.5 text-xs font-sans text-slate-500 dark:text-slate-400">{printedLabel(r, chapter)}</sup>
-                {r.text}{" "}
-              </span>
-            ))}
+            {s.rows.map((r, j) => {
+              const label = printedLabel(r, chapter);
+              return (
+                <span key={j}>
+                  {label && <sup className="mr-0.5 text-xs font-sans text-slate-500 dark:text-slate-400">{label}</sup>}
+                  {r.text}{" "}
+                </span>
+              );
+            })}
           </p>
         </section>
       ))}

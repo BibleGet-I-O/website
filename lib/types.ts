@@ -14,6 +14,11 @@ export type Book = {
   abbrev: string;
   chapters: number;
   versesPerChapter: number[];
+  /**
+   * Esther in an edition that stores both texts: the endpoint's index lists 20 chapters (10 Hebrew, then 10
+   * Greek); `chapters` is 10, `versesPerChapter` the Hebrew counts and this the Greek ones.
+   */
+  greekVersesPerChapter?: number[];
 };
 
 export type EditionIndex = { sigla: string; books: Book[] };

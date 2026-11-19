@@ -1,4 +1,5 @@
 import "server-only";
+import { ESTHER } from "./esther";
 import type { Access, Book, Chapter, Edition, EditionIndex, VerseRow } from "./types";
 
 export class ApiUnavailable extends Error {
@@ -78,19 +79,30 @@ type RawIndex = {
   book_num: number[];
 };
 
+const ESTHER_CHAPTERS = 10;
+
 export async function getIndex(sigla: string): Promise<EditionIndex> {
   const body = (await request(`/metadata/versionindex?versions=${encodeURIComponent(sigla)}`, "visitor", METADATA)) as {
     indexes?: Record<string, RawIndex>;
   };
   const raw = body.indexes?.[sigla];
   if (!raw) throw new NotFound(`no index for ${sigla}`);
-  const books: Book[] = raw.biblebooks.map((name, i) => ({
-    bookNum: raw.book_num[i],
-    name,
-    abbrev: raw.abbreviations[i],
-    chapters: raw.chapter_limit[i],
-    versesPerChapter: raw.verse_limit[i],
-  }));
+  const books: Book[] = raw.biblebooks.map((name, i) => {
+    const book: Book = {
+      bookNum: raw.book_num[i],
+      name,
+      abbrev: raw.abbreviations[i],
+      chapters: raw.chapter_limit[i],
+      versesPerChapter: raw.verse_limit[i],
+    };
+    // An edition with both Esther texts reports 20 chapters: the Hebrew 1-10, then the Greek 1-10.
+    if (book.bookNum === ESTHER && book.chapters === 2 * ESTHER_CHAPTERS) {
+      book.chapters = ESTHER_CHAPTERS;
+      book.greekVersesPerChapter = book.versesPerChapter.slice(ESTHER_CHAPTERS);
+      book.versesPerChapter = book.versesPerChapter.slice(0, ESTHER_CHAPTERS);
+    }
+    return book;
+  });
   return { sigla, books };
 }
 
@@ -167,7 +179,9 @@ export async function getChapter(p: ChapterParams): Promise<Chapter> {
   const rows = results.map(toRow);
   if (!index) return { rows, truncated: false, expectedVerses: rows.length };
   const book = index.books.find((b) => b.abbrev === p.bookAbbrev);
-  const expectedVerses = book?.versesPerChapter[p.chapter - 1];
+  // Esther with both texts: count the verses of the text requested (Greek, the API's default, unless HEBREW).
+  const counts = book?.greekVersesPerChapter && p.tradition !== "HEBREW" ? book.greekVersesPerChapter : book?.versesPerChapter;
+  const expectedVerses = counts?.[p.chapter - 1];
   if (expectedVerses === undefined) throw new NotFound(`${p.bookAbbrev} ${p.chapter} is not in ${p.sigla}`);
   return { rows, truncated: rows[rows.length - 1].verse < expectedVerses, expectedVerses };
 }

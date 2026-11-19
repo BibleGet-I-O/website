@@ -45,6 +45,7 @@ describe("BookPage", () => {
 
   it("showsThePrintedLabelOfAVersePrintedInThePreviousChapter", () => {
     const placed = placeAsPrinted(
+      [],
       [row(11, 25, { printedChapter: 11 }), row(11, 26, { printedChapter: 11 })],
       [row(12, 1, { printedChapter: 11, label: "1" })],
       11,
@@ -53,8 +54,18 @@ describe("BookPage", () => {
     const sups = Array.from(container.querySelectorAll("sup")).map((e) => e.textContent);
     expect(sups).toEqual(["25", "26", "12:1"]);
     // Twelve no longer shows it.
-    const twelve = placeAsPrinted([row(12, 1, { printedChapter: 11, label: "1" }), row(12, 2)], [], 12);
+    const twelve = placeAsPrinted([], [row(12, 1, { printedChapter: 11, label: "1" }), row(12, 2)], [], 12);
     expect(twelve.map((r) => r.verse)).toEqual([2]);
+  });
+});
+
+describe("BookPage labels", () => {
+  it("printsNoVerseNumberForAnUnlabelledContinuation", () => {
+    const { container } = render(
+      <BookPage heading="Job 10" chapter={10} rows={[row(10, 1, { label: "", text: "rest of verse one" }), row(10, 2)]} />,
+    );
+    expect(Array.from(container.querySelectorAll("sup")).map((e) => e.textContent)).toEqual(["2"]);
+    expect(screen.getByText(/rest of verse one/)).toBeInTheDocument();
   });
 });
 
