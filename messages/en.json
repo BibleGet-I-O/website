@@ -35,7 +35,10 @@
     "chapterNav": "Chapters",
     "previous": "Previous chapter",
     "next": "Next chapter",
-    "heading": "{book} {chapter}"
+    "heading": "{book} {chapter}",
+    "gapAbsent": "Not in {edition}",
+    "dividedDifferently": "{main} and {second} divide the chapters of this book differently: {second}'s chapter {chapter} is shown whole below.",
+    "secondMissing": "{second} does not have {book} {chapter}."
   },
   "Notice": {
     "signIn": "This edition shows visitors the first 30 verses of each chapter. Sign in to read the whole chapter.",

@@ -7,9 +7,13 @@ import { CappedNotice, noticeFor } from "@/components/CappedNotice";
 import { ChapterNav } from "@/components/ChapterNav";
 import { editionSlug } from "@/components/EditionCard";
 import { ReaderBar } from "@/components/ReaderBar";
+import { Spread } from "@/components/Spread";
+import { VerseLines } from "@/components/VerseLines";
 import { getAccess } from "@/lib/access";
 import { ApiUnavailable, bookBySlug, getChapter, getEditions, getIndex, getVerses, NotFound, slugFor } from "@/lib/api";
 import { estherTradition } from "@/lib/esther";
+import { loadSecond, type Second } from "@/lib/interlinear";
+import { buildRows } from "@/lib/parallel";
 import { placeAsPrinted } from "@/lib/placement";
 import type { Chapter, EditionIndex, VerseRow } from "@/lib/types";
 
@@ -82,6 +86,14 @@ export default async function ChapterPage({ params, searchParams }: { params: Pr
       ? await neighbourVerse(getVerses({ ...request, chapter: chapter + 1, verse: 1 }))
       : [];
   const rows = placeAsPrinted(prevLast, current.rows, nextFirst, chapter);
+  const secondEdition = withSigla ? editions.find((e) => e.sigla === withSigla) : undefined;
+  // The second edition reads with the main one's access; a failure to reach it shows the error page.
+  const second: Second | null = secondEdition
+    ? await loadSecond({
+        mainIndex: index, bookNum: book.bookNum, chapter, mainRows: rows, withSigla: secondEdition.sigla,
+        access: info.access, tradition, prevLast, nextFirst,
+      })
+    : null;
 
   const query = new URLSearchParams();
   if (withSigla) query.set("with", withSigla);
@@ -92,7 +104,7 @@ export default async function ChapterPage({ params, searchParams }: { params: Pr
   const t = await getTranslations("Reader");
 
   return (
-    <main className="mx-auto w-full max-w-3xl p-4 sm:p-6">
+    <main className={`mx-auto w-full ${secondEdition ? "max-w-6xl" : "max-w-3xl"} p-4 sm:p-6`}>
       <ReaderBar
         locale={locale}
         edition={edition.sigla}
@@ -104,9 +116,62 @@ export default async function ChapterPage({ params, searchParams }: { params: Pr
         esther={tradition !== undefined}
         tradition={tradition}
       />
-      <BookPage heading={t("heading", { book: book.name, chapter })} chapter={chapter} rows={rows} lang={edition.language || undefined} />
+      {secondEdition && second ? (
+        <Interlinear
+          heading={t("heading", { book: book.name, chapter })}
+          main={{ sigla: edition.sigla, name: edition.fullname, lang: edition.language || undefined }}
+          other={{ sigla: secondEdition.sigla, name: secondEdition.fullname, lang: secondEdition.language || undefined }}
+          rows={rows}
+          second={second}
+          bookNum={book.bookNum}
+          bookName={book.name}
+          chapter={chapter}
+          truncated={current.truncated}
+          t={t}
+        />
+      ) : (
+        <BookPage heading={t("heading", { book: book.name, chapter })} chapter={chapter} rows={rows} lang={edition.language || undefined} />
+      )}
       {notice && await CappedNotice({ kind: notice, redirectTo: `/${locale}${base}/${slugFor(book)}/${chapter}${qs}` })}
       {await ChapterNav({ index, bookNum: book.bookNum, chapter, base, query: qs })}
     </main>
+  );
+}
+
+type Side = { sigla: string; name: string; lang?: string };
+type ReaderT = Awaited<ReturnType<typeof getTranslations<"Reader">>>;
+
+const noteClass = "my-4 rounded-lg border border-slate-300 bg-slate-50 p-3 text-sm dark:border-slate-700 dark:bg-slate-900";
+
+/** Interlinear on: verse per line, the second edition beside the main one, or below it when they cannot align. */
+function Interlinear(p: {
+  heading: string; main: Side; other: Side; rows: VerseRow[]; second: Second; bookNum: number; bookName: string;
+  chapter: number; truncated: boolean; t: ReaderT;
+}) {
+  const { t, second, chapter } = p;
+  const title = <h1 className="mb-6 text-center text-3xl font-semibold">{p.heading}</h1>;
+  if (second.mode === "aligned") {
+    return (
+      <article>
+        {title}
+        <Spread a={p.main} b={p.other} rows={buildRows(p.rows, second.rows, p.bookNum)} chapter={chapter} aTruncated={p.truncated} />
+      </article>
+    );
+  }
+  return (
+    <article>
+      {title}
+      <VerseLines rows={p.rows} chapter={chapter} lang={p.main.lang} />
+      {second.mode === "missing" ? (
+        <p role="note" className={noteClass}>{t("secondMissing", { second: p.other.name, book: p.bookName, chapter })}</p>
+      ) : (
+        <>
+          <p role="note" className={noteClass}>{t("dividedDifferently", { main: p.main.name, second: p.other.name, chapter })}</p>
+          <h2 className="mt-6 mb-1 text-center text-2xl font-semibold">{t("heading", { book: second.book?.name ?? p.bookName, chapter })}</h2>
+          <p className="mb-4 text-center font-sans text-sm text-slate-600 dark:text-slate-400">{p.other.name}</p>
+          <VerseLines rows={second.rows} chapter={chapter} lang={p.other.lang} />
+        </>
+      )}
+    </article>
   );
 }
