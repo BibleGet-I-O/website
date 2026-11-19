@@ -1,3 +1,5 @@
+import "server-only";
+
 // Token-lifecycle logic, kept free of Auth.js imports so it can be unit
 // tested without booting a provider. lib/session-token.ts (used by
 // getAccessToken() in lib/access.ts) is the only consumer.

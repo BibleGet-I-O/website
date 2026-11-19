@@ -1,4 +1,5 @@
 import { describe, it, expect, vi, afterEach } from "vitest";
+vi.mock("server-only", () => ({}));
 import { getToken } from "next-auth/jwt";
 import {
   MAX_COOKIE_VALUE_LENGTH,
