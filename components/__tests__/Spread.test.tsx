@@ -51,6 +51,14 @@ describe("Spread", () => {
     expect(screen.getByText("Text 5:4.")).toBeInTheDocument();
   });
 
+  it("aCappedSecondEditionLeavesTheRestOfTheMainWithoutNotes", () => {
+    const a = Array.from({ length: 4 }, (_, i) => row(5, i + 1));
+    const b = Array.from({ length: 2 }, (_, i) => row(5, i + 1));
+    render(wrap(<Spread a={A} b={B} rows={buildRows(a, b, 47)} chapter={5} bTruncated />));
+    expect(screen.queryByText(/Not in/)).toBeNull();
+    expect(screen.getByText("Text 5:4.")).toBeInTheDocument();
+  });
+
   it("verseLinesPutOneVersePerLineWithItsNumber", () => {
     render(wrap(<VerseLines rows={[row(3, 1), row(3, 2)]} chapter={3} />));
     const lines = screen.getAllByTestId("verse-line");

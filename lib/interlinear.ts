@@ -1,18 +1,22 @@
 import "server-only";
-import { getChapter, getIndex, NotFound } from "./api";
+import { ApiUnavailable, getChapter, getIndex, NotFound } from "./api";
 import { hasBothEstherTexts } from "./esther";
 import { hebrewRef, pairingMode, psalmChapters, PSALMS } from "./parallel";
 import type { Access, Book, EditionIndex, VerseRow } from "./types";
 
-export type Second = {
-  /** "missing": the second edition has no such book or chapter. */
-  mode: "aligned" | "whole-chapter" | "missing";
-  rows: VerseRow[];
-  /** The second edition's book, for its heading. */
-  book?: Book;
-};
+export type Second =
+  /** Verse beside verse. `truncated`: the second edition stops early (capped), so its empty side has no notes. */
+  | { mode: "aligned"; rows: VerseRow[]; truncated: boolean; book: Book }
+  /** The editions divide the book's chapters differently: the second's chapter whole, below (none: no such chapter). */
+  | { mode: "whole-chapter"; rows: VerseRow[]; truncated: boolean; book: Book }
+  /** No such book or chapter; or Esther 11-16 of a Vulgate-numbered main edition, which the second prints as additions. */
+  | { mode: "missing"; reason: "book" | "chapter" | "esther-additions" }
+  /** The endpoint could not be reached for the second edition. */
+  | { mode: "unavailable" };
 
 export type SecondParams = {
+  mainSigla: string;
+  mainBookAbbrev: string;
   mainIndex: EditionIndex;
   bookNum: number;
   chapter: number;
@@ -21,12 +25,10 @@ export type SecondParams = {
   withSigla: string;
   access: Access;
   tradition?: string;
-  /** The main edition's neighbouring verses (its previous chapter's last, its next chapter's first). */
-  prevLast?: VerseRow[];
-  nextFirst?: VerseRow[];
 };
 
-const MISSING: Second = { mode: "missing", rows: [] };
+/** The endpoint's cap on a copyrighted edition for the read key. */
+export const VERSE_CAP = 30;
 
 async function orMissing<T>(p: Promise<T>): Promise<T | null> {
   try {
@@ -37,44 +39,90 @@ async function orMissing<T>(p: Promise<T>): Promise<T | null> {
   }
 }
 
+const refKey = (r: VerseRow) => {
+  const ref = hebrewRef(r);
+  return ref ? `${ref[0]}:${ref[1]}` : null;
+};
+
 /**
- * A Hebrew psalm the main edition splits across two chapters (VGCL 114-115 = Hebrew 116) is fetched whole:
- * keep only the verses the main edition does not print in its neighbouring chapters.
+ * One Hebrew psalm of the second edition, trimmed to this page. A Hebrew psalm the main edition splits across
+ * two chapters (DRB/VGCL 114-115 = Hebrew 116) is fetched whole, so the main edition is asked for the same
+ * Hebrew psalm too: rows whose Hebrew verse it prints in another chapter belong to that chapter's page.
+ * Hebrew-numbered requests never report `truncated`, so a cap is inferred: exactly VERSE_CAP rows while
+ * the main edition's rows on this page go beyond the last of them in this psalm.
  */
-function notInNeighbours(rows: VerseRow[], prevLast: VerseRow[], nextFirst: VerseRow[]): VerseRow[] {
-  const prev = prevLast.map(hebrewRef).filter((x) => x !== null);
-  const next = nextFirst.map(hebrewRef).filter((x) => x !== null);
-  return rows.filter((r) => {
-    const ref = hebrewRef(r);
-    if (!ref) return true;
-    const [ps, v] = ref;
-    return !prev.some(([p, pv]) => p === ps && v <= pv) && !next.some(([p, nv]) => p === ps && v >= nv);
+async function psalm(p: SecondParams, request: { sigla: string; bookAbbrev: string; access: Access }, hebrew: number) {
+  const [second, main] = await Promise.all([
+    orMissing(getChapter({ ...request, chapter: hebrew, numbering: "hebrew" })),
+    orMissing(getChapter({ sigla: p.mainSigla, bookAbbrev: p.mainBookAbbrev, access: p.access, chapter: hebrew, numbering: "hebrew" })),
+  ]);
+  const rows = second?.rows ?? [];
+  const here = new Set<string>();
+  const elsewhere = new Set<string>();
+  for (const r of main?.rows ?? []) {
+    const k = refKey(r);
+    if (k) ((r.printedChapter ?? r.chapter) === p.chapter ? here : elsewhere).add(k);
+  }
+  for (const r of p.mainRows) {
+    const k = refKey(r);
+    if (k) here.add(k);
+  }
+  const kept = rows.filter((r) => {
+    const k = refKey(r);
+    return !k || here.has(k) || !elsewhere.has(k);
   });
+  const last = rows.length > 0 ? hebrewRef(rows[rows.length - 1]) : null;
+  const truncated =
+    rows.length === VERSE_CAP &&
+    last !== null &&
+    p.mainRows.some((r) => {
+      const ref = hebrewRef(r);
+      return ref !== null && ref[0] === hebrew && ref[1] > last[1];
+    });
+  return { rows: kept, truncated };
+}
+
+async function load(p: SecondParams): Promise<Second> {
+  const bIndex = await orMissing(getIndex(p.withSigla));
+  const book = bIndex?.books.find((b) => b.bookNum === p.bookNum);
+  if (!bIndex || !book) return { mode: "missing", reason: "book" };
+  const tradition = hasBothEstherTexts(book) ? p.tradition : undefined;
+  const request = { sigla: p.withSigla, bookAbbrev: book.abbrev, access: p.access, ...(tradition && { tradition }) };
+
+  if (p.bookNum === PSALMS) {
+    const hebrew = psalmChapters(p.mainRows);
+    if (hebrew.length === 0) hebrew.push(p.chapter);
+    const parts = await Promise.all(hebrew.map((h) => psalm(p, request, h)));
+    const rows = parts.flatMap((x) => x.rows);
+    if (rows.length === 0) return { mode: "missing", reason: "chapter" };
+    return { mode: "aligned", rows, truncated: parts.some((x) => x.truncated), book };
+  }
+
+  if (p.chapter > book.chapters) {
+    // VGCL/DRB Esther 11-16 are the Greek additions an edition with both texts prints within chapters 1-10.
+    if (hasBothEstherTexts(book)) return { mode: "missing", reason: "esther-additions" };
+    return { mode: "whole-chapter", rows: [], truncated: false, book };
+  }
+  const mode = pairingMode(p.mainIndex, bIndex, p.bookNum, p.chapter, p.tradition);
+  const second = await orMissing(getChapter({ ...request, chapter: p.chapter }));
+  if (!second) return mode === "whole-chapter" ? { mode, rows: [], truncated: false, book } : { mode: "missing", reason: "chapter" };
+  return { mode, rows: second.rows, truncated: second.truncated, book };
 }
 
 /**
  * The second edition of the interlinear, with the main edition's access. In the Psalms it is fetched by the
  * Hebrew psalm(s) the main edition's rows report, with Hebrew numbering, so the endpoint maps each to the
  * second edition's own numbering (NABRE Ps 10 beside VGCL 9:22-39; VGCL 9 beside NABRE 9 and 10).
- * Elsewhere it is the same chapter, aligned or whole (see pairingMode). Shown as returned: never capped here.
+ * Elsewhere it is the same chapter, aligned or whole (see pairingMode). An unreachable endpoint costs only
+ * the second edition: the page still shows the main one.
  */
 export async function loadSecond(p: SecondParams): Promise<Second> {
-  const bIndex = await orMissing(getIndex(p.withSigla));
-  const book = bIndex?.books.find((b) => b.bookNum === p.bookNum);
-  if (!bIndex || !book) return MISSING;
-  const tradition = hasBothEstherTexts(book) ? p.tradition : undefined;
-  const request = { sigla: p.withSigla, bookAbbrev: book.abbrev, access: p.access, ...(tradition && { tradition }) };
-
-  if (p.bookNum === PSALMS) {
-    const psalms = psalmChapters(p.mainRows);
-    if (psalms.length === 0) psalms.push(p.chapter);
-    const parts = await Promise.all(psalms.map((chapter) => orMissing(getChapter({ ...request, chapter, numbering: "hebrew" }))));
-    const rows = notInNeighbours(parts.flatMap((c) => c?.rows ?? []), p.prevLast ?? [], p.nextFirst ?? []);
-    return rows.length > 0 ? { mode: "aligned", rows, book } : MISSING;
+  try {
+    return await load(p);
+  } catch (err) {
+    if (!(err instanceof ApiUnavailable)) throw err;
+    // ApiUnavailable messages carry the status, never the URL or key.
+    console.error(`[interlinear] second edition unavailable (${err.message})`);
+    return { mode: "unavailable" };
   }
-
-  if (p.chapter > book.chapters) return MISSING;
-  const mode = pairingMode(p.mainIndex, bIndex, p.bookNum, p.chapter, p.tradition);
-  const second = await orMissing(getChapter({ ...request, chapter: p.chapter }));
-  return second ? { mode, rows: second.rows, book } : MISSING;
 }

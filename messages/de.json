@@ -38,7 +38,11 @@
     "heading": "{book} {chapter}",
     "gapAbsent": "Not in {edition}",
     "dividedDifferently": "{main} and {second} divide the chapters of this book differently: {second}'s chapter {chapter} is shown whole below.",
-    "secondMissing": "{second} does not have {book} {chapter}."
+    "secondMissing": "{second} does not have {book} {chapter}.",
+    "secondNoBook": "{second} does not have {book}.",
+    "dividedNoChapter": "{main} and {second} divide the chapters of this book differently: {second} has no chapter {chapter}.",
+    "estherAdditions": "{second} prints the text of these chapters as additions within chapters 1–10 of Esther.",
+    "secondUnavailable": "{second} could not be loaded, so only {main} is shown. Try again later."
   },
   "Notice": {
     "signIn": "This edition shows visitors the first 30 verses of each chapter. Sign in to read the whole chapter.",

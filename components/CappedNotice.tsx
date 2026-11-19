@@ -14,10 +14,12 @@ export function noticeFor(truncated: boolean, a: AccessInfo): NoticeKind | null 
   return a.signedIn ? "verify" : "signIn";
 }
 
-export async function CappedNotice({ kind, redirectTo }: { kind: NoticeKind; redirectTo: string }) {
+/** `edition` names the edition the notice is about, when the page shows two. */
+export async function CappedNotice({ kind, redirectTo, edition }: { kind: NoticeKind; redirectTo: string; edition?: string }) {
   const t = await getTranslations("Notice");
   return (
     <aside role="note" className="mt-6 rounded-lg border border-amber-300 bg-amber-50 p-4 dark:border-amber-700 dark:bg-amber-950">
+      {edition && <p className="mb-1 font-semibold">{edition}</p>}
       <p>{t(kind)}</p>
       {/* Awaited, not <SignInButton />: one async component, so it also renders outside the RSC runtime (tests). */}
       {kind === "signIn" && <div className="mt-3">{await SignInButton({ redirectTo })}</div>}
