@@ -52,34 +52,42 @@ export function ReaderBar(p: ReaderBarProps) {
   };
 
   return (
-    <div role="toolbar" aria-label={t("toolbar")} className="mb-6 flex flex-wrap items-center gap-2 text-sm">
+    <div role="toolbar" aria-label={t("toolbar")} className="mb-6 flex flex-nowrap items-center gap-1.5 text-sm sm:flex-wrap sm:gap-2">
       <label className="sr-only" htmlFor="rb-edition">{t("edition")}</label>
-      <select
-        id="rb-edition"
-        className={`${selectClass} min-w-0 max-w-full`}
-        value={p.edition}
-        onChange={(e) => switchEdition(e.target.value)}
-      >
-        {p.editions.map((e) => (
-          <option key={e.sigla} value={e.sigla}>{e.fullname}</option>
-        ))}
-      </select>
+      {/* Below sm the edition shows as its sigla, so book and chapter fit beside it: the select lies
+          transparent over it and still opens the picker of full names. */}
+      <span className="relative inline-flex shrink-0">
+        <span data-testid="edition-sigla" aria-hidden="true" className={`${selectClass} inline-flex items-center gap-1 sm:hidden`}>
+          {p.edition}
+          <svg viewBox="0 0 12 12" width="10" height="10" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M2 4l4 4 4-4" /></svg>
+        </span>
+        <select
+          id="rb-edition"
+          className={`${selectClass} min-w-0 max-w-full max-sm:absolute max-sm:inset-0 max-sm:w-full max-sm:opacity-0`}
+          value={p.edition}
+          onChange={(e) => switchEdition(e.target.value)}
+        >
+          {p.editions.map((e) => (
+            <option key={e.sigla} value={e.sigla}>{e.fullname}</option>
+          ))}
+        </select>
+      </span>
 
       <label className="sr-only" htmlFor="rb-book">{t("book")}</label>
-      <select id="rb-book" className={selectClass} value={p.book} onChange={(e) => go({ book: e.target.value, chapter: 1 })}>
+      <select id="rb-book" className={`${selectClass} min-w-0 max-sm:flex-1`} value={p.book} onChange={(e) => go({ book: e.target.value, chapter: 1 })}>
         {p.books.map((b) => (
           <option key={b.slug} value={b.slug}>{b.name}</option>
         ))}
       </select>
 
       <label className="sr-only" htmlFor="rb-chapter">{t("chapter")}</label>
-      <select id="rb-chapter" className={selectClass} value={p.chapter} onChange={(e) => go({ chapter: Number(e.target.value) })}>
+      <select id="rb-chapter" className={`${selectClass} shrink-0`} value={p.chapter} onChange={(e) => go({ chapter: Number(e.target.value) })}>
         {Array.from({ length: current?.chapters ?? p.chapter }, (_, i) => i + 1).map((n) => (
           <option key={n} value={n}>{n}</option>
         ))}
       </select>
 
-      <span className="ml-auto">
+      <span className="ml-auto shrink-0">
         <ReaderSettings
           editions={p.editions}
           main={p.edition}

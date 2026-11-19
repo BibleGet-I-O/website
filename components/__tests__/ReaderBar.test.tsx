@@ -223,4 +223,20 @@ describe("ReaderBar", () => {
     openMenu();
     expect(document.getElementById(button.getAttribute("aria-controls")!)).not.toBeNull();
   });
+
+  it("onANarrowScreenTheEditionShowsAsItsSiglaOverTheFullNamePicker", () => {
+    render(wrap(<ReaderBar {...props} />));
+    const select = screen.getByLabelText("Edition");
+    // The picker still lists the full names; below sm it is transparent over the sigla.
+    expect(select).toHaveValue("NABRE");
+    expect((select as HTMLSelectElement).selectedOptions[0].textContent).toBe("New American Bible");
+    expect(select).toHaveClass("max-sm:absolute", "max-sm:inset-0", "max-sm:opacity-0");
+    const short = screen.getByTestId("edition-sigla");
+    expect(short).toHaveTextContent("NABRE");
+    expect(short).toHaveAttribute("aria-hidden", "true");
+    expect(short).toHaveClass("sm:hidden");
+    // One line below sm: the book's name gives way (shrinks) before anything wraps.
+    expect(screen.getByRole("toolbar")).toHaveClass("flex-nowrap", "sm:flex-wrap");
+    expect(screen.getByLabelText("Book")).toHaveClass("min-w-0", "max-sm:flex-1");
+  });
 });
