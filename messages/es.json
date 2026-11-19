@@ -145,6 +145,9 @@
     "makeSame": "Marcar como el mismo texto",
     "acceptChapter": "Aceptar todos los borradores de este capítulo",
     "acceptedChapter": "{count, plural, one {# borrador aceptado} other {# borradores aceptados}}.",
-    "failed": "No se pudo guardar el cambio."
+    "failed": "No se pudo guardar el cambio.",
+    "changed": "Este enlace cambió mientras tanto.",
+    "reload": "Recargar el capítulo",
+    "capped": "Aquí las ediciones con derechos de autor muestran solo sus primeros 30 versículos: verifica tu correo electrónico y vuelve a iniciar sesión para revisarlas completas."
   }
 }

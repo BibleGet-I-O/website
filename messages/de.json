@@ -145,6 +145,9 @@
     "makeSame": "Als gleicher Text markieren",
     "acceptChapter": "Alle Entwürfe dieses Kapitels annehmen",
     "acceptedChapter": "{count, plural, one {# Entwurf angenommen} other {# Entwürfe angenommen}}.",
-    "failed": "Die Änderung konnte nicht gespeichert werden."
+    "failed": "Die Änderung konnte nicht gespeichert werden.",
+    "changed": "Diese Verknüpfung hat sich inzwischen geändert.",
+    "reload": "Kapitel neu laden",
+    "capped": "Urheberrechtlich geschützte Ausgaben zeigen hier nur ihre ersten 30 Verse: Bestätigen Sie Ihre E-Mail-Adresse und melden Sie sich erneut an, um sie vollständig zu prüfen."
   }
 }

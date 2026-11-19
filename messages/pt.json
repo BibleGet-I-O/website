@@ -145,6 +145,9 @@
     "makeSame": "Marcar como o mesmo texto",
     "acceptChapter": "Aceitar todos os rascunhos deste capítulo",
     "acceptedChapter": "{count, plural, one {# rascunho aceito} other {# rascunhos aceitos}}.",
-    "failed": "Não foi possível salvar a alteração."
+    "failed": "Não foi possível salvar a alteração.",
+    "changed": "Esta ligação mudou entretanto.",
+    "reload": "Recarregar o capítulo",
+    "capped": "Aqui as edições protegidas por direitos autorais mostram só os primeiros 30 versículos: confirme o seu endereço de e-mail e entre novamente para revisá-las por completo."
   }
 }

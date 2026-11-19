@@ -145,6 +145,9 @@
     "makeSame": "Segna come stesso testo",
     "acceptChapter": "Accetta tutte le bozze di questo capitolo",
     "acceptedChapter": "{count, plural, one {# bozza accettata} other {# bozze accettate}}.",
-    "failed": "Non è stato possibile salvare la modifica."
+    "failed": "Non è stato possibile salvare la modifica.",
+    "changed": "Questo collegamento è cambiato nel frattempo.",
+    "reload": "Ricarica il capitolo",
+    "capped": "Qui le edizioni protette da copyright mostrano solo i primi 30 versetti: verifica il tuo indirizzo email, poi accedi di nuovo, per rivederle per intero."
   }
 }

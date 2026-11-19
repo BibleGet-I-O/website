@@ -2,6 +2,7 @@ import { hasLocale } from "next-intl";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import { notFound } from "next/navigation";
 import { auth } from "@/auth";
+import { SignInButton } from "@/components/SignInButton";
 import { Link } from "@/i18n/navigation";
 import { routing } from "@/i18n/routing";
 import { getIndex } from "@/lib/api";
@@ -35,8 +36,12 @@ export default async function ReviewPage({ params, searchParams }: { params: Pro
       // Book numbers stand in for names.
     }
   }
+  const signIn = await SignInButton({ redirectTo: `/${locale}/review` });
   const error = (e: "signIn" | "failed" | "notFound") => (
-    <p role="alert" className="mt-6 text-red-700 dark:text-red-400">{e === "signIn" ? t("signInAgain") : t("listFailed")}</p>
+    <div role="alert" className="mt-6 text-red-700 dark:text-red-400">
+      <p>{e === "signIn" ? t("signInAgain") : t("listFailed")}</p>
+      {e === "signIn" && <div className="mt-2">{signIn}</div>}
+    </div>
   );
 
   return (
@@ -47,7 +52,8 @@ export default async function ReviewPage({ params, searchParams }: { params: Pro
       {"error" in editions ? (
         error(editions.error)
       ) : (
-        <table className="mt-6 w-full text-left text-sm">
+        <div className="mt-6 overflow-x-auto">
+        <table className="w-full text-left text-sm">
           <thead>
             <tr className="border-b border-slate-300 dark:border-slate-700">
               <th className="py-2">{t("edition")}</th>
@@ -69,6 +75,7 @@ export default async function ReviewPage({ params, searchParams }: { params: Pro
             ))}
           </tbody>
         </table>
+        </div>
       )}
       {edition && chapters && (
         <section className="mt-8">

@@ -145,6 +145,9 @@
     "makeSame": "Mark as same text",
     "acceptChapter": "Accept all drafts in this chapter",
     "acceptedChapter": "{count, plural, one {# draft accepted} other {# drafts accepted}}.",
-    "failed": "The change could not be saved."
+    "failed": "The change could not be saved.",
+    "changed": "This link changed meanwhile.",
+    "reload": "Reload the chapter",
+    "capped": "Copyrighted editions show only their first 30 verses here: verify your email address, then sign in again, to review them in full."
   }
 }

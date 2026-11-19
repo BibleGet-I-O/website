@@ -145,6 +145,9 @@
     "makeSame": "Marquer comme même texte",
     "acceptChapter": "Accepter tous les brouillons de ce chapitre",
     "acceptedChapter": "{count, plural, one {# brouillon accepté} other {# brouillons acceptés}}.",
-    "failed": "La modification n'a pas pu être enregistrée."
+    "failed": "La modification n'a pas pu être enregistrée.",
+    "changed": "Ce lien a changé entre-temps.",
+    "reload": "Recharger le chapitre",
+    "capped": "Les éditions protégées par le droit d'auteur n'affichent ici que leurs 30 premiers versets : vérifiez votre adresse e-mail, puis reconnectez-vous, pour les relire en entier."
   }
 }

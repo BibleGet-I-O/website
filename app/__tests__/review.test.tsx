@@ -7,7 +7,8 @@ vi.mock("server-only", () => ({}));
 const auth = vi.fn();
 vi.mock("@/auth", () => ({ auth: () => auth(), signIn: vi.fn(), signOut: vi.fn() }));
 const getAccessToken = vi.fn();
-vi.mock("@/lib/access", () => ({ getAccessToken: () => getAccessToken(), getAccess: async () => ({ access: "reader", signedIn: true, emailVerified: true }) }));
+const accessMock = vi.fn();
+vi.mock("@/lib/access", () => ({ getAccessToken: () => getAccessToken(), getAccess: () => accessMock() }));
 vi.mock("next/cache", () => ({ revalidatePath: vi.fn() }));
 vi.mock("next/navigation", async () => ({
   ...(await vi.importActual<object>("next/navigation")),
@@ -55,7 +56,8 @@ const chapterData = {
 };
 
 beforeEach(() => {
-  for (const m of [auth, getAccessToken, fetchMock, getChapter]) m.mockReset();
+  for (const m of [auth, getAccessToken, fetchMock, getChapter, accessMock]) m.mockReset();
+  accessMock.mockResolvedValue({ access: "reader", signedIn: true, emailVerified: true });
   auth.mockResolvedValue(reviewer);
   getAccessToken.mockResolvedValue("tok");
 });
@@ -101,6 +103,22 @@ describe("review pages", () => {
     expect(rows[1]).toHaveTextContent("NV three");
     expect(within(rows[1]).getByLabelText("Confidence 45%")).toBeInTheDocument();
     expect(screen.getByRole("button", { name: /Accept all drafts in this chapter/ })).toBeInTheDocument();
+  });
+
+  it("anUncappedReaderAccessIsNeededOrTheChapterSaysSo", async () => {
+    fetchMock.mockResolvedValue(json(chapterData));
+    getChapter.mockResolvedValue({ rows: [], truncated: false, expectedVerses: 0 });
+    accessMock.mockResolvedValue({ access: "visitor", signedIn: true, emailVerified: false });
+    render(wrap(await ChapterReviewPage({ params: chapterParams })));
+    expect(screen.getByRole("note")).toHaveTextContent(/first 30 verses/);
+  });
+
+  it("aHebrewRefGetsTheHebrewText", async () => {
+    fetchMock.mockResolvedValue(json({ links: [{ ...chapterData.links[0], ref: "5:1@HEBREW" }], units: [] }));
+    getChapter.mockImplementation(async (p: { sigla: string; tradition?: string }) =>
+      ({ rows: [row(5, 1, p.sigla === "VGCL" ? (p.tradition === "HEBREW" ? "Hebrew text" : "Greek text") : "NV")], truncated: false, expectedVerses: 1 }));
+    render(wrap(await ChapterReviewPage({ params: chapterParams })));
+    expect(screen.getByTestId("review-row")).toHaveTextContent("Hebrew text");
   });
 
   it("reviewLinkActionRequiresTheReviewerRole", async () => {

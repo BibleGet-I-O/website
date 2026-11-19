@@ -1,7 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useId, useState } from "react";
 import { useTranslations } from "next-intl";
+import { useRouter } from "next/navigation";
 import { reviewLink, type ReviewChange } from "@/app/[locale]/review/actions";
 import type { ReviewLinkData } from "@/lib/review";
 
@@ -31,8 +32,19 @@ export function ReviewLink(p: ReviewLinkProps) {
   const [mode, setMode] = useState<"idle" | "relink" | "split">("idle");
   const [chosen, setChosen] = useState<string[]>(p.link.units);
   const [note, setNote] = useState("");
-  const [failed, setFailed] = useState(false);
+  const [failed, setFailed] = useState<false | "failed" | "changed">(false);
   const [busy, setBusy] = useState(false);
+  const router = useRouter();
+  const refId = useId();
+  // A new link from the server (after "accept all", or a reload) replaces the one shown: reset while rendering
+  // when the prop changes (React's pattern for state that follows a prop).
+  const [shownFor, setShownFor] = useState(p.link);
+  if (p.link !== shownFor) {
+    setShownFor(p.link);
+    setLink(p.link);
+    setChosen(p.link.units);
+    setMode("idle");
+  }
 
   const apply = async (change: ReviewChange) => {
     setBusy(true);
@@ -44,7 +56,7 @@ export function ReviewLink(p: ReviewLinkProps) {
       setChosen(r.link.units);
       setMode("idle");
     } else {
-      setFailed(true);
+      setFailed(r.status === 409 ? "changed" : "failed");
     }
   };
 
@@ -53,9 +65,13 @@ export function ReviewLink(p: ReviewLinkProps) {
   const status = { rule: t("statusRule"), draft: t("statusDraft"), reviewed: t("statusReviewed") }[link.status];
 
   return (
-    <div data-testid="review-row" className="grid grid-cols-1 gap-3 border-b border-slate-200 py-3 md:grid-cols-2 dark:border-slate-800">
+    <section
+      data-testid="review-row"
+      aria-labelledby={refId}
+      className="grid grid-cols-1 gap-3 border-b border-slate-200 py-3 md:grid-cols-2 dark:border-slate-800"
+    >
       <div>
-        <p className="font-sans text-xs text-slate-500 dark:text-slate-400">{link.ref}</p>
+        <p id={refId} className="font-sans text-xs text-slate-500 dark:text-slate-400">{link.ref}</p>
         <p className="font-serif">{p.text}</p>
       </div>
       <div>
@@ -111,7 +127,7 @@ export function ReviewLink(p: ReviewLinkProps) {
             ))}
             <div className="flex gap-2 pt-1">
               <button type="button" className={button} disabled={busy || chosen.length === 0} onClick={() => apply({ action: "relink", units: chosen })}>{t("saveLinks")}</button>
-              <button type="button" className={button} onClick={() => setMode("idle")}>{t("cancel")}</button>
+              <button type="button" className={button} disabled={busy} onClick={() => setMode("idle")}>{t("cancel")}</button>
             </div>
           </fieldset>
         )}
@@ -124,13 +140,20 @@ export function ReviewLink(p: ReviewLinkProps) {
             </label>
             <div className="flex gap-2">
               <button type="button" className={button} disabled={busy || note.trim() === ""} onClick={() => apply({ action: "split", note })}>{t("flag")}</button>
-              <button type="button" className={button} onClick={() => setMode("idle")}>{t("cancel")}</button>
+              <button type="button" className={button} disabled={busy} onClick={() => setMode("idle")}>{t("cancel")}</button>
             </div>
           </div>
         )}
 
-        {failed && <p role="alert" className="mt-1 text-sm text-red-700 dark:text-red-400">{t("failed")}</p>}
+        {failed && (
+          <div role="alert" className="mt-1 text-sm text-red-700 dark:text-red-400">
+            {failed === "changed" ? t("changed") : t("failed")}
+            {failed === "changed" && (
+              <button type="button" className={`${button} ml-2`} onClick={() => router.refresh()}>{t("reload")}</button>
+            )}
+          </div>
+        )}
       </div>
-    </div>
+    </section>
   );
 }

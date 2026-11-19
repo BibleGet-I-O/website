@@ -54,4 +54,24 @@ describe("ReviewLink", () => {
     fireEvent.click(screen.getByRole("button", { name: "No counterpart" }));
     expect(await screen.findByRole("alert")).toHaveTextContent("The change could not be saved.");
   });
+
+  it("aNewLinkFromTheServerReplacesTheShownOne", () => {
+    const { rerender } = render(wrap(<ReviewLink link={draft} text="x" units={[stretch[0]]} stretch={stretch} />));
+    expect(screen.getByText("Draft")).toBeInTheDocument();
+    rerender(wrap(<ReviewLink link={{ ...draft, status: "reviewed" }} text="x" units={[stretch[0]]} stretch={stretch} />));
+    expect(screen.getByText("Reviewed")).toBeInTheDocument();
+  });
+
+  it("aConflictAsksToReloadTheChapter", async () => {
+    reviewLink.mockResolvedValue({ ok: false, status: 409 });
+    render(wrap(<ReviewLink link={draft} text="x" units={[stretch[0]]} stretch={stretch} />));
+    fireEvent.click(screen.getByRole("button", { name: "Accept" }));
+    expect(await screen.findByRole("alert")).toHaveTextContent("This link changed meanwhile");
+    expect(screen.getByRole("button", { name: "Reload the chapter" })).toBeInTheDocument();
+  });
+
+  it("eachRowIsARegionNamedByItsVerse", () => {
+    render(wrap(<ReviewLink link={draft} text="x" units={[stretch[0]]} stretch={stretch} />));
+    expect(screen.getByRole("region", { name: "5:2" })).toBeInTheDocument();
+  });
 });
