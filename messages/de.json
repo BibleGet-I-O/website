@@ -20,7 +20,8 @@
   "Auth": {
     "signIn": "Anmelden",
     "signOut": "Abmelden",
-    "admin": "Verwaltung"
+    "admin": "Verwaltung",
+    "review": "Prüfung"
   },
   "Books": {
     "ot": "Altes Testament",
@@ -107,5 +108,43 @@
     "closeMenu": "Menü schließen",
     "mainNav": "Hauptnavigation",
     "language": "Sprache"
+  },
+  "Review": {
+    "title": "Prüfung",
+    "intro": "Die Verknüpfungen der Verse jeder Ausgabe mit den Texteinheiten der Nova Vulgata (CBTUDR). Regeln haben die meisten Verse verknüpft; die Entwürfe hier müssen geprüft werden.",
+    "back": "Zurück",
+    "backToList": "Alle Kapitel",
+    "edition": "Ausgabe",
+    "drafts": "Entwürfe",
+    "reviewed": "Geprüft",
+    "byRule": "Nach Regel",
+    "chaptersOf": "{edition}: zu prüfende Kapitel",
+    "chapters": "Zu prüfende Kapitel",
+    "chapterLine": "{name}: {drafts, plural, one {# Entwurf} other {# Entwürfe}}, niedrigste Zuversicht {percent} %",
+    "nothing": "In dieser Ausgabe gibt es nichts mehr zu prüfen.",
+    "chapterTitle": "{edition}: {name}",
+    "listFailed": "Die Prüfdaten konnten nicht geladen werden.",
+    "signInAgain": "Melden Sie sich erneut an, um fortzufahren.",
+    "nova": "Nova Vulgata",
+    "noUnits": "Keine Entsprechung in der Nova Vulgata",
+    "confidence": "Zuversicht {percent} %",
+    "statusRule": "Nach Regel",
+    "statusDraft": "Entwurf",
+    "statusReviewed": "Geprüft",
+    "kindCorresponding": "entsprechende Stelle",
+    "accept": "Annehmen",
+    "relink": "Neu verknüpfen",
+    "relinkTo": "Diesen Vers verknüpfen mit:",
+    "saveLinks": "Verknüpfungen speichern",
+    "cancel": "Abbrechen",
+    "noCounterpart": "Keine Entsprechung",
+    "split": "Muss geteilt werden",
+    "splitNote": "Was muss geteilt werden, und wo?",
+    "flag": "Melden",
+    "makeCorresponding": "Als entsprechend markieren",
+    "makeSame": "Als gleicher Text markieren",
+    "acceptChapter": "Alle Entwürfe dieses Kapitels annehmen",
+    "acceptedChapter": "{count, plural, one {# Entwurf angenommen} other {# Entwürfe angenommen}}.",
+    "failed": "Die Änderung konnte nicht gespeichert werden."
   }
 }

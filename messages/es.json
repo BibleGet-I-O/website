@@ -20,7 +20,8 @@
   "Auth": {
     "signIn": "Iniciar sesión",
     "signOut": "Cerrar sesión",
-    "admin": "Administración"
+    "admin": "Administración",
+    "review": "Revisión"
   },
   "Books": {
     "ot": "Antiguo Testamento",
@@ -107,5 +108,43 @@
     "closeMenu": "Cerrar el menú",
     "mainNav": "Navegación principal",
     "language": "Idioma"
+  },
+  "Review": {
+    "title": "Revisión",
+    "intro": "Los enlaces de los versículos de cada edición a las unidades textuales de la Nova Vulgata (CBTUDR). Las reglas enlazaron la mayoría de los versículos; los borradores de aquí necesitan revisión.",
+    "back": "Volver",
+    "backToList": "Todos los capítulos",
+    "edition": "Edición",
+    "drafts": "Borradores",
+    "reviewed": "Revisados",
+    "byRule": "Por regla",
+    "chaptersOf": "{edition}: capítulos por revisar",
+    "chapters": "Capítulos por revisar",
+    "chapterLine": "{name}: {drafts, plural, one {# borrador} other {# borradores}}, confianza mínima {percent}%",
+    "nothing": "No queda nada por revisar en esta edición.",
+    "chapterTitle": "{edition}: {name}",
+    "listFailed": "No se pudieron cargar los datos de la revisión.",
+    "signInAgain": "Vuelve a iniciar sesión para continuar.",
+    "nova": "Nova Vulgata",
+    "noUnits": "Sin correspondencia en la Nova Vulgata",
+    "confidence": "Confianza {percent}%",
+    "statusRule": "Por regla",
+    "statusDraft": "Borrador",
+    "statusReviewed": "Revisado",
+    "kindCorresponding": "pasaje correspondiente",
+    "accept": "Aceptar",
+    "relink": "Volver a enlazar",
+    "relinkTo": "Enlazar este versículo con:",
+    "saveLinks": "Guardar los enlaces",
+    "cancel": "Cancelar",
+    "noCounterpart": "Sin correspondencia",
+    "split": "Hay que dividir",
+    "splitNote": "¿Qué hay que dividir, y dónde?",
+    "flag": "Señalar",
+    "makeCorresponding": "Marcar como correspondiente",
+    "makeSame": "Marcar como el mismo texto",
+    "acceptChapter": "Aceptar todos los borradores de este capítulo",
+    "acceptedChapter": "{count, plural, one {# borrador aceptado} other {# borradores aceptados}}.",
+    "failed": "No se pudo guardar el cambio."
   }
 }

@@ -35,6 +35,11 @@ export async function AuthStatus() {
           {t("admin")}
         </Link>
       )}
+      {session.reviewer === true && (
+        <Link href="/review" className="underline">
+          {t("review")}
+        </Link>
+      )}
       <span>{session.user.email ?? session.user.name}</span>
       <form
         action={async () => {
