@@ -21,5 +21,31 @@
     "title": "Page not found",
     "body": "That page does not exist.",
     "home": "Back to the editions"
+  },
+  "Reader": {
+    "toolbar": "Reading options",
+    "edition": "Edition",
+    "book": "Book",
+    "chapter": "Chapter",
+    "interlinear": "Interlinear",
+    "secondEdition": "Second edition",
+    "estherText": "Esther text",
+    "greek": "Greek",
+    "hebrew": "Hebrew",
+    "chapterNav": "Chapters",
+    "previous": "Previous chapter",
+    "next": "Next chapter",
+    "heading": "{book} {chapter}"
+  },
+  "Notice": {
+    "signIn": "This edition shows visitors the first 30 verses of each chapter. Sign in to read the whole chapter.",
+    "verify": "Verify your email address to read the whole chapter: we sent you a link when you signed up. Then sign out and sign in again.",
+    "unavailable": "The full text is not available for this edition at the moment: only the first 30 verses of each chapter are shown."
+  },
+  "Error": {
+    "title": "Something went wrong",
+    "unavailable": "The Bible service is unavailable, try again.",
+    "generic": "This page could not be shown.",
+    "retry": "Try again"
   }
 }

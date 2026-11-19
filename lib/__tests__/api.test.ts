@@ -1,7 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 vi.mock("server-only", () => ({}));
-import { ApiUnavailable, NotFound, bookBySlug, getChapter, getEditions, slugFor } from "../api";
+import { ApiUnavailable, NotFound, bookBySlug, getChapter, getEditions, getVerses, slugFor } from "../api";
 
 const raw = (verse: number, extra: object = {}) => ({
   chapter: 11, verse, text: `v${verse}`, title1: null, title2: null, title3: null,
@@ -122,6 +122,26 @@ describe("getChapter", () => {
   it("throwsNotFoundOnA200WithErrorsAndNoResults", async () => {
     mockFetch(() => json(quote([], [{ errNum: 13, errMessage: "A chapter in the query is out of bounds: there is no chapter <29> in the book in the requested version DRB, the last possible chapter is <28>" }])));
     await expect(getChapter({ ...base, chapter: 29 })).rejects.toBeInstanceOf(NotFound);
+  });
+});
+
+describe("getVerses", () => {
+  it("requestsOneVerseInTheEditionsNumberingWithoutAnIndexLookup", async () => {
+    const fn = mockFetch(() => json(quote([raw(1, { chapter: 12, printed_chapter: 11, verse_label: "12:1" })])));
+    const rows = await getVerses({ ...base, chapter: 12, verse: 1, access: "reader", tradition: "GREEK" });
+    expect(rows).toEqual([expect.objectContaining({ chapter: 12, verse: 1, printedChapter: 11, label: "12:1" })]);
+    const [url, init] = quoteCall(fn);
+    const qs = new URL(url).searchParams;
+    expect(qs.get("query")).toBe("Ws12:1");
+    expect(qs.get("numbering")).toBe("edition");
+    expect(qs.get("text_tradition")).toBe("GREEK");
+    expect(init.cache).toBe("no-store");
+    expect(fn.mock.calls.some((c) => String(c[0]).includes("versionindex"))).toBe(false);
+  });
+
+  it("returnsNothingForAVerseTheEndpointDoesNotHave", async () => {
+    mockFetch(() => json(quote([], [{ message: "no such verse" }])));
+    expect(await getVerses({ ...base, chapter: 12, verse: 1 })).toEqual([]);
   });
 });
 

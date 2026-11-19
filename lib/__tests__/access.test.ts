@@ -49,7 +49,8 @@ describe("getAccess", () => {
 
   it("gives visitor access to a session whose refresh was rejected", async () => {
     auth.mockResolvedValue({ ...signedIn(true), error: "RefreshAccessTokenError" });
-    expect(await getAccess()).toEqual({ access: "visitor", signedIn: false, emailVerified: true });
+    // Signed out, so not verified either: a signed-out user is asked to sign in, not to verify.
+    expect(await getAccess()).toEqual({ access: "visitor", signedIn: false, emailVerified: false });
   });
 
   it("gives visitor access when the session cannot be read", async () => {

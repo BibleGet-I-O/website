@@ -3,6 +3,7 @@ import { getTranslations, setRequestLocale } from "next-intl/server";
 import { notFound } from "next/navigation";
 import { routing } from "@/i18n/routing";
 import { Link } from "@/i18n/navigation";
+import { editionSlug } from "@/components/EditionCard";
 import { getEditions, getIndex, NotFound, slugFor } from "@/lib/api";
 import type { Book } from "@/lib/types";
 
@@ -14,7 +15,7 @@ export default async function BooksPage({ params }: { params: Promise<{ locale: 
   if (!hasLocale(routing.locales, locale)) notFound();
   setRequestLocale(locale);
 
-  const edition = (await getEditions()).find((e) => e.sigla.toLowerCase() === editionParam.toLowerCase());
+  const edition = (await getEditions()).find((e) => editionSlug(e.sigla) === editionParam.toLowerCase());
   if (!edition) notFound();
   let books: Book[];
   try {
@@ -29,7 +30,7 @@ export default async function BooksPage({ params }: { params: Promise<{ locale: 
     { key: "ot", title: t("ot"), books: books.filter((b) => b.bookNum <= LAST_OT_BOOK) },
     { key: "nt", title: t("nt"), books: books.filter((b) => b.bookNum > LAST_OT_BOOK) },
   ].filter((g) => g.books.length > 0);
-  const base = `/read/${edition.sigla.toLowerCase()}`;
+  const base = `/read/${editionSlug(edition.sigla)}`;
 
   return (
     <main className="mx-auto w-full max-w-3xl p-4 sm:p-6">

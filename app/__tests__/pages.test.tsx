@@ -6,16 +6,27 @@ import en from "@/messages/en.json";
 vi.mock("server-only", () => ({}));
 const getEditions = vi.fn();
 const getIndex = vi.fn();
+const getChapter = vi.fn();
+const getVerses = vi.fn();
 vi.mock("@/lib/api", async () => {
   const actual = await vi.importActual<typeof import("@/lib/api")>("@/lib/api");
-  return { ...actual, getEditions: () => getEditions(), getIndex: (s: string) => getIndex(s) };
+  return {
+    ...actual,
+    getEditions: () => getEditions(),
+    getIndex: (s: string) => getIndex(s),
+    getChapter: (p: unknown) => getChapter(p),
+    getVerses: (p: unknown) => getVerses(p),
+  };
 });
+const getAccess = vi.fn();
+vi.mock("@/lib/access", () => ({ getAccess: () => getAccess() }));
 vi.mock("@/auth", () => ({ auth: vi.fn(), signIn: vi.fn(), signOut: vi.fn() }));
 vi.mock("next/navigation", async () => ({
   ...(await vi.importActual<object>("next/navigation")),
   notFound: () => {
     throw new Error("NEXT_NOT_FOUND");
   },
+  useRouter: () => ({ push: vi.fn() }),
   unstable_rethrow: (e: unknown) => {
     throw e;
   },
@@ -24,6 +35,7 @@ vi.mock("next/navigation", async () => ({
 const { NotFound } = await import("@/lib/api");
 const { default: HomePage } = await import("@/app/[locale]/page");
 const { default: BooksPage } = await import("@/app/[locale]/read/[edition]/page");
+const { default: ChapterPage } = await import("@/app/[locale]/read/[edition]/[book]/[chapter]/page");
 
 const wrap = (ui: React.ReactNode) => (
   <NextIntlClientProvider locale="en" messages={en}>
@@ -49,6 +61,10 @@ const book = (bookNum: number, name: string, abbrev: string, chapters: number) =
 beforeEach(() => {
   getEditions.mockReset();
   getIndex.mockReset();
+  getChapter.mockReset();
+  getVerses.mockReset();
+  getAccess.mockReset();
+  getAccess.mockResolvedValue({ access: "visitor", signedIn: false, emailVerified: false });
 });
 
 describe("home", () => {
@@ -96,13 +112,84 @@ describe("books", () => {
     await expect(BooksPage(params("drb"))).rejects.toThrow("NEXT_NOT_FOUND");
   });
 
-  it("bookTheEditionLacksIs404", async () => {
-    // Tobit is a book the edition may lack: the books page simply does not list it.
+  it("booksPageHidesABookTheEditionLacks", async () => {
     getEditions.mockResolvedValue([ed("LUZZI", "it")]);
     getIndex.mockResolvedValue({ sigla: "LUZZI", books: [book(1, "Genesi", "Gen", 50)] });
     render(wrap(await BooksPage(params("luzzi"))));
     expect(screen.queryByText(/Tobi/)).toBeNull();
-    const { bookBySlug } = await import("@/lib/api");
-    expect(bookBySlug({ sigla: "LUZZI", books: [book(1, "Genesi", "Gen", 50)] }, "tobia")).toBeUndefined();
+  });
+});
+
+describe("chapter", () => {
+  const params = (edition: string, bookSlug: string, chapter: string, search: Record<string, string> = {}) => ({
+    params: Promise.resolve({ locale: "en", edition, book: bookSlug, chapter }),
+    searchParams: Promise.resolve(search),
+  });
+  const verse = (chapter: number, v: number, extra: object = {}) => ({
+    chapter, verse: v, label: null, printedChapter: null, text: `Verse ${chapter}:${v}.`, titles: [], ...extra,
+  });
+  const drbIndex = { sigla: "DRB", books: [book(17, "Tobias", "Tob", 14), book(19, "Esther", "Esth", 16), book(26, "Wisdom", "Wis", 19)] };
+
+  beforeEach(() => {
+    getEditions.mockResolvedValue([ed("DRB", "en", "Douay-Rheims"), ed("NABRE", "en"), ed("LUZZI", "it")]);
+  });
+
+  it("bookTheEditionLacksIs404", async () => {
+    getIndex.mockResolvedValue({ sigla: "LUZZI", books: [book(1, "Genesi", "Gen", 50)] });
+    await expect(ChapterPage(params("luzzi", "tobia", "1"))).rejects.toThrow("NEXT_NOT_FOUND");
+    expect(getChapter).not.toHaveBeenCalled();
+  });
+
+  it("chapterOutsideTheBookOrUnknownEditionIs404", async () => {
+    getIndex.mockResolvedValue(drbIndex);
+    for (const c of ["0", "20", "x", "1.5"]) {
+      await expect(ChapterPage(params("drb", "wisdom", c))).rejects.toThrow("NEXT_NOT_FOUND");
+    }
+    await expect(ChapterPage(params("nope", "wisdom", "1"))).rejects.toThrow("NEXT_NOT_FOUND");
+    expect(getChapter).not.toHaveBeenCalled();
+  });
+
+  it("aChapterTheEndpointRejectsIs404", async () => {
+    getIndex.mockResolvedValue(drbIndex);
+    getChapter.mockRejectedValue(new NotFound());
+    getVerses.mockResolvedValue([]);
+    await expect(ChapterPage(params("drb", "wisdom", "11"))).rejects.toThrow("NEXT_NOT_FOUND");
+  });
+
+  it("rendersTheChapterWithTheNextChaptersVersePrintedInIt", async () => {
+    getIndex.mockResolvedValue(drbIndex);
+    getChapter.mockResolvedValue({ rows: [verse(11, 1), verse(11, 2)], truncated: false, expectedVerses: 2 });
+    getVerses.mockResolvedValue([verse(12, 1, { printedChapter: 11 })]);
+    render(wrap(await ChapterPage(params("drb", "wisdom", "11", { with: "NABRE" }))));
+    expect(getChapter).toHaveBeenCalledWith(expect.objectContaining({ sigla: "DRB", bookAbbrev: "Wis", chapter: 11, access: "visitor" }));
+    expect(getVerses).toHaveBeenCalledWith(expect.objectContaining({ sigla: "DRB", bookAbbrev: "Wis", chapter: 12, verse: 1 }));
+    expect(screen.getByRole("heading", { level: 1, name: "Wisdom 11" })).toBeInTheDocument();
+    expect(screen.getByText("12:1")).toBeInTheDocument();
+    expect(screen.queryByText(/Sign in to read/)).toBeNull();
+    expect(screen.getByRole("link", { name: /Next chapter/ })).toHaveAttribute("href", "/en/read/drb/wisdom/12?with=NABRE");
+  });
+
+  it("aCappedChapterGetsTheNoticeForTheUser", async () => {
+    getIndex.mockResolvedValue(drbIndex);
+    getChapter.mockResolvedValue({ rows: [verse(11, 1)], truncated: true, expectedVerses: 48 });
+    getVerses.mockResolvedValue([verse(12, 1, { printedChapter: 11 })]);
+    render(wrap(await ChapterPage(params("drb", "wisdom", "11"))));
+    expect(screen.getByText(/Sign in to read the whole chapter/)).toBeInTheDocument();
+    // A capped chapter does not end with the next chapter's first verse.
+    expect(screen.queryByText("12:1")).toBeNull();
+  });
+
+  it("passesTheEstherTraditionOnlyWhereTheEditionHasBoth", async () => {
+    getIndex.mockResolvedValue({ sigla: "NABRE", books: [book(19, "Esther", "Est", 10)] });
+    getChapter.mockResolvedValue({ rows: [verse(1, 1)], truncated: false, expectedVerses: 1 });
+    getVerses.mockResolvedValue([]);
+    render(wrap(await ChapterPage(params("nabre", "esther", "1", { tradition: "HEBREW" }))));
+    expect(getChapter).toHaveBeenCalledWith(expect.objectContaining({ tradition: "HEBREW" }));
+    expect(screen.getByLabelText("Esther text")).toHaveValue("HEBREW");
+
+    getChapter.mockClear();
+    getIndex.mockResolvedValue(drbIndex);
+    render(wrap(await ChapterPage(params("drb", "esther", "1", { tradition: "HEBREW" }))));
+    expect(getChapter).toHaveBeenCalledWith(expect.not.objectContaining({ tradition: "HEBREW" }));
   });
 });

@@ -142,19 +142,22 @@ export type ChapterParams = {
   numbering?: "edition" | "hebrew";
 };
 
-export async function getChapter(p: ChapterParams): Promise<Chapter> {
-  const qs = new URLSearchParams({ query: `${p.bookAbbrev}${p.chapter}`, version: p.sigla });
+function quoteRequest(p: ChapterParams, query: string): Promise<{ results?: RawRow[]; errors?: unknown[] }> {
+  const qs = new URLSearchParams({ query, version: p.sigla });
   if (p.numbering !== "hebrew") qs.set("numbering", "edition");
   qs.set("return", "json");
   if (p.tradition) qs.set("text_tradition", p.tradition);
-
   const init: FetchInit = p.access === "reader" ? { cache: "no-store" } : { next: { revalidate: 3600 } };
+  return request(`/quote?${qs}`, p.access, init) as Promise<{ results?: RawRow[]; errors?: unknown[] }>;
+}
+
+export async function getChapter(p: ChapterParams): Promise<Chapter> {
   const hebrew = p.numbering === "hebrew";
   // In Hebrew mode the requested chapter is a Hebrew psalm number, which maps to a different edition chapter
   // (or two), so the index cannot be consulted by it. The interlinear second edition is shown as returned;
   // the cap notice belongs to the main edition.
   const [body, index] = await Promise.all([
-    request(`/quote?${qs}`, p.access, init) as Promise<{ results?: RawRow[]; errors?: unknown[] }>,
+    quoteRequest(p, `${p.bookAbbrev}${p.chapter}`),
     hebrew ? Promise.resolve(null) : getIndex(p.sigla),
   ]);
   const results = body.results ?? [];
@@ -167,4 +170,13 @@ export async function getChapter(p: ChapterParams): Promise<Chapter> {
   const expectedVerses = book?.versesPerChapter[p.chapter - 1];
   if (expectedVerses === undefined) throw new NotFound(`${p.bookAbbrev} ${p.chapter} is not in ${p.sigla}`);
   return { rows, truncated: rows[rows.length - 1].verse < expectedVerses, expectedVerses };
+}
+
+/**
+ * The rows of one verse (all its printed parts), or none when the endpoint has no such verse.
+ * Used for the first verse of the next chapter, which an edition may print at the end of this one.
+ */
+export async function getVerses(p: ChapterParams & { verse: number }): Promise<VerseRow[]> {
+  const body = await quoteRequest(p, `${p.bookAbbrev}${p.chapter}:${p.verse}`);
+  return (body.results ?? []).map(toRow);
 }

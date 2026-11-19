@@ -23,7 +23,7 @@ export async function getAccess(): Promise<AccessInfo> {
     console.warn(`[access] could not read the session; serving visitor pages (${errorName(err)})`);
   }
   const signedIn = Boolean(session?.user) && !session?.error;
-  const emailVerified = session?.emailVerified === true;
+  const emailVerified = signedIn && session?.emailVerified === true;
   return { access: signedIn && emailVerified ? "reader" : "visitor", signedIn, emailVerified };
 }
 
