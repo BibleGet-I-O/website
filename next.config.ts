@@ -4,11 +4,8 @@ import createNextIntlPlugin from "next-intl/plugin";
 const config: NextConfig = {
   // Self-contained server.js plus a pruned node_modules, so the deployed bundle needs no `npm ci` on the host.
   output: "standalone",
-  async headers() {
-    // Staging must never be indexed: robots.ts says so for crawlers that read it, this header for the rest.
-    if (process.env.SITE_NOINDEX !== "1") return [];
-    return [{ source: "/:path*", headers: [{ key: "X-Robots-Tag", value: "noindex" }] }];
-  },
+  // Inlined at build time: the release id /api/version reports (the deploy's bundle tag; not a secret).
+  env: { BIBLEGET_RELEASE: process.env.BIBLEGET_RELEASE || "dev" },
 };
 
 export default createNextIntlPlugin("./i18n/request.ts")(config);

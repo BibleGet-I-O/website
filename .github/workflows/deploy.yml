@@ -1,0 +1,329 @@
+name: Deploy
+
+# Builds the Next.js standalone bundle, ships it to the Plesk subdomain on the
+# VPS over SSH and restarts the Passenger-managed Node application.
+#
+# The deploy identity is the Plesk subscription system user (chrooted shell),
+# so "restart" means touching tmp/restart.txt, not calling systemctl.
+# All runtime configuration and secrets (AUTH_*, ZITADEL_PROJECT_ID,
+# BIBLEGET_API_URL, BIBLEGET_READ_KEY, BIBLEGET_READER_KEY, SITE_NOINDEX) live in
+# the Plesk Node.js panel. The build bakes none of them in; it bakes in only
+# BIBLEGET_RELEASE (the bundle tag, not a secret), which /api/version reports so
+# the smoke test can tell the new release from the old process.
+#
+# Every ${{ ... }} interpolation is a repo secret/variable or a choice input
+# (trusted). No untrusted github.event.* field reaches a command line.
+#
+# See docs/deploy.md
+
+on:
+  workflow_dispatch:
+    inputs:
+      target:
+        description: "Deployment target"
+        type: choice
+        options:
+          - staging
+        default: staging
+
+permissions:
+  contents: read
+
+concurrency:
+  group: deploy-website-${{ inputs.target }}
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    # Pinned, never ubuntu-latest: the standalone bundle carries glibc-linked
+    # native addons (sharp), so the runner's glibc must match the VPS
+    # (Ubuntu 24.04). Node's ABI is pinned by .nvmrc, which must equal the Node
+    # version selected in the Plesk panel.
+    runs-on: ubuntu-24.04
+    env:
+      # Per attempt: "Re-run all jobs" (a rollback) rebuilds and must redeploy,
+      # while a retried SSH step within one attempt must not (see the marker below).
+      BUNDLE_TAG: ${{ github.run_id }}-${{ github.run_attempt }}
+      TARGET: ${{ inputs.target }}
+
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version-file: ".nvmrc"
+          cache: "npm"
+
+      - name: Validate deploy configuration (fail fast)
+        env:
+          VPS_HOST: ${{ secrets.VPS_HOST }}
+          VPS_USERNAME: ${{ secrets.VPS_USERNAME }}
+          VPS_SSH_KEY: ${{ secrets.VPS_SSH_KEY }}
+          VPS_HOST_KEY: ${{ vars.VPS_HOST_KEY }}
+          VPS_APP_DIR: ${{ vars.VPS_APP_DIR }}
+          SITE_URL: ${{ vars.SITE_URL }}
+        run: |
+          set -euo pipefail
+          fail() { echo "::error::$1"; MISSING=1; }
+          MISSING=0
+
+          # Only staging exists for now. Production is added as another choice
+          # option plus its own variable set; refuse anything else explicitly.
+          [ "$TARGET" = "staging" ] || fail "unsupported target '$TARGET'"
+
+          [ -n "$VPS_HOST" ]     || fail "secrets.VPS_HOST is empty"
+          [ -n "$VPS_USERNAME" ] || fail "secrets.VPS_USERNAME is empty"
+          [ -n "$VPS_SSH_KEY" ]  || fail "secrets.VPS_SSH_KEY is empty"
+          [ -n "$VPS_HOST_KEY" ] || fail "vars.VPS_HOST_KEY is empty; refusing to deploy without a pinned host key"
+          [ -n "$SITE_URL" ]     || fail "vars.SITE_URL is empty (e.g. https://staging.bibleget.io); the smoke test needs it"
+          # An empty VPS_APP_DIR would make the remote tar extract into the ssh
+          # session's home directory instead of failing.
+          [ -n "$VPS_APP_DIR" ]  || fail "vars.VPS_APP_DIR is empty (e.g. staging.bibleget.io, relative to the chroot home)"
+
+          [ "$MISSING" -eq 0 ] || exit 1
+          echo "Deploy configuration OK. TARGET=$TARGET APP_DIR=$VPS_APP_DIR SITE_URL=$SITE_URL"
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Type check
+        run: npm run typecheck
+
+      - name: Vitest
+        run: npm test
+
+      - name: ESLint
+        run: npm run lint
+
+      - name: Cache Next.js build
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v5
+        with:
+          path: .next/cache
+          key: nextjs-deploy-${{ hashFiles('package-lock.json') }}-${{ hashFiles('app/**/*.{ts,tsx,css}', 'lib/**/*.{ts,tsx,css}', 'components/**/*.{ts,tsx,css}', 'i18n/**/*.ts', 'messages/*.json', '*.ts', '*.mjs', 'tsconfig.json') }}
+          restore-keys: nextjs-deploy-${{ hashFiles('package-lock.json') }}-
+
+      # `next build` loads any .env* file and copies .env into
+      # .next/standalone/.env, which is read again at runtime. A fresh checkout
+      # has none (they are gitignored), but remove them unconditionally so no
+      # value, secret or otherwise, can be baked into the bundle.
+      - name: Remove any .env files before building
+        run: |
+          set -euo pipefail
+          rm -f .env .env.local .env.production .env.production.local .env.development .env.development.local
+          ls -a | grep -E '^\.env' | grep -v '^\.env\.example$' && exit 1 || true
+
+      - name: Build
+        env:
+          # Inlined by next.config.ts; served by /api/version for the smoke test.
+          BIBLEGET_RELEASE: ${{ env.BUNDLE_TAG }}
+        run: npm run build
+
+      - name: Assemble the standalone bundle
+        run: |
+          set -euo pipefail
+
+          # `output: "standalone"` omits both of these on purpose. Without
+          # them the app boots but serves unstyled pages and 404s every file
+          # in public/.
+          mkdir -p .next/standalone/.next
+          cp -r .next/static .next/standalone/.next/static
+          cp -r public .next/standalone/public
+
+          # Hard guard: the bundle must carry no environment file.
+          if find .next/standalone -maxdepth 1 -name '.env*' | grep -q .; then
+            echo "::error::the standalone bundle contains a .env file; refusing to ship it"
+            exit 1
+          fi
+
+          # Record what is live. Nothing reads this at runtime.
+          printf '{"commit":"%s","ref":"%s","release":"%s","target":"%s"}\n' \
+            "$GITHUB_SHA" "$GITHUB_REF_NAME" "$BUNDLE_TAG" "$TARGET" \
+            > .next/standalone/.deploy-manifest.json
+
+          # tmp/restart.txt is NOT in the bundle: it is touched remotely, last,
+          # after extraction, so Passenger restarts onto a complete tree.
+          tar -czf "/tmp/nextjs-bundle-${BUNDLE_TAG}.tar.gz" -C .next/standalone .
+          ls -la "/tmp/nextjs-bundle-${BUNDLE_TAG}.tar.gz"
+
+      - name: Verify the bundle's native dependencies resolve
+        run: |
+          set -euo pipefail
+          # standalone traces require graphs, not dlopen, so a native addon can
+          # ship without the shared library it loads. Load it from the bundle.
+          cd .next/standalone
+          node -e '
+            let sharp;
+            try { sharp = require("sharp"); } catch (e) {
+              if (e.code === "MODULE_NOT_FOUND") { console.log("sharp not in bundle; skipping"); process.exit(0); }
+              throw e;
+            }
+            if (!sharp.versions || !sharp.versions.vips) throw new Error("sharp loaded but reported no libvips version");
+            console.log("sharp " + sharp.versions.sharp + " / libvips " + sharp.versions.vips);
+          '
+
+      - name: Setup SSH
+        env:
+          VPS_SSH_KEY: ${{ secrets.VPS_SSH_KEY }}
+          VPS_HOST_KEY: ${{ vars.VPS_HOST_KEY }}
+        run: |
+          mkdir -p ~/.ssh
+          chmod 700 ~/.ssh
+          echo "$VPS_SSH_KEY" > ~/.ssh/deploy_key
+          chmod 600 ~/.ssh/deploy_key
+          echo "$VPS_HOST_KEY" > ~/.ssh/known_hosts
+          chmod 644 ~/.ssh/known_hosts
+
+      - name: Verify the pinned host key covers the target
+        env:
+          VPS_HOST: ${{ secrets.VPS_HOST }}
+        run: |
+          if ! ssh-keygen -F "$VPS_HOST" -f ~/.ssh/known_hosts >/dev/null; then
+            echo "::error::vars.VPS_HOST_KEY has no entry for the host in secrets.VPS_HOST. Regenerate with: ssh-keyscan -t ed25519,rsa <host>, then compare 'ssh-keygen -lf' of that output with 'ssh-keygen -lf /etc/ssh/ssh_host_ed25519_key.pub' run on the VPS itself (console or an already trusted session) before saving it. ssh-keyscan does not authenticate the host. See docs/deploy.md"
+            exit 1
+          fi
+
+      - name: Upload bundle
+        env:
+          VPS_USERNAME: ${{ secrets.VPS_USERNAME }}
+          VPS_HOST: ${{ secrets.VPS_HOST }}
+        run: |
+          # Staged in the chroot's /tmp, never in the application directory,
+          # so the tarball is never publicly fetchable.
+          for attempt in 1 2 3; do
+            echo "Upload attempt $attempt..."
+            if scp -i ~/.ssh/deploy_key \
+              -o StrictHostKeyChecking=yes \
+              -o ConnectTimeout=10 -o ServerAliveInterval=15 -o ServerAliveCountMax=2 \
+              "/tmp/nextjs-bundle-${BUNDLE_TAG}.tar.gz" \
+              "${VPS_USERNAME}@${VPS_HOST}:/tmp/nextjs-bundle-${BUNDLE_TAG}.tar.gz"; then
+              echo "Upload succeeded on attempt $attempt"
+              exit 0
+            fi
+            echo "Upload failed on attempt $attempt"
+            [ "$attempt" -lt 3 ] && echo "Retrying in 15s..." && sleep 15
+          done
+          echo "::error::All upload attempts failed"
+          exit 1
+
+      - name: Extract and restart the Passenger application
+        env:
+          VPS_USERNAME: ${{ secrets.VPS_USERNAME }}
+          VPS_HOST: ${{ secrets.VPS_HOST }}
+          VPS_APP_DIR: ${{ vars.VPS_APP_DIR }}
+        run: |
+          set -euo pipefail
+          # printf %q makes the remote path a single literal word.
+          REMOTE_APP_DIR="$(printf '%q' "$VPS_APP_DIR")"
+
+          # Extraction is over the previous release (the Plesk application root
+          # is fixed), so stale files linger harmlessly. The route cache is the
+          # exception: it outlives the build that wrote it, so it is cleared on
+          # every deploy, as is the fetch cache (visitor fetches are cached for an hour,
+          # so a new build must not serve stale API data) and public/ (deleted public
+          # files must not linger). restart.txt is touched last.
+          #
+          # Idempotent per bundle, so a retry after a lost acknowledgement cannot
+          # undo a completed deploy: the last action writes .deployed-$BUNDLE_TAG
+          # (in the application root, outside the public/ document root), and a
+          # run that finds it exits without touching the tree. Older markers are
+          # removed first, so a later re-run of an earlier deploy still deploys.
+          # The tarball is removed by the next step, not here, so a retry can
+          # always re-extract.
+          MARKER="${REMOTE_APP_DIR}/.deployed-${BUNDLE_TAG}"
+          for attempt in 1 2 3; do
+            echo "SSH attempt $attempt..."
+            if ssh -i ~/.ssh/deploy_key \
+              -o StrictHostKeyChecking=yes \
+              -o ConnectTimeout=10 -o ServerAliveInterval=15 -o ServerAliveCountMax=2 \
+              "${VPS_USERNAME}@${VPS_HOST}" \
+              "set -e; \
+               if [ -e ${MARKER} ]; then echo 'bundle ${BUNDLE_TAG} already deployed'; exit 0; fi; \
+               rm -rf ${REMOTE_APP_DIR}/public && \
+               tar -xzf /tmp/nextjs-bundle-${BUNDLE_TAG}.tar.gz -C ${REMOTE_APP_DIR} && \
+               rm -rf ${REMOTE_APP_DIR}/.next/cache/fetch-cache && \
+               rm -rf ${REMOTE_APP_DIR}/.next/server/route-cache && \
+               mkdir -p ${REMOTE_APP_DIR}/tmp && \
+               touch ${REMOTE_APP_DIR}/tmp/restart.txt && \
+               rm -f ${REMOTE_APP_DIR}/.deployed-* && \
+               touch ${MARKER}"; then
+              echo "SSH succeeded on attempt $attempt"
+              exit 0
+            fi
+            echo "SSH failed on attempt $attempt"
+            [ "$attempt" -lt 3 ] && echo "Retrying in 15s..." && sleep 15
+          done
+          echo "::error::All SSH attempts failed. If the subscription user is Plesk-chrooted, confirm tar/gzip/mkdir/touch/rm exist in the chroot."
+          exit 1
+
+      - name: Remove the uploaded bundle (best effort)
+        if: always()
+        continue-on-error: true
+        env:
+          VPS_USERNAME: ${{ secrets.VPS_USERNAME }}
+          VPS_HOST: ${{ secrets.VPS_HOST }}
+        run: |
+          ssh -i ~/.ssh/deploy_key \
+            -o StrictHostKeyChecking=yes \
+            -o ConnectTimeout=10 -o ServerAliveInterval=15 -o ServerAliveCountMax=2 \
+            "${VPS_USERNAME}@${VPS_HOST}" \
+            "rm -f /tmp/nextjs-bundle-${BUNDLE_TAG}.tar.gz" \
+            || echo "::warning::could not remove /tmp/nextjs-bundle-${BUNDLE_TAG}.tar.gz on the host"
+
+      - name: Smoke-test the deployed site
+        env:
+          SITE_URL: ${{ vars.SITE_URL }}
+        run: |
+          set -euo pipefail
+          SITE_URL="${SITE_URL%/}"
+          # Passenger keeps serving the old process until it notices restart.txt,
+          # and starts the new one lazily (a cold Next boot is not instant), so
+          # first retry until /api/version reports this bundle's release: a 200
+          # from the old process proves nothing. The id is baked into the build
+          # and read once at startup, so the old process cannot report it.
+          echo "Waiting for $SITE_URL/api/version to report $BUNDLE_TAG"
+          for attempt in $(seq 1 15); do
+            RELEASE=$(curl -sS --connect-timeout 10 --max-time 45 "$SITE_URL/api/version" | jq -r '.release // empty' 2>/dev/null) || RELEASE=""
+            if [ "$RELEASE" = "$BUNDLE_TAG" ]; then
+              echo "/api/version: $RELEASE"
+              break
+            fi
+            echo "Attempt $attempt: release '${RELEASE:-none}'"
+            if [ "$attempt" -eq 15 ]; then
+              echo "::error::$SITE_URL/api/version never reported $BUNDLE_TAG (last: '${RELEASE:-none}'). The new release did not start; check the Plesk Node.js panel and logs."
+              exit 1
+            fi
+            sleep 8
+          done
+
+          # No -L: a redirect on /en is a failure.
+          echo "Smoke testing $SITE_URL/en"
+          HDR_FILE=$(mktemp)
+          for attempt in 1 2 3 4 5 6; do
+            STATUS=$(curl -sS -o /dev/null -D "$HDR_FILE" -w '%{http_code}' \
+              --connect-timeout 10 --max-time 45 "$SITE_URL/en") || STATUS="000"
+            if [ "$STATUS" = "200" ]; then
+              echo "GET /en: HTTP 200"
+              break
+            fi
+            echo "Attempt $attempt: HTTP $STATUS"
+            if [ "$attempt" -eq 6 ]; then
+              echo "::error::GET $SITE_URL/en returned $STATUS (expected 200). The Passenger application did not come up; check the Plesk Node.js panel and logs."
+              exit 1
+            fi
+            sleep 8
+          done
+
+          if [ "$TARGET" = "staging" ]; then
+            if ! grep -i '^x-robots-tag:' "$HDR_FILE" | grep -qi 'noindex'; then
+              echo "::error::staging response lacks 'X-Robots-Tag: noindex'. Set SITE_NOINDEX=1 in the Plesk Node.js environment."
+              cat "$HDR_FILE"
+              exit 1
+            fi
+            echo "X-Robots-Tag: noindex present"
+          fi
+
+      - name: Remove the SSH key
+        if: always()
+        run: rm -f ~/.ssh/deploy_key

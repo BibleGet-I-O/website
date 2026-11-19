@@ -1,0 +1,255 @@
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+
+vi.mock("server-only", () => ({}));
+import { ApiUnavailable, NotFound, bookBySlug, getChapter, getEditions, getIndex, getVerses, slugFor } from "../api";
+
+const raw = (verse: number, extra: object = {}) => ({
+  chapter: 11, verse, text: `v${verse}`, title1: null, title2: null, title3: null,
+  printed_chapter: null, verse_label: null, ...extra,
+});
+const rows = (n: number) => Array.from({ length: n }, (_, i) => raw(i + 1));
+const quote = (results: object[], errors: object[] = []) => ({ results, errors, notices: [], info: {} });
+const index = (verses: number) => ({
+  indexes: { DRB: { abbreviations: ["Ws"], biblebooks: ["Wisdom"], chapter_limit: [11], verse_limit: [Array(10).fill(10).concat([verses])], book_num: [27] } },
+});
+const json = (body: unknown, status = 200, type = "application/json") =>
+  new Response(JSON.stringify(body), { status, headers: { "content-type": type } });
+
+function mockFetch(q: () => Response | Promise<Response>, verses = 48) {
+  const fn = vi.fn(async (url: string | URL | Request, _init?: RequestInit) =>
+    String(url).includes("/metadata/versionindex") ? json(index(verses)) : q());
+  vi.stubGlobal("fetch", fn);
+  return fn;
+}
+const quoteCall = (fn: ReturnType<typeof mockFetch>) =>
+  fn.mock.calls.find((c) => String(c[0]).includes("/quote"))! as unknown as [string, RequestInit & { next?: unknown }];
+const base = { sigla: "DRB", bookAbbrev: "Ws", chapter: 11, access: "visitor" as const };
+
+beforeEach(() => {
+  process.env.BIBLEGET_API_URL = "https://api.test/dev";
+  process.env.BIBLEGET_READ_KEY = "read-key";
+  process.env.BIBLEGET_READER_KEY = "reader-key";
+});
+afterEach(() => vi.unstubAllGlobals());
+
+describe("getChapter", () => {
+  it("usesTheReadKeyForVisitorsAndTheReaderKeyForReaders", async () => {
+    const fn = mockFetch(() => json(quote(rows(48))));
+    await getChapter(base);
+    expect(quoteCall(fn)[1].headers).toMatchObject({ "X-Api-Key": "read-key" });
+    expect(quoteCall(fn)[1].next).toEqual({ revalidate: 3600 });
+    const fn2 = mockFetch(() => json(quote(rows(48))));
+    await getChapter({ ...base, access: "reader" });
+    expect(quoteCall(fn2)[1].headers).toMatchObject({ "X-Api-Key": "reader-key" });
+    expect(quoteCall(fn2)[1].cache).toBe("no-store");
+  });
+
+  it("requestsEditionNumbering", async () => {
+    const fn = mockFetch(() => json(quote(rows(48))));
+    await getChapter({ ...base, tradition: "x" });
+    const url = quoteCall(fn)[0];
+    expect(url).toContain("numbering=edition");
+    expect(url).toContain("query=Ws11");
+    expect(url).toContain("return=json");
+    expect(url).toContain("text_tradition=x");
+  });
+
+  it("requestsHebrewNumberingWithoutTheEditionParameter", async () => {
+    const fn = mockFetch(() => json(quote(rows(48))));
+    await getChapter({ ...base, numbering: "hebrew" });
+    expect(quoteCall(fn)[0]).not.toContain("numbering=");
+  });
+
+  it("marksA48VerseChapterCappedAt30AsTruncated", async () => {
+    mockFetch(() => json(quote(rows(30))), 48);
+    const c = await getChapter(base);
+    expect(c.truncated).toBe(true);
+    expect(c.expectedVerses).toBe(48);
+  });
+
+  it("doesNotMarkAnExactly30VerseChapterAsTruncated", async () => {
+    mockFetch(() => json(quote(rows(30))), 30);
+    expect((await getChapter(base)).truncated).toBe(false);
+  });
+
+  it("mapsPrintedChapterAndLabel", async () => {
+    mockFetch(() => json(quote([
+      raw(1, { printed_chapter: 10, verse_label: "1a", title1: "T1", title2: "T2", psalm_hebrew: "23:1" }),
+    ])), 1);
+    const [r] = (await getChapter(base)).rows;
+    expect(r).toMatchObject({ printedChapter: 10, label: "1a", titles: ["T1", "T2"], psalmHebrew: "23:1" });
+    expect(r.verse).toBe(1);
+  });
+
+  it("throwsApiUnavailableOn503AndNetworkError", async () => {
+    mockFetch(() => new Response("down", { status: 503 }));
+    await expect(getChapter(base)).rejects.toBeInstanceOf(ApiUnavailable);
+    mockFetch(() => { throw new TypeError("fetch failed"); });
+    await expect(getChapter(base)).rejects.toBeInstanceOf(ApiUnavailable);
+  });
+
+  it("throwsNotFoundOnA4xxProblemResponse", async () => {
+    mockFetch(() => json({ type: "x", title: "Unprocessable Content", status: 422,
+      detail: "No valid Bible versions were requested." }, 422, "application/problem+json"));
+    await expect(getChapter({ ...base, sigla: "XXX" })).rejects.toBeInstanceOf(NotFound);
+  });
+
+  it("mapsAuthAndRateLimitStatusesToApiUnavailable", async () => {
+    for (const status of [401, 403, 408, 429]) {
+      mockFetch(() => new Response("x", { status }));
+      await expect(getChapter(base)).rejects.toBeInstanceOf(ApiUnavailable);
+    }
+    for (const status of [400, 404, 422]) {
+      mockFetch(() => new Response("x", { status }));
+      await expect(getChapter(base)).rejects.toBeInstanceOf(NotFound);
+    }
+  });
+
+  it("showsAHebrewModeSecondEditionAsReturnedWithoutIndexLookup", async () => {
+    // Hebrew Ps 10 is VGCL Ps 9:22-39; the index has only 9 chapters of 30 verses for this book.
+    const vgcl = Array.from({ length: 18 }, (_, i) => raw(22 + i, { chapter: 9 }));
+    const fn = vi.fn(async (url: string | URL | Request, _init?: RequestInit) =>
+      String(url).includes("/metadata/versionindex")
+        ? json({ indexes: { VGCL: { abbreviations: ["Psal"], biblebooks: ["Psalmorum"], chapter_limit: [1], verse_limit: [[40]], book_num: [23] } } })
+        : json(quote(vgcl)));
+    vi.stubGlobal("fetch", fn);
+    const c = await getChapter({ sigla: "VGCL", bookAbbrev: "Psal", chapter: 10, access: "visitor", numbering: "hebrew" });
+    expect(c.truncated).toBe(false);
+    expect(c.expectedVerses).toBe(18);
+    expect(c.rows[0].chapter).toBe(9);
+  });
+
+  it("throwsNotFoundOnA200WithErrorsAndNoResults", async () => {
+    mockFetch(() => json(quote([], [{ errNum: 13, errMessage: "A chapter in the query is out of bounds: there is no chapter <29> in the book in the requested version DRB, the last possible chapter is <28>" }])));
+    await expect(getChapter({ ...base, chapter: 29 })).rejects.toBeInstanceOf(NotFound);
+  });
+});
+
+describe("Esther with both texts", () => {
+  // NABRE-shaped: versionindex reports Esther with 20 chapters, 10 Hebrew then 10 Greek.
+  const hebrew = [22, 23, 15, 17, 14, 14, 10, 17, 32, 3];
+  const greek = [22, 23, 15, 17, 14, 14, 10, 17, 32, 13];
+  const nabreIndex = {
+    indexes: {
+      NABRE: {
+        abbreviations: ["Est", "1Mc"], biblebooks: ["Esther", "1 Maccabees"], chapter_limit: [20, 16],
+        verse_limit: [hebrew.concat(greek), Array(16).fill(50)], book_num: [19, 20],
+      },
+    },
+  };
+  const vgclIndex = {
+    indexes: { VGCL: { abbreviations: ["Est"], biblebooks: ["Esther"], chapter_limit: [16], verse_limit: [Array(16).fill(20)], book_num: [19] } },
+  };
+  const stub = (idx: object, results: () => object[]) =>
+    vi.stubGlobal("fetch", vi.fn(async (url: string | URL | Request) =>
+      String(url).includes("/metadata/versionindex") ? json(idx) : json(quote(results()))));
+  const esther = (n: number) => Array.from({ length: n }, (_, i) => raw(i + 1, { chapter: 10 }));
+
+  it("splitsTheTwentyChaptersIntoTenWithBothVerseCounts", async () => {
+    stub(nabreIndex, () => []);
+    const [est, mac] = (await getIndex("NABRE")).books;
+    expect(est).toMatchObject({ bookNum: 19, chapters: 10, versesPerChapter: hebrew, greekVersesPerChapter: greek });
+    expect(mac).toMatchObject({ bookNum: 20, chapters: 16 });
+    expect(mac.greekVersesPerChapter).toBeUndefined();
+  });
+
+  it("keepsAVulgateShapedSixteenChapterEsther", async () => {
+    stub(vgclIndex, () => []);
+    const [est] = (await getIndex("VGCL")).books;
+    expect(est.chapters).toBe(16);
+    expect(est.versesPerChapter).toHaveLength(16);
+    expect(est.greekVersesPerChapter).toBeUndefined();
+  });
+
+  it("countsTheVersesOfTheRequestedText", async () => {
+    // Esther 10: 3 Hebrew verses, 13 Greek. Greek is the default.
+    stub(nabreIndex, () => esther(3));
+    const args = { sigla: "NABRE", bookAbbrev: "Est", chapter: 10, access: "visitor" as const };
+    expect(await getChapter({ ...args, tradition: "HEBREW" })).toMatchObject({ truncated: false, expectedVerses: 3 });
+    expect(await getChapter(args)).toMatchObject({ truncated: true, expectedVerses: 13 });
+    expect(await getChapter({ ...args, tradition: "GREEK" })).toMatchObject({ truncated: true, expectedVerses: 13 });
+  });
+});
+
+describe("getVerses", () => {
+  it("requestsOneVerseInTheEditionsNumberingWithoutAnIndexLookup", async () => {
+    const fn = mockFetch(() => json(quote([raw(1, { chapter: 12, printed_chapter: 11, verse_label: "12:1" })])));
+    const rows = await getVerses({ ...base, chapter: 12, verse: 1, access: "reader", tradition: "GREEK" });
+    expect(rows).toEqual([expect.objectContaining({ chapter: 12, verse: 1, printedChapter: 11, label: "12:1" })]);
+    const [url, init] = quoteCall(fn);
+    const qs = new URL(url).searchParams;
+    expect(qs.get("query")).toBe("Ws12:1");
+    expect(qs.get("numbering")).toBe("edition");
+    expect(qs.get("text_tradition")).toBe("GREEK");
+    expect(init.cache).toBe("no-store");
+    expect(fn.mock.calls.some((c) => String(c[0]).includes("versionindex"))).toBe(false);
+  });
+
+  it("returnsNothingForAVerseTheEndpointDoesNotHave", async () => {
+    mockFetch(() => json(quote([], [{ message: "no such verse" }])));
+    expect(await getVerses({ ...base, chapter: 12, verse: 1 })).toEqual([]);
+  });
+});
+
+/** The slug of a book that is alone in its edition. */
+const slugOf = (name: string) => slugFor({ bookNum: 1, name }, [{ bookNum: 1, name }]);
+
+describe("slugFor", () => {
+  it("slugForStripsDiacritics", () => {
+    expect(slugOf("Génesis")).toBe("genesis");
+    expect(slugOf("1 Maccabees")).toBe("1-maccabees");
+  });
+});
+
+describe("slugFor edge cases", () => {
+  it("makesCleanSlugs", () => {
+    expect(slugOf("1 Samuel")).toBe("1-samuel");
+    expect(slugOf("Cantico dei Cantici")).toBe("cantico-dei-cantici");
+    expect(slugOf("Song of Songs / Canticles")).toBe("song-of-songs-canticles");
+    expect(slugOf("Sirach (Ben Sira)'s")).toBe("sirach-ben-sira-s");
+  });
+
+  it("aNameWithNoLatinLettersFallsBackToTheBookNumber", () => {
+    const books = [{ bookNum: 1, name: "Γένεσις" }];
+    expect(slugFor(books[0], books)).toBe("book-1");
+  });
+
+  it("twoDifferentNonLatinNamesGetDistinctSlugs", () => {
+    const books = [{ bookNum: 1, name: "Γένεσις" }, { bookNum: 2, name: "Ἔξοδος" }];
+    expect(books.map((b) => slugFor(b, books))).toEqual(["book-1", "book-2"]);
+  });
+
+  it("collidingSlugsAreSuffixedWithTheBookNumber", () => {
+    const books = [{ bookNum: 1, name: "Genesis" }, { bookNum: 9, name: "1 Samuel" }, { bookNum: 10, name: "1. Samuel" }];
+    expect(books.map((b) => slugFor(b, books))).toEqual(["genesis", "1-samuel-9", "1-samuel-10"]);
+  });
+});
+
+describe("bookBySlug", () => {
+  const index = { sigla: "X", books: [{ bookNum: 1, name: "Génesis", abbrev: "Gn", chapters: 50, versesPerChapter: [] }] };
+  it("findsAndMissesBooks", () => {
+    expect(bookBySlug(index, "genesis")?.abbrev).toBe("Gn");
+    expect(bookBySlug(index, "exodus")).toBeUndefined();
+  });
+
+  it("reachesEveryBookOfAnEditionWithNonLatinOrCollidingNames", () => {
+    const book = (bookNum: number, name: string) => ({ bookNum, name, abbrev: `B${bookNum}`, chapters: 1, versesPerChapter: [1] });
+    const greek = { sigla: "G", books: [book(1, "Γένεσις"), book(2, "Ἔξοδος"), book(9, "Samuel"), book(10, "Samuel")] };
+    for (const b of greek.books) expect(bookBySlug(greek, slugFor(b, greek.books))?.bookNum).toBe(b.bookNum);
+    expect(bookBySlug(greek, "samuel")).toBeUndefined();
+  });
+});
+
+describe("getEditions", () => {
+  it("parsesTheFullnameField", async () => {
+    vi.stubGlobal("fetch", vi.fn(async () => json({
+      validversions: ["DRB", "BARE"],
+      copyrightversions: ["DRB"],
+      validversions_fullname: { DRB: "Douay–Rheims Challoner Revision|1752|en|1|CATHOLIC|Some Holder|notes", BARE: "Bare" },
+    })));
+    expect(await getEditions()).toEqual([
+      { sigla: "DRB", fullname: "Douay–Rheims Challoner Revision", year: "1752", language: "en", copyrightHolder: "Some Holder", copyright: true },
+      { sigla: "BARE", fullname: "Bare", year: "", language: "", copyrightHolder: "", copyright: false },
+    ]);
+  });
+});

@@ -1,3 +1,4 @@
+import { fileURLToPath } from "node:url";
 import { defineConfig } from "vitest/config";
 import react from "@vitejs/plugin-react";
 
@@ -8,5 +9,5 @@ export default defineConfig({
     // resolve when externalized; inline it so Vite resolves it instead.
     server: { deps: { inline: ["next-auth", "next-intl"] } },
   },
-  resolve: { alias: { "@": new URL(".", import.meta.url).pathname } },
+  resolve: { alias: { "@": fileURLToPath(new URL(".", import.meta.url)) } },
 });
