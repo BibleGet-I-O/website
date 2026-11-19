@@ -65,4 +65,29 @@ describe("Spread", () => {
     expect(lines).toHaveLength(2);
     expect(lines[1]).toHaveTextContent("2Text 3:2.");
   });
+
+  it("versesRenderTheirFormattingInBothColumns", () => {
+    const poetic = (chapter: number, verse: number): VerseRow => ({
+      ...row(chapter, verse), text: " <pof>The L<sm>ORD</sm> is my light,</pof>\n<pol>whom shall I fear?</pol>",
+    });
+    render(wrap(<VerseLines rows={[poetic(27, 1)]} chapter={27} />));
+    const line = screen.getByTestId("verse-line");
+    expect(line.textContent).not.toMatch(/<\/?(pof|pol|sm)>/);
+    expect(line.querySelector(".bg-pof .bg-sm")?.textContent).toBe("ORD");
+    expect(line.querySelector(".bg-pol")).not.toBeNull();
+
+    const rows = buildRows([poetic(27, 1)], [poetic(27, 1)], PSALMS);
+    const { container } = render(wrap(<Spread a={A} b={B} rows={rows} chapter={27} />));
+    for (const id of ["cell-a", "cell-b"]) {
+      const cell = within(container).getByTestId(id);
+      expect(cell.textContent).not.toContain("<pof>");
+      expect(cell.querySelector(".bg-pof")).not.toBeNull();
+    }
+  });
+
+  it("verseLinePlacesAMidVerseHeadingInsideTheVerse", () => {
+    const r: VerseRow = { ...row(5, 1), titles: ["Mid"], titlePosition: 7, text: "First. Second." };
+    render(wrap(<VerseLines rows={[r]} chapter={5} />));
+    expect(screen.getByTestId("verse-line")).toHaveTextContent("1First. MidSecond.");
+  });
 });

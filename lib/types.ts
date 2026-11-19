@@ -32,6 +32,11 @@ export type VerseRow = {
   printedChapter: number | null;
   text: string;
   titles: string[];
+  /**
+   * Where `titles` go: null (or absent) before the verse; otherwise a 0-based code-point offset into `text`
+   * for headings inside the verse (the API's `title_position`).
+   */
+  titlePosition?: number | null;
   psalmHebrew?: string;
 };
 

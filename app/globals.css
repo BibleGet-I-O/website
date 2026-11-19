@@ -1,1 +1,69 @@
 @import "tailwindcss";
+
+/*
+ * Reader: the edition's layout tags, rendered by lib/formatted.tsx. Ported from the WordPress plugin
+ * (bibleget-wordpress includes/BibleGet_Customize.php `span.pof` ... and js/shortcode.js), with em indents
+ * so narrow phone columns keep them.
+ */
+@layer components {
+  /* Line tags: one block line each. pof opens a stanza, pol closes it; the i/3 variants indent further. */
+  .bg-line {
+    display: block;
+    position: relative;
+    margin-left: 1.5em;
+    text-indent: 0;
+  }
+  .bg-pof { margin-top: 0.75em; }
+  .bg-po, .bg-poi { margin-top: 0.1em; }
+  .bg-pol { margin-top: 0.1em; margin-bottom: 0.75em; }
+  .bg-pos { margin-top: 0.3em; }
+  .bg-poi, .bg-poif, .bg-poil, .bg-po3, .bg-po3l { margin-left: 2.5em; }
+  .bg-poif { margin-top: 0.25em; }
+  /* A prose line, and an untagged line of a multi-line verse (a psalm superscription): no indent. */
+  .bg-pr, .bg-plain { margin-left: 0; }
+  /* Block quotation lines. */
+  .bg-bq, .bg-bqf, .bg-bql { margin-left: 1.5em; margin-right: 1.5em; }
+  .bg-bqf { margin-top: 0.75em; }
+  .bg-bql { margin-bottom: 0.75em; }
+  /* A poetic line opened by a speaker sits slightly left, so the words line up with the lines around it. */
+  .bg-line.bg-has-speaker { left: -0.35em; }
+
+  /* The verse number of a verse that opens with an indented line hangs in that line's indent. */
+  .bg-vnum-hang {
+    position: absolute;
+    right: 100%;
+    top: 0.2em;
+    padding-right: 0.25em;
+    line-height: 1;
+    white-space: nowrap;
+  }
+
+  /* Inline tags. L<sm>ORD</sm> reads LORD in small capitals. */
+  .bg-sm { font-variant-caps: small-caps; text-transform: lowercase; }
+  .bg-speaker {
+    display: inline-block;
+    margin-right: 0.2em;
+    padding: 0 0.35em;
+    border-radius: 0.25rem;
+    background-color: var(--color-slate-100);
+    color: var(--color-slate-700);
+    font-family: var(--font-sans);
+    font-size: 0.75em;
+    font-weight: 600;
+    line-height: 1.5;
+    vertical-align: 0.1em;
+  }
+  @media (prefers-color-scheme: dark) {
+    .bg-speaker { background-color: var(--color-slate-800); color: var(--color-slate-300); }
+  }
+
+  /*
+   * One verse per line (interlinear): the number has its own margin column, so lines start level with it
+   * and keep only their relative indent; stanza spacing stays between lines of the same verse.
+   */
+  .bg-compact .bg-line { margin-left: 0; }
+  .bg-compact .bg-poi, .bg-compact .bg-poif, .bg-compact .bg-poil, .bg-compact .bg-po3, .bg-compact .bg-po3l { margin-left: 1em; }
+  .bg-compact .bg-bq, .bg-compact .bg-bqf, .bg-compact .bg-bql { margin-left: 1em; margin-right: 0; }
+  .bg-compact > .bg-line:first-child { margin-top: 0; }
+  .bg-compact > .bg-line:last-child { margin-bottom: 0; }
+}

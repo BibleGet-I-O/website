@@ -79,6 +79,13 @@ describe("getChapter", () => {
     const [r] = (await getChapter(base)).rows;
     expect(r).toMatchObject({ printedChapter: 10, label: "1a", titles: ["T1", "T2"], psalmHebrew: "23:1" });
     expect(r.verse).toBe(1);
+    expect(r.titlePosition).toBeNull();
+  });
+
+  it("mapsTitlePosition", async () => {
+    mockFetch(() => json(quote([raw(1, { title1: "Mid", title_position: 12 })])), 1);
+    const [r] = (await getChapter(base)).rows;
+    expect(r).toMatchObject({ titles: ["Mid"], titlePosition: 12 });
   });
 
   it("throwsApiUnavailableOn503AndNetworkError", async () => {

@@ -59,6 +59,38 @@ describe("BookPage", () => {
   });
 });
 
+describe("BookPage formatting", () => {
+  it("rendersLineTagsInsteadOfPrintingThem", () => {
+    const rows = [
+      row(2, 1, { text: "<pof>Why have the Gentiles raged,</pof> <pol>and the people devised vain things?</pol>" }),
+      row(2, 2, { text: "\n<pof>The kings of the earth stood up,</pof>\n<poi>and the princes met together,</poi>" }),
+      row(2, 3, { text: "And then a prose verse." }),
+    ];
+    const { container } = render(<BookPage heading="Psalm 2" chapter={2} rows={rows} />);
+    expect(container.textContent).not.toMatch(/<\/?po/);
+    const lines = Array.from(container.querySelectorAll(".bg-line"));
+    expect(lines.map((l) => l.className.split(" ")[1])).toEqual(["bg-pof", "bg-pol", "bg-pof", "bg-poi"]);
+    // Each poetic verse's number hangs at the start of its first line; the prose verse's stays inline.
+    expect(lines[0].firstElementChild).toHaveClass("bg-vnum-hang");
+    expect(lines[0].firstElementChild?.textContent).toBe("1");
+    expect(lines[2].firstElementChild?.textContent).toBe("2");
+    const three = Array.from(container.querySelectorAll("sup")).find((s) => s.textContent === "3");
+    expect(three).not.toHaveClass("bg-vnum-hang");
+  });
+
+  it("putsAMidVerseHeadingAtItsTitlePositionWithoutStartingASection", () => {
+    const text = "And it was so. And God made two great lights.";
+    const rows = [
+      row(1, 1, { titles: ["Creation"], text: "In the beginning." }),
+      row(1, 2, { titles: ["The Lights"], titlePosition: "And it was so. ".length, text }),
+    ];
+    const { container } = render(<BookPage heading="Genesis 1" chapter={1} rows={rows} />);
+    expect(container.querySelectorAll("section")).toHaveLength(1);
+    expect(screen.getAllByRole("heading", { level: 2 }).map((h) => h.textContent)).toEqual(["Creation", "The Lights"]);
+    expect(container.querySelector("p")?.textContent).toContain("And it was so. The LightsAnd God made");
+  });
+});
+
 describe("BookPage labels", () => {
   it("printsNoVerseNumberForAnUnlabelledContinuation", () => {
     const { container } = render(
