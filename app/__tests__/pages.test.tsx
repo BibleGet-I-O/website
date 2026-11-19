@@ -106,19 +106,44 @@ describe("home", () => {
     const { container } = await home();
     const english = container.querySelector("#lang-en") as HTMLElement;
     const books = within(english).getAllByRole("link");
-    expect(books.map((a) => a.getAttribute("aria-label"))).toEqual(["Douay-Rheims, 1899", "Synthetic English, 1970"]);
+    expect(books).toEqual(["Douay-Rheims, 1899", "Synthetic English, 1970"].map((name) => within(english).getByRole("link", { name })));
+    // The name comes from the cover's own text, not an aria-label, so the title can carry its language.
+    expect(books[0]).not.toHaveAttribute("aria-label");
     expect(within(english).getByRole("link", { name: "Douay-Rheims, 1899" })).toHaveAttribute("href", "/en/read/drb");
     const spanish = container.querySelector("#lang-es") as HTMLElement;
     expect(within(spanish).getByRole("link", { name: "Nueva Sintetica, 1990" })).toHaveAttribute("href", "/en/read/nvbse");
     expect(within(spanish).getByRole("link", { name: "Libro del Pueblo de Dios, 2015" })).toHaveAttribute("href", "/en/read/blpd");
   });
 
+  it("theEditionsTitleAndNotesCarryItsLanguage", async () => {
+    getEditions.mockResolvedValue(shelf());
+    await home();
+    const link = screen.getByRole("link", { name: "Libro del Pueblo de Dios, 2015" });
+    expect(within(link).getByText("Libro del Pueblo de Dios")).toHaveAttribute("lang", "es");
+    const button = screen.getByRole("button", { name: "About Synthetic English, 1970" });
+    const back = document.getElementById(button.getAttribute("aria-controls")!)!;
+    expect(within(back).getByText("Synthetic English")).toHaveAttribute("lang", "en");
+    expect(within(back).getByText("First note line.").closest("[lang]")).toHaveAttribute("lang", "en");
+  });
+
+  it("anEditionWithoutALanguageIsShelvedLastUnderOtherLanguages", async () => {
+    getEditions.mockResolvedValue([...shelf(), ed("ZZZ", "", "Nameless Synthetic", "1800")]);
+    const { container } = await home();
+    const nav = screen.getByRole("navigation", { name: "Languages" });
+    const links = within(nav).getAllByRole("link");
+    expect(links.map((a) => a.textContent)).toEqual(["English", "Italian", "Latin", "Spanish", "Other languages"]);
+    const id = links.at(-1)!.getAttribute("href")!.slice(1);
+    const section = container.querySelector(`#${id}`) as HTMLElement;
+    expect(within(section).getByRole("heading", { level: 2 })).toHaveTextContent("Other languages");
+    const link = within(section).getByRole("link", { name: "Nameless Synthetic, 1800" });
+    expect(within(link).getByText("Nameless Synthetic")).not.toHaveAttribute("lang");
+  });
+
   it("aCopyrightedEditionHasTheDarkBinding", async () => {
     getEditions.mockResolvedValue(shelf());
     await home();
-    expect(screen.getByRole("link", { name: "Synthetic English, 1970" }).className).toMatch(/dark/);
-    expect(screen.getByRole("link", { name: "Douay-Rheims, 1899" }).className).not.toMatch(/dark/);
-    expect(screen.getByRole("link", { name: "Douay-Rheims, 1899" }).className).toMatch(/bright/);
+    expect(screen.getByRole("link", { name: "Synthetic English, 1970" })).toHaveAttribute("data-tone", "dark");
+    expect(screen.getByRole("link", { name: "Douay-Rheims, 1899" })).toHaveAttribute("data-tone", "bright");
   });
 
   it("theCopyrightButtonTurnsTheBookToItsBackCover", async () => {
@@ -136,6 +161,12 @@ describe("home", () => {
     expect(within(back).getByText("First note line.")).toBeInTheDocument();
     expect(within(back).getByText("Second note line.")).toBeInTheDocument();
     expect(within(back).getByText("1970")).toBeInTheDocument();
+    // The endpaper scrolls, so it is a focusable, named region.
+    const endpaper = within(back).getByRole("region", { name: "Colophon of Synthetic English, 1970" });
+    expect(endpaper).toHaveAttribute("tabindex", "0");
+    expect(button).not.toHaveAttribute("title");
+    // The button comes before the turned book in tab order, so Tab from it reaches the back cover.
+    expect(button.compareDocumentPosition(endpaper) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
     fireEvent.click(button);
     expect(button).toHaveAttribute("aria-expanded", "false");
   });

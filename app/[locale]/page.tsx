@@ -6,19 +6,24 @@ import { getEditions } from "@/lib/api";
 import type { Edition } from "@/lib/types";
 import BookCover from "@/components/BookCover";
 
-/** The language's name in the UI locale, capitalised ("italiano" → "Italiano"); the code if unknown. */
-function languageName(code: string, locale: string): string {
-  let name = code;
+/** The language's name in the UI locale, capitalised ("italiano" → "Italiano"); null for an empty or unknown code. */
+function languageName(code: string, locale: string): string | null {
+  if (!code) return null;
+  let name: string | undefined;
   try {
-    name = new Intl.DisplayNames([locale], { type: "language" }).of(code) ?? code;
+    name = new Intl.DisplayNames([locale], { type: "language", fallback: "none" }).of(code);
   } catch {
-    // An empty or malformed code: show it as it is.
+    // A malformed code.
   }
+  if (!name) return null;
   return name.charAt(0).toLocaleUpperCase(locale) + name.slice(1);
 }
 
+/** The shelf for editions whose language has no name: one section, shelved last. */
+const OTHER = "";
+
 /** A safe fragment id for a language section. */
-const sectionId = (code: string) => `lang-${code.replace(/[^A-Za-z0-9_-]/g, "") || "unknown"}`;
+const sectionId = (code: string) => `lang-${code.replace(/[^A-Za-z0-9_-]/g, "") || "other"}`;
 
 export default async function HomePage({ params }: { params: Promise<{ locale: string }> }) {
   const { locale } = await params;
@@ -27,16 +32,21 @@ export default async function HomePage({ params }: { params: Promise<{ locale: s
   const t = await getTranslations("Home");
   const editions = await getEditions();
 
+  const names = new Map<string, string | null>();
   const byLanguage = new Map<string, Edition[]>();
-  for (const e of editions) byLanguage.set(e.language, [...(byLanguage.get(e.language) ?? []), e]);
+  for (const e of editions) {
+    if (!names.has(e.language)) names.set(e.language, languageName(e.language, locale));
+    const code = names.get(e.language) ? e.language : OTHER;
+    byLanguage.set(code, [...(byLanguage.get(code) ?? []), e]);
+  }
   const groups = [...byLanguage.entries()]
     .map(([code, list]) => ({
       code,
       id: sectionId(code),
-      name: languageName(code, locale),
+      name: code === OTHER ? t("otherLanguage") : names.get(code)!,
       list: [...list].sort((a, b) => a.year.localeCompare(b.year, undefined, { numeric: true }) || a.fullname.localeCompare(b.fullname, locale)),
     }))
-    .sort((a, b) => a.name.localeCompare(b.name, locale));
+    .sort((a, b) => Number(a.code === OTHER) - Number(b.code === OTHER) || a.name.localeCompare(b.name, locale));
 
   return (
     <main className="mx-auto w-full max-w-5xl p-4 sm:p-6">

@@ -3,7 +3,7 @@ import { getTranslations, setRequestLocale } from "next-intl/server";
 import { notFound } from "next/navigation";
 import { routing } from "@/i18n/routing";
 import { Link } from "@/i18n/navigation";
-import { editionSlug } from "@/components/EditionCard";
+import { editionSlug } from "@/lib/slug";
 import { getEditions, getIndex, NotFound, slugFor } from "@/lib/api";
 import type { Book } from "@/lib/types";
 

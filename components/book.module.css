@@ -42,9 +42,10 @@
 .backHeading { color: #a3161b; font-size: 0.75rem; margin-bottom: 0.3rem; font-variant: small-caps; }
 .colophon dt { color: #a3161b; font-size: 0.6rem; letter-spacing: 0.06em; text-transform: uppercase; margin-top: 0.35rem; }
 .colophon dd p + p { margin-top: 0.3rem; }
-.labelRow { display: flex; align-items: center; gap: 0.35rem; }
+/* The label row comes first in the DOM (for tab order) but sits under the book. */
+.labelRow { display: flex; align-items: center; gap: 0.35rem; order: 2; }
 .about {
-  width: 1.3rem; height: 1.3rem; border-radius: 9999px; border: 1px solid #b8aca1; background: transparent;
+  width: 1.5rem; height: 1.5rem; border-radius: 9999px; border: 1px solid #7a6e65; background: transparent;
   color: #6b625b; font-family: Georgia, "Times New Roman", serif; font-size: 0.8rem; line-height: 1; cursor: pointer;
 }
 .about:hover, .about:focus-visible, .about[aria-expanded="true"] { border-color: #8b1a1f; color: #8b1a1f; }
@@ -52,7 +53,7 @@
 
 @media (prefers-color-scheme: dark) {
   .label { color: #b8aea4; }
-  .about { color: #b8aea4; border-color: #6b625b; }
+  .about { color: #b8aea4; border-color: #9a8f86; }
   .about:hover, .about:focus-visible, .about[aria-expanded="true"] { border-color: #e9c46a; color: #e9c46a; }
   .about:focus-visible { outline-color: #e9c46a; }
   /* The dark binding would vanish against a dark page: lift it a little and edge it. */

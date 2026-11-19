@@ -9,12 +9,12 @@
     "languages": "Languages",
     "bookName": "{name}, {year}",
     "aboutNamed": "About {name}",
-    "aboutEdition": "About this edition",
     "colophon": "Colophon of {name}",
     "year": "Year",
     "rights": "Rights",
     "publicDomain": "Public domain",
-    "notes": "Notes"
+    "notes": "Notes",
+    "otherLanguage": "Other languages"
   },
   "Auth": {
     "signIn": "Sign in",
