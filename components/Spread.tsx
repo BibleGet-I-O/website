@@ -29,17 +29,18 @@ export function Spread({ sides, rows, chapter, truncated = [], view = "side-by-s
   sides: SpreadSide[]; rows: ParallelRow[]; chapter: number; truncated?: boolean[]; view?: View;
 }) {
   const interlinear = view === "interlinear";
+  const cols = interlinear ? 1 : sides.length;
+  const compact = cols === 3;
   const cellsOf = (r: ParallelRow) => [r.a, ...r.others];
   const last = sides.map((_, s) => rows.reduce((at, r, i) => (cellsOf(r)[s] ? i : at), -1));
   const cell = (r: ParallelRow, i: number, s: number): ReactNode => {
     const v = cellsOf(r)[s];
     // Numbered against the main chapter: VGCL 9:22 beside NABRE Psalm 10 reads "9:22".
-    if (v) return <VerseLine row={v} chapter={chapter} headings={false} />;
+    if (v) return <VerseLine row={v} chapter={chapter} headings={false} compact={compact} />;
     if (truncated[s] && i > last[s]) return null;
     if (s > 0 && r.a && r.a.chapter !== chapter) return null;
     return <GapNote edition={sides[s].name} />;
   };
-  const cols = interlinear ? 1 : sides.length;
   // Three columns on a phone: a smaller text so the words fit.
   const size = cols === 3 ? "text-base sm:text-lg" : "text-lg";
   const gap = cols === 3 ? "gap-x-3 sm:gap-x-6" : "gap-x-4 sm:gap-x-8";
@@ -58,7 +59,7 @@ export function Spread({ sides, rows, chapter, truncated = [], view = "side-by-s
           <Fragment key={i}>
             {titles.some((h) => h.length > 0) && sides.map((side, s) => (
               <div key={`h${s}`} data-testid={`heading-${LETTERS[s]}`} lang={side.lang} className={muted(s)}>
-                <Headings titles={titles[s]} />
+                <Headings titles={titles[s]} compact={compact} />
               </div>
             ))}
             {sides.map((side, s) => {

@@ -53,6 +53,8 @@ describe("Spread", () => {
     expect(screen.getAllByTestId("column-name").map((e) => e.textContent)).toEqual([A.name, B.name, C.name]);
     const order = Array.from(spread.querySelectorAll("[data-testid^=cell-]")).map((e) => e.getAttribute("data-testid"));
     expect(order).toEqual(["cell-a", "cell-b", "cell-c"]);
+    // A narrower number margin on a phone, the usual one from sm up.
+    expect(screen.getAllByTestId("verse-line")[0].firstElementChild).toHaveClass("w-4", "sm:w-8");
   });
 
   it("interlinearStacksEachComparedVerseUnderTheMainOneWithItsSigla", () => {
