@@ -8,8 +8,8 @@
 2. `npm ci`, typecheck, tests, lint, then `next build` (standalone output). Any `.env*` file is removed first and the bundle is checked for one afterwards: **no configuration or secret is baked into the build**.
 3. Adds `.next/static` and `public` to `.next/standalone`, writes `.deploy-manifest.json`, and tars the result.
 4. Uploads the tarball over `scp` to the chrooted `/tmp`, using the pinned host key (`StrictHostKeyChecking=yes`).
-5. Over `ssh`: extracts into `VPS_APP_DIR`, clears `.next/server/route-cache`, removes the tarball, and touches `tmp/restart.txt` last (Passenger restart).
-6. Smoke test: `GET $SITE_URL/en` returns 200 and, on staging, carries `X-Robots-Tag: noindex`.
+5. Over `ssh`: extracts into `VPS_APP_DIR`, removes `public/` first, then clears `.next/cache/fetch-cache` and `.next/server/route-cache`, touches `tmp/restart.txt` (Passenger restart), and removes the tarball last so a retry can re-extract.
+6. Smoke test: `GET $SITE_URL/en` returns 200 (no redirect followed) and, on staging, carries `X-Robots-Tag: noindex`.
 
 ## Repository secrets and variables
 
@@ -24,7 +24,7 @@
 
 ## Server side (Plesk, already configured)
 
-Subdomain `staging.bibleget.io` of the `bibleget.io` subscription; Node.js version equal to `.nvmrc`; application root `/staging.bibleget.io`, document root `/staging.bibleget.io/public`, startup file `server.js`, mode production. All runtime environment variables (`AUTH_*`, `ZITADEL_PROJECT_ID`, `BIBLEGET_API_URL`, `BIBLEGET_READ_KEY`, `BIBLEGET_READER_KEY`, `SITE_NOINDEX=1`) are set in the Plesk Node.js panel, never in the repository or the bundle.
+Subdomain `staging.bibleget.io` of the `bibleget.io` subscription; Node.js major version the same as `.nvmrc` (24); application root `/staging.bibleget.io`, document root `/staging.bibleget.io/public`, startup file `server.js`, mode production. All runtime environment variables (`AUTH_*`, `ZITADEL_PROJECT_ID`, `BIBLEGET_API_URL`, `BIBLEGET_READ_KEY`, `BIBLEGET_READER_KEY`, `SITE_NOINDEX=1`) are set in the Plesk Node.js panel, never in the repository or the bundle.
 
 The chroot needs `tar`, `gzip`, `rm`, `mkdir` and `touch`. The runner is pinned to `ubuntu-24.04` to match the VPS glibc for native addons.
 

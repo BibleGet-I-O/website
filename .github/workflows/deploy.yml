@@ -213,7 +213,10 @@ jobs:
           # Extraction is over the previous release (the Plesk application root
           # is fixed), so stale files linger harmlessly. The route cache is the
           # exception: it outlives the build that wrote it, so it is cleared on
-          # every deploy. restart.txt is touched last.
+          # every deploy, as is the fetch cache (visitor fetches are cached for an hour,
+          # so a new build must not serve stale API data) and public/ (deleted public
+          # files must not linger). restart.txt is touched last, the tarball removed
+          # after it so a retry can re-extract.
           for attempt in 1 2 3; do
             echo "SSH attempt $attempt..."
             if ssh -i ~/.ssh/deploy_key \
@@ -221,11 +224,13 @@ jobs:
               -o ConnectTimeout=10 -o ServerAliveInterval=15 -o ServerAliveCountMax=2 \
               "${VPS_USERNAME}@${VPS_HOST}" \
               "set -e; \
+               rm -rf ${REMOTE_APP_DIR}/public && \
                tar -xzf /tmp/nextjs-bundle-${BUNDLE_TAG}.tar.gz -C ${REMOTE_APP_DIR} && \
+               rm -rf ${REMOTE_APP_DIR}/.next/cache/fetch-cache && \
                rm -rf ${REMOTE_APP_DIR}/.next/server/route-cache && \
-               rm -f /tmp/nextjs-bundle-${BUNDLE_TAG}.tar.gz && \
                mkdir -p ${REMOTE_APP_DIR}/tmp && \
-               touch ${REMOTE_APP_DIR}/tmp/restart.txt"; then
+               touch ${REMOTE_APP_DIR}/tmp/restart.txt && \
+               rm -f /tmp/nextjs-bundle-${BUNDLE_TAG}.tar.gz"; then
               echo "SSH succeeded on attempt $attempt"
               exit 0
             fi
@@ -240,19 +245,22 @@ jobs:
           SITE_URL: ${{ vars.SITE_URL }}
         run: |
           set -euo pipefail
+          SITE_URL="${SITE_URL%/}"
           # Passenger starts the app lazily on the first request after
           # restart.txt changes; a cold Next boot is not instant, so retry.
+          # No -L: a redirect on /en is a failure.
           echo "Smoke testing $SITE_URL/en"
           HDR_FILE=$(mktemp)
           for attempt in 1 2 3 4 5 6; do
-            if curl -fsS -o /dev/null -D "$HDR_FILE" \
-              --connect-timeout 10 --max-time 45 "$SITE_URL/en"; then
+            STATUS=$(curl -sS -o /dev/null -D "$HDR_FILE" -w '%{http_code}' \
+              --connect-timeout 10 --max-time 45 "$SITE_URL/en" || echo "000")
+            if [ "$STATUS" = "200" ]; then
               echo "GET /en: HTTP 200"
               break
             fi
-            echo "Attempt $attempt failed"
+            echo "Attempt $attempt: HTTP $STATUS"
             if [ "$attempt" -eq 6 ]; then
-              echo "::error::GET $SITE_URL/en did not return 200. The Passenger application did not come up; check the Plesk Node.js panel and logs."
+              echo "::error::GET $SITE_URL/en returned $STATUS (expected 200). The Passenger application did not come up; check the Plesk Node.js panel and logs."
               exit 1
             fi
             sleep 8
@@ -266,3 +274,7 @@ jobs:
             fi
             echo "X-Robots-Tag: noindex present"
           fi
+
+      - name: Remove the SSH key
+        if: always()
+        run: rm -f ~/.ssh/deploy_key
