@@ -1,6 +1,26 @@
 @import "tailwindcss";
 
 /*
+ * Dark mode: the reader's choice on <html data-theme> (from the theme cookie), or the system's when there
+ * is none. Every dark: utility goes through this variant.
+ */
+@custom-variant dark {
+  &:where([data-theme="dark"], [data-theme="dark"] *) {
+    @slot;
+  }
+  @media (prefers-color-scheme: dark) {
+    &:where(:root:not([data-theme="light"]), :root:not([data-theme="light"]) *) {
+      @slot;
+    }
+  }
+}
+
+/* Native controls and scrollbars follow the same choice. */
+:root { color-scheme: light dark; }
+:root[data-theme="light"] { color-scheme: light; }
+:root[data-theme="dark"] { color-scheme: dark; }
+
+/*
  * Reader: the edition's layout tags, rendered by lib/formatted.tsx. Ported from the WordPress plugin
  * (bibleget-wordpress includes/BibleGet_Customize.php `span.pof` ... and js/shortcode.js), with em indents
  * so narrow phone columns keep them.
@@ -56,8 +76,8 @@
     line-height: 1.5;
     vertical-align: 0.1em;
   }
-  @media (prefers-color-scheme: dark) {
-    .bg-speaker { background-color: var(--color-slate-800); color: var(--color-slate-300); }
+  .bg-speaker {
+    @variant dark { background-color: var(--color-slate-800); color: var(--color-slate-300); }
   }
 
   /*

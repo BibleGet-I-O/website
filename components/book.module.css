@@ -56,7 +56,8 @@
 .about:hover, .about:focus-visible, .about[aria-expanded="true"] { border-color: #8b1a1f; color: #8b1a1f; }
 .about:focus-visible { outline: 2px solid #8b1a1f; outline-offset: 2px; }
 
-@media (prefers-color-scheme: dark) {
+/* Dark mode, as the dark: variant in globals.css: the reader's choice on <html data-theme>, else the system's. */
+:global(:root[data-theme="dark"]) {
   .label { color: #b8aea4; }
   .about { color: #b8aea4; border-color: #9a8f86; }
   .about:hover, .about:focus-visible, .about[aria-expanded="true"] { border-color: #e9c46a; color: #e9c46a; }
@@ -64,6 +65,17 @@
   /* The dark binding would vanish against a dark page: lift it a little and edge it. */
   .dark { background: linear-gradient(90deg, #2b1d16 0 10px, #4a372b 10px); box-shadow: 0 0 0 1px #6b5444, 2px 3px 7px rgba(0, 0, 0, 0.6); }
   .back.dark { background: linear-gradient(270deg, #2b1d16 0 10px, #4a372b 10px); }
+}
+@media (prefers-color-scheme: dark) {
+  :global(:root:not([data-theme="light"])) {
+    .label { color: #b8aea4; }
+    .about { color: #b8aea4; border-color: #9a8f86; }
+    .about:hover, .about:focus-visible, .about[aria-expanded="true"] { border-color: #e9c46a; color: #e9c46a; }
+    .about:focus-visible { outline-color: #e9c46a; }
+    /* The dark binding would vanish against a dark page: lift it a little and edge it. */
+    .dark { background: linear-gradient(90deg, #2b1d16 0 10px, #4a372b 10px); box-shadow: 0 0 0 1px #6b5444, 2px 3px 7px rgba(0, 0, 0, 0.6); }
+    .back.dark { background: linear-gradient(270deg, #2b1d16 0 10px, #4a372b 10px); }
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {

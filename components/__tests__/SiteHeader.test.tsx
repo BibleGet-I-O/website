@@ -9,7 +9,7 @@ describe("SiteHeader", () => {
   it("linksHomeWithTheBibleGetLogo", () => {
     render(
       <NextIntlClientProvider locale="en" messages={en}>
-        <SiteHeader auth={<span>auth</span>} />
+        <SiteHeader auth={<span>auth</span>} theme="system" />
       </NextIntlClientProvider>,
     );
     const home = screen.getByRole("link", { name: "BibleGet" });
@@ -19,5 +19,6 @@ describe("SiteHeader", () => {
     // The link text names it; the logo is decorative.
     expect(logo).toHaveAttribute("alt", "");
     expect(screen.getByRole("banner")).toHaveTextContent("auth");
+    expect(screen.getByRole("combobox", { name: "Theme" })).toHaveValue("system");
   });
 });

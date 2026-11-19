@@ -7,19 +7,30 @@ const labelClass = "w-8 shrink-0 pt-1 text-right font-sans text-xs text-slate-50
 const midHeadingClass = (j: number) =>
   j === 0 ? "mt-4 mb-1 block font-semibold" : "mb-1 block text-base font-semibold italic";
 
+/** The section headings printed before a verse (none when they fall inside it, at `titlePosition`). */
+export function headingsBefore(row: VerseRow | undefined): string[] {
+  return row && row.titlePosition == null ? row.titles : [];
+}
+
+/** Section headings set level with the verse text, past the number's margin. */
+export function Headings({ titles }: { titles: string[] }) {
+  return titles.map((t, j) => (
+    <h2 key={j} className={j === 0 ? "mt-4 mb-1 ml-10 font-semibold" : "mb-1 ml-10 text-base font-semibold italic"}>
+      {t}
+    </h2>
+  ));
+}
+
 /**
  * One verse on its own line, its printed number in the margin and its section headings above it (or inside
  * it, at `titlePosition`). Poetic lines keep their relative indents but start level with the number.
+ * `headings={false}` leaves the headings before the verse to the caller (the interlinear gives them a row).
  */
-export function VerseLine({ row, chapter }: { row: VerseRow; chapter: number }) {
+export function VerseLine({ row, chapter, headings = true }: { row: VerseRow; chapter: number; headings?: boolean }) {
   const mid = row.titlePosition != null;
   return (
     <>
-      {!mid && row.titles.map((t, j) => (
-        <h2 key={j} className={j === 0 ? "mt-4 mb-1 ml-10 font-semibold" : "mb-1 ml-10 text-base font-semibold italic"}>
-          {t}
-        </h2>
-      ))}
+      {headings && <Headings titles={headingsBefore(row)} />}
       <p data-testid="verse-line" className="flex gap-2">
         <span className={labelClass}>{printedLabel(row, chapter)}</span>
         <span className="bg-text bg-compact min-w-0">
