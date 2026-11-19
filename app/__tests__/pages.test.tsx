@@ -165,7 +165,9 @@ describe("chapter", () => {
     expect(getChapter).toHaveBeenCalledWith(expect.objectContaining({ sigla: "DRB", bookAbbrev: "Wis", chapter: 11, access: "visitor" }));
     expect(getVerses).toHaveBeenCalledWith(expect.objectContaining({ sigla: "DRB", bookAbbrev: "Wis", chapter: 12, verse: 1 }));
     expect(screen.getByRole("heading", { level: 1, name: "Wisdom 11" })).toBeInTheDocument();
-    expect(screen.getByText("12:1")).toBeInTheDocument();
+    // In both columns: the second edition's own Wisdom 12:1 is fetched to pair with it.
+    expect(getVerses).toHaveBeenCalledWith(expect.objectContaining({ sigla: "NABRE", chapter: 12, verse: 1 }));
+    expect(screen.getAllByText("12:1")).toHaveLength(2);
     expect(screen.queryByText(/Sign in to read/)).toBeNull();
     expect(screen.getByRole("link", { name: /Next chapter/ })).toHaveAttribute("href", "/en/read/drb/wisdom/12?with=NABRE");
   });
