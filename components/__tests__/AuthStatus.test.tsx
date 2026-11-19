@@ -5,11 +5,16 @@ import en from "@/messages/en.json";
 
 const auth = vi.fn();
 vi.mock("@/auth", () => ({ auth: () => auth(), signIn: vi.fn(), signOut: vi.fn() }));
+let requestHeaders = new Headers();
+vi.mock("next/headers", () => ({ headers: async () => requestHeaders }));
 
 const { AuthStatus } = await import("@/components/AuthStatus");
 const { safeRedirect } = await import("@/components/SignInButton");
 
-beforeEach(() => auth.mockReset());
+beforeEach(() => {
+  auth.mockReset();
+  requestHeaders = new Headers();
+});
 
 describe("AuthStatus", () => {
   it("shows a sign-in button to a visitor", async () => {
@@ -30,6 +35,27 @@ describe("AuthStatus", () => {
     auth.mockResolvedValue({ user: { email: "a@b.c" }, expires: "2099", emailVerified: true, admin: false, error: "RefreshAccessTokenError" });
     render(await AuthStatus());
     expect(screen.getByRole("button", { name: "Sign in" })).toBeInTheDocument();
+  });
+});
+
+describe("AuthStatus sign-in return target", () => {
+  const returnTo = (container: HTMLElement) => container.querySelector<HTMLInputElement>('input[name="redirectTo"]')?.value;
+
+  it("returns to the current page and query that the proxy forwarded", async () => {
+    auth.mockResolvedValue(null);
+    requestHeaders = new Headers({ "x-bibleget-return-to": "/en/read/NABRE/john/3?with=VGCL" });
+    const { container } = render(await AuthStatus());
+    expect(returnTo(container)).toBe("/en/read/NABRE/john/3?with=VGCL");
+  });
+
+  it("falls back to the locale's home page without one, or for an unsafe one", async () => {
+    auth.mockResolvedValue(null);
+    const { container, unmount } = render(await AuthStatus());
+    expect(returnTo(container)).toBe("/en");
+    unmount();
+    requestHeaders = new Headers({ "x-bibleget-return-to": "//evil.test/x" });
+    const second = render(await AuthStatus());
+    expect(returnTo(second.container)).toBe("/en");
   });
 });
 

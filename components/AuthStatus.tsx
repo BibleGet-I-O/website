@@ -1,8 +1,10 @@
+import { headers } from "next/headers";
 import { getLocale, getTranslations } from "next-intl/server";
 import { unstable_rethrow } from "next/navigation";
 import { auth, signOut } from "@/auth";
 import { Link } from "@/i18n/navigation";
 import { SignInButton } from "@/components/SignInButton";
+import { RETURN_TO_HEADER } from "@/lib/return-to";
 
 const buttonClass = "rounded border border-slate-300 px-3 py-1 text-sm dark:border-slate-700";
 
@@ -20,7 +22,11 @@ export async function AuthStatus() {
   }
 
   // Awaited, not <SignInButton />: one async component, so it also renders outside the RSC runtime (tests).
-  if (!session?.user || session.error) return SignInButton({});
+  if (!session?.user || session.error) {
+    // Back to this page after sign-in; SignInButton falls back to the home page for anything unsafe.
+    const redirectTo = (await headers()).get(RETURN_TO_HEADER) ?? undefined;
+    return SignInButton({ redirectTo });
+  }
 
   return (
     <div className="flex items-center gap-3 text-sm">
