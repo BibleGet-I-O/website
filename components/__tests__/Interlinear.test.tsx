@@ -15,16 +15,23 @@ const joel: Book = { bookNum: 32, name: "Joel", abbrev: "Joel", chapters: 3, ver
 const base = {
   heading: "Joel 3",
   main: { sigla: "NABRE", name: "New American Bible" },
-  other: { sigla: "VGCL", name: "Vulgata Clementina" },
   rows: [row(3, 1), row(3, 2)],
   bookNum: 32,
   bookName: "Joel",
   chapter: 3,
   truncated: false,
+  view: "side-by-side" as const,
   redirectTo: "/en/read/nabre/joel/3?with=VGCL",
 };
-const show = async (props: Partial<Parameters<typeof Interlinear>[0]>) =>
-  render(<NextIntlClientProvider locale="en" messages={en}>{await Interlinear({ ...base, second: { mode: "unavailable" }, ...props })}</NextIntlClientProvider>);
+type Props = Parameters<typeof Interlinear>[0];
+type Second = Props["others"][number]["second"];
+const VGCL = { sigla: "VGCL", name: "Vulgata Clementina" };
+const DRB = { sigla: "DRB", name: "Douay-Rheims" };
+const render2 = async (props: Partial<Props>) =>
+  render(<NextIntlClientProvider locale="en" messages={en}>{await Interlinear({ ...base, others: [], ...props })}</NextIntlClientProvider>);
+/** One compared edition (VGCL), as before the third. */
+const show = async ({ second, secondNotice, ...props }: Partial<Props> & { second: Second; secondNotice?: Props["others"][number]["notice"] }) =>
+  render2({ ...props, others: [{ side: VGCL, second, notice: secondNotice }] });
 
 describe("Interlinear", () => {
   it("alignedShowsTheSpread", async () => {
@@ -76,5 +83,67 @@ describe("Interlinear", () => {
     const note = screen.getByRole("note");
     expect(note).toHaveTextContent("Vulgata Clementina");
     expect(note).toHaveTextContent(/Sign in to read the whole chapter/);
+  });
+
+  it("alignedSecondStaysInTheSpreadWhileAWholeChapterThirdGoesBelow", async () => {
+    await render2({
+      others: [
+        { side: DRB, second: { mode: "aligned", rows: [row(3, 1), row(3, 2)], truncated: false, book: joel } },
+        { side: VGCL, second: { mode: "whole-chapter", rows: [row(3, 1), row(3, 2), row(3, 3)], truncated: false, book: joel } },
+      ],
+    });
+    expect(screen.getAllByTestId("column-name").map((e) => e.textContent)).toEqual(["New American Bible", "Douay-Rheims"]);
+    expect(screen.getByRole("note")).toHaveTextContent(/New American Bible and Vulgata Clementina divide the chapters/);
+    expect(screen.getAllByTestId("verse-line").length).toBeGreaterThanOrEqual(3);
+  });
+
+  it("twoAlignedComparedEditionsMakeThreeColumns", async () => {
+    await render2({
+      others: [
+        { side: DRB, second: { mode: "aligned", rows: [row(3, 1), row(3, 2)], truncated: false, book: joel } },
+        { side: VGCL, second: { mode: "aligned", rows: [row(3, 1), row(3, 2)], truncated: false, book: joel } },
+      ],
+    });
+    expect(screen.getByTestId("spread")).toHaveClass("grid-cols-3");
+    expect(screen.queryByRole("note")).toBeNull();
+  });
+
+  it("theInterlinearViewReachesTheSpread", async () => {
+    await render2({ view: "interlinear", others: [{ side: DRB, second: { mode: "aligned", rows: [row(3, 1)], truncated: false, book: joel } }] });
+    expect(screen.getByTestId("spread")).toHaveClass("grid-cols-1");
+  });
+
+  it("oneUnavailableOfTwoKeepsTheSpreadOfTheOther", async () => {
+    await render2({
+      others: [
+        { side: DRB, second: { mode: "unavailable" } },
+        { side: VGCL, second: { mode: "aligned", rows: [row(3, 1), row(3, 2)], truncated: false, book: joel } },
+      ],
+    });
+    expect(screen.getAllByTestId("column-name").map((e) => e.textContent)).toEqual(["New American Bible", "Vulgata Clementina"]);
+    expect(screen.getByRole("note")).toHaveTextContent(/Douay-Rheims could not be loaded/);
+  });
+
+  it("allUnavailableShowsTheBookViewWithANotePerEdition", async () => {
+    await render2({ others: [{ side: DRB, second: { mode: "unavailable" } }, { side: VGCL, second: { mode: "unavailable" } }] });
+    expect(screen.queryByTestId("spread")).toBeNull();
+    expect(screen.queryAllByTestId("verse-line")).toHaveLength(0);
+    expect(screen.getAllByRole("note").map((n) => n.textContent)).toEqual([
+      expect.stringMatching(/Douay-Rheims could not be loaded/),
+      expect.stringMatching(/Vulgata Clementina could not be loaded/),
+    ]);
+  });
+
+  it("eachCappedComparedEditionShowsItsNotice", async () => {
+    await render2({
+      others: [
+        { side: DRB, notice: "signIn", second: { mode: "aligned", rows: [row(3, 1)], truncated: true, book: joel } },
+        { side: VGCL, notice: "signIn", second: { mode: "aligned", rows: [row(3, 1)], truncated: true, book: joel } },
+      ],
+    });
+    const notes = screen.getAllByRole("note");
+    expect(notes).toHaveLength(2);
+    expect(notes[0]).toHaveTextContent("Douay-Rheims");
+    expect(notes[1]).toHaveTextContent("Vulgata Clementina");
   });
 });
