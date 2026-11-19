@@ -9,7 +9,8 @@
   },
   "Auth": {
     "signIn": "Sign in",
-    "signOut": "Sign out"
+    "signOut": "Sign out",
+    "admin": "Admin"
   },
   "Books": {
     "ot": "Old Testament",
@@ -54,5 +55,21 @@
     "unavailable": "The Bible service is unavailable, try again.",
     "generic": "This page could not be shown.",
     "retry": "Try again"
+  },
+  "Admin": {
+    "title": "Editions",
+    "intro": "Choose which editions signed-in readers may read in full.",
+    "edition": "Edition",
+    "year": "Year",
+    "copyright": "Copyright",
+    "copyrighted": "Copyrighted",
+    "publicDomain": "Public domain",
+    "fullText": "Full text",
+    "fullTextFor": "Full text for {sigla}",
+    "signInAgain": "Your session has expired. Sign in again to manage editions.",
+    "listFailed": "The editions could not be loaded.",
+    "forbidden": "You are not allowed to change this.",
+    "switchFailed": "The change could not be saved. Try again.",
+    "back": "Home"
   }
 }

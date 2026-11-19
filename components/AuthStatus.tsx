@@ -1,6 +1,7 @@
 import { getLocale, getTranslations } from "next-intl/server";
 import { unstable_rethrow } from "next/navigation";
 import { auth, signOut } from "@/auth";
+import { Link } from "@/i18n/navigation";
 import { SignInButton } from "@/components/SignInButton";
 
 const buttonClass = "rounded border border-slate-300 px-3 py-1 text-sm dark:border-slate-700";
@@ -23,6 +24,11 @@ export async function AuthStatus() {
 
   return (
     <div className="flex items-center gap-3 text-sm">
+      {session.admin === true && (
+        <Link href="/admin/editions" className="underline">
+          {t("admin")}
+        </Link>
+      )}
       <span>{session.user.email ?? session.user.name}</span>
       <form
         action={async () => {

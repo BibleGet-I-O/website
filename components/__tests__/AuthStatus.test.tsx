@@ -1,5 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { render, screen } from "@testing-library/react";
+import { NextIntlClientProvider } from "next-intl";
+import en from "@/messages/en.json";
 
 const auth = vi.fn();
 vi.mock("@/auth", () => ({ auth: () => auth(), signIn: vi.fn(), signOut: vi.fn() }));
@@ -37,5 +39,22 @@ describe("safeRedirect", () => {
     for (const bad of ["https://evil.test/", "//evil.test", "/\\evil.test", "", undefined, null]) {
       expect(safeRedirect(bad, "/en")).toBe("/en");
     }
+  });
+});
+
+describe("AuthStatus admin link", () => {
+  it("shows Admin only to an admin", async () => {
+    auth.mockResolvedValue({ user: { email: "a@b.c" }, expires: "2099", emailVerified: true, admin: true });
+    const wrap = (ui: React.ReactNode) => (
+      <NextIntlClientProvider locale="en" messages={en}>
+        {ui}
+      </NextIntlClientProvider>
+    );
+    const { unmount } = render(wrap(await AuthStatus()));
+    expect(screen.getByRole("link", { name: "Admin" })).toHaveAttribute("href", expect.stringContaining("/admin/editions"));
+    unmount();
+    auth.mockResolvedValue({ user: { email: "a@b.c" }, expires: "2099", emailVerified: true, admin: false });
+    render(wrap(await AuthStatus()));
+    expect(screen.queryByRole("link", { name: "Admin" })).toBeNull();
   });
 });
