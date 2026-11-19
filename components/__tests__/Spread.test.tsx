@@ -18,35 +18,76 @@ const row = (chapter: number, verse: number, psalmHebrew?: string): VerseRow => 
 });
 const A = { sigla: "NABRE", name: "New American Bible" };
 const B = { sigla: "CEI2008", name: "Bibbia CEI 2008" };
+const C = { sigla: "VGCL", name: "Vulgata Clementina" };
 
 describe("Spread", () => {
   it("missingVerseLeavesAGapNote", () => {
     // NABRE Ps 2 has 11 verses where CEI2008 has 12 (synthetic text).
     const a = Array.from({ length: 11 }, (_, i) => row(2, i + 1, `2:${i + 1}`));
     const b = Array.from({ length: 12 }, (_, i) => row(2, i + 1, `2:${i + 1}`));
-    const rows = buildRows(a, b, PSALMS);
-    expect(rows[11]).toMatchObject({ key: "2:12", b: { verse: 12 } });
+    const rows = buildRows(a, [b], PSALMS);
+    expect(rows[11]).toMatchObject({ key: "2:12", others: [{ verse: 12 }] });
     expect(rows[11].a).toBeUndefined();
-    render(wrap(<Spread a={A} b={B} rows={rows} chapter={2} />));
+    render(wrap(<Spread sides={[A, B]} rows={rows} chapter={2} />));
     const cells = screen.getAllByTestId("cell-a");
     expect(within(cells[11]).getByText(/Not in New American Bible/)).toBeInTheDocument();
     expect(screen.getAllByText(/Not in/)).toHaveLength(1);
   });
 
-  it("layoutIsSideBySideFromMdOrInLandscapeAndStackedInPortrait", () => {
-    const rows = buildRows([row(5, 1)], [row(5, 1)], 47);
-    render(wrap(<Spread a={A} b={B} rows={rows} chapter={5} />));
+  it("twoEditionsSideBySideHaveTwoColumnsAtEveryWidth", () => {
+    const rows = buildRows([row(5, 1)], [[row(5, 1)]], 47);
+    render(wrap(<Spread sides={[A, B]} rows={rows} chapter={5} />));
     const spread = screen.getByTestId("spread");
-    for (const c of ["grid", "grid-cols-1", "md:grid-cols-2", "landscape:grid-cols-2"]) expect(spread).toHaveClass(c);
-    // Each verse of the second edition follows its counterpart, so a single column stacks it under it.
+    expect(spread).toHaveClass("grid", "grid-cols-2");
+    expect(spread.className).not.toMatch(/(md|landscape):grid-cols/);
+    expect(screen.getAllByTestId("column-name").map((e) => e.textContent)).toEqual([A.name, B.name]);
+    for (const e of screen.getAllByTestId("column-name")) expect(e.className).not.toMatch(/hidden/);
+    expect(screen.queryByTestId("sigla")).toBeNull();
+  });
+
+  it("threeEditionsSideBySideHaveThreeColumnsAtEveryWidth", () => {
+    const rows = buildRows([row(5, 1)], [[row(5, 1)], [row(5, 1)]], 47);
+    render(wrap(<Spread sides={[A, B, C]} rows={rows} chapter={5} />));
+    const spread = screen.getByTestId("spread");
+    expect(spread).toHaveClass("grid", "grid-cols-3");
+    expect(screen.getAllByTestId("column-name").map((e) => e.textContent)).toEqual([A.name, B.name, C.name]);
     const order = Array.from(spread.querySelectorAll("[data-testid^=cell-]")).map((e) => e.getAttribute("data-testid"));
-    expect(order).toEqual(["cell-a", "cell-b"]);
+    expect(order).toEqual(["cell-a", "cell-b", "cell-c"]);
+    // A narrower number margin on a phone, the usual one from sm up.
+    expect(screen.getAllByTestId("verse-line")[0].firstElementChild).toHaveClass("w-4", "sm:w-8");
+  });
+
+  it("interlinearStacksEachComparedVerseUnderTheMainOneWithItsSigla", () => {
+    const rows = buildRows([row(5, 1), row(5, 2)], [[row(5, 1), row(5, 2)], [row(5, 1), row(5, 2)]], 47);
+    render(wrap(<Spread sides={[A, B, C]} rows={rows} chapter={5} view="interlinear" />));
+    const spread = screen.getByTestId("spread");
+    expect(spread).toHaveClass("grid", "grid-cols-1");
+    expect(spread.className).not.toMatch(/grid-cols-[23]/);
+    expect(screen.queryByTestId("column-name")).toBeNull();
+    const order = Array.from(spread.querySelectorAll("[data-testid^=cell-]")).map((e) => e.getAttribute("data-testid"));
+    expect(order).toEqual(["cell-a", "cell-b", "cell-c", "cell-a", "cell-b", "cell-c"]);
+    expect(screen.getAllByTestId("sigla").map((e) => e.textContent)).toEqual(["CEI2008", "VGCL", "CEI2008", "VGCL"]);
+    expect(within(screen.getAllByTestId("cell-a")[0]).queryByTestId("sigla")).toBeNull();
+  });
+
+  it("aThirdEditionLackingAVerseGetsItsOwnGapNote", () => {
+    const rows = buildRows([row(5, 1), row(5, 2)], [[row(5, 1), row(5, 2)], [row(5, 1)]], 47);
+    render(wrap(<Spread sides={[A, B, C]} rows={rows} chapter={5} />));
+    expect(within(screen.getAllByTestId("cell-c")[1]).getByText(/Not in Vulgata Clementina/)).toBeInTheDocument();
+    expect(screen.getAllByText(/Not in/)).toHaveLength(1);
+  });
+
+  it("aCappedThirdEditionLeavesTheRestWithoutNotes", () => {
+    const four = Array.from({ length: 4 }, (_, i) => row(5, i + 1));
+    const rows = buildRows(four, [four, four.slice(0, 2)], 47);
+    render(wrap(<Spread sides={[A, B, C]} rows={rows} chapter={5} truncated={[false, false, true]} />));
+    expect(screen.queryByText(/Not in/)).toBeNull();
   });
 
   it("aCappedMainEditionLeavesTheRestOfTheSecondWithoutNotes", () => {
     const a = Array.from({ length: 2 }, (_, i) => row(5, i + 1));
     const b = Array.from({ length: 4 }, (_, i) => row(5, i + 1));
-    render(wrap(<Spread a={A} b={B} rows={buildRows(a, b, 47)} chapter={5} aTruncated />));
+    render(wrap(<Spread sides={[A, B]} rows={buildRows(a, [b], 47)} chapter={5} truncated={[true, false]} />));
     expect(screen.queryByText(/Not in/)).toBeNull();
     expect(screen.getByText("Text 5:4.")).toBeInTheDocument();
   });
@@ -54,7 +95,7 @@ describe("Spread", () => {
   it("aCappedSecondEditionLeavesTheRestOfTheMainWithoutNotes", () => {
     const a = Array.from({ length: 4 }, (_, i) => row(5, i + 1));
     const b = Array.from({ length: 2 }, (_, i) => row(5, i + 1));
-    render(wrap(<Spread a={A} b={B} rows={buildRows(a, b, 47)} chapter={5} bTruncated />));
+    render(wrap(<Spread sides={[A, B]} rows={buildRows(a, [b], 47)} chapter={5} truncated={[false, true]} />));
     expect(screen.queryByText(/Not in/)).toBeNull();
     expect(screen.getByText("Text 5:4.")).toBeInTheDocument();
   });
@@ -76,8 +117,8 @@ describe("Spread", () => {
     expect(line.querySelector(".bg-pof .bg-sm")?.textContent).toBe("ORD");
     expect(line.querySelector(".bg-pol")).not.toBeNull();
 
-    const rows = buildRows([poetic(27, 1)], [poetic(27, 1)], PSALMS);
-    const { container } = render(wrap(<Spread a={A} b={B} rows={rows} chapter={27} />));
+    const rows = buildRows([poetic(27, 1)], [[poetic(27, 1)]], PSALMS);
+    const { container } = render(wrap(<Spread sides={[A, B]} rows={rows} chapter={27} />));
     for (const id of ["cell-a", "cell-b"]) {
       const cell = within(container).getByTestId(id);
       expect(cell.textContent).not.toContain("<pof>");
@@ -95,7 +136,7 @@ describe("Spread", () => {
     // CEI2008 Gn 1 opens with two headings; the Nova Vulgata has none (synthetic text).
     const a = [row(1, 1), row(1, 2)];
     const b = [{ ...row(1, 1), titles: ["Creazione", "La creazione"] }, row(1, 2)];
-    render(wrap(<Spread a={A} b={B} rows={buildRows(a, b, 1)} chapter={1} />));
+    render(wrap(<Spread sides={[A, B]} rows={buildRows(a, [b], 1)} chapter={1} />));
     const order = Array.from(screen.getByTestId("spread").querySelectorAll("[data-testid^=cell-],[data-testid^=heading-]"))
       .map((e) => e.getAttribute("data-testid"));
     // The headings row comes first, then verse 1 of both editions side by side.
@@ -107,7 +148,18 @@ describe("Spread", () => {
   });
 
   it("rowsWithoutHeadingsGetNoHeadingRow", () => {
-    render(wrap(<Spread a={A} b={B} rows={buildRows([row(5, 1)], [row(5, 1)], 47)} chapter={5} />));
+    render(wrap(<Spread sides={[A, B]} rows={buildRows([row(5, 1)], [[row(5, 1)]], 47)} chapter={5} />));
     expect(screen.queryByTestId("heading-a")).toBeNull();
+  });
+
+  it("interlinearPutsEachEditionsHeadingsWithItsOwnVerseTagged", () => {
+    // Only the compared edition has a heading at 1:1 (synthetic text).
+    const rows = buildRows([row(1, 1)], [[{ ...row(1, 1), titles: ["Titolo"] }]], 1);
+    render(wrap(<Spread sides={[A, B]} rows={rows} chapter={1} view="interlinear" />));
+    expect(screen.queryByTestId("heading-a")).toBeNull();
+    const cellB = screen.getByTestId("cell-b");
+    const kids = Array.from(cellB.querySelectorAll("[data-testid=sigla], h2, [data-testid=verse-line]")).map((e) => e.tagName === "H2" ? "h2" : e.getAttribute("data-testid"));
+    expect(kids).toEqual(["sigla", "h2", "verse-line"]);
+    expect(within(screen.getByTestId("cell-a")).queryByRole("heading")).toBeNull();
   });
 });

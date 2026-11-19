@@ -54,7 +54,16 @@
     "secondNoBook": "{second} ne contient pas {book}.",
     "dividedNoChapter": "{main} et {second} découpent différemment les chapitres de ce livre : {second} n'a pas de chapitre {chapter}.",
     "estherAdditions": "{second} imprime le texte de ces chapitres comme des ajouts à l'intérieur des chapitres 1–10 d'Esther.",
-    "secondUnavailable": "{second} n'a pas pu être chargée : seule {main} est affichée. Réessayez plus tard."
+    "secondUnavailable": "{second} n'a pas pu être chargée. Réessayez plus tard.",
+    "settings": "Options de lecture",
+    "compare": "Comparer avec une autre édition…",
+    "changeSecond": "Changer la deuxième édition…",
+    "addThird": "Ajouter une troisième édition…",
+    "changeThird": "Changer la troisième édition…",
+    "removeThird": "Retirer la troisième édition",
+    "stopComparing": "Arrêter la comparaison",
+    "thirdEdition": "Troisième édition",
+    "cancel": "Annuler"
   },
   "Notice": {
     "signIn": "Cette édition montre aux visiteurs les 30 premiers versets de chaque chapitre. Connectez-vous pour lire le chapitre entier.",

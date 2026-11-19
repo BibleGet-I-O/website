@@ -11,12 +11,13 @@ import { Interlinear } from "@/components/Interlinear";
 import { getAccess } from "@/lib/access";
 import { ApiUnavailable, bookBySlug, getChapter, getEditions, getIndex, getVerses, NotFound, slugFor } from "@/lib/api";
 import { estherTradition } from "@/lib/esther";
-import { loadSecond, type Second } from "@/lib/interlinear";
+import { compareQuery, parseView, parseWith } from "@/lib/compare";
+import { loadSecond } from "@/lib/interlinear";
 import { placeAsPrinted } from "@/lib/placement";
 import type { Chapter, EditionIndex, VerseRow } from "@/lib/types";
 
 type Params = { locale: string; edition: string; book: string; chapter: string };
-type Search = { with?: string | string[]; tradition?: string | string[] };
+type Search = { with?: string | string[]; view?: string | string[]; tradition?: string | string[] };
 
 const one = (v: string | string[] | undefined) => (Array.isArray(v) ? v[0] : v);
 
@@ -64,8 +65,8 @@ export default async function ChapterPage({ params, searchParams }: { params: Pr
   const chapter = Number(chapterParam);
   if (chapter > book.chapters) notFound();
 
-  const withParam = one(search.with)?.toUpperCase();
-  const withSigla = editions.some((e) => e.sigla === withParam && e.sigla !== edition.sigla) ? withParam : undefined;
+  const withSiglas = parseWith(one(search.with), edition.sigla, editions.map((e) => e.sigla));
+  const view = parseView(one(search.view));
   const tradition = estherTradition(book, one(search.tradition));
 
   const info = await getAccess();
@@ -86,27 +87,30 @@ export default async function ChapterPage({ params, searchParams }: { params: Pr
       ? await neighbourVerse(getVerses({ ...request, chapter: chapter + 1, verse: 1 }))
       : [];
   const rows = placeAsPrinted(prevLast, current.rows, nextFirst, chapter);
-  const secondEdition = withSigla ? editions.find((e) => e.sigla === withSigla) : undefined;
-  // The second edition reads with the main one's access; one that cannot be reached degrades to the main
-  // edition with a note (it does not show the error page).
-  const second: Second | null = secondEdition
-    ? await loadSecond({
+  const compared = withSiglas.map((sigla) => editions.find((e) => e.sigla === sigla)!);
+  // The compared editions read with the main one's access; one that cannot be reached degrades to a note
+  // (it does not show the error page).
+  const seconds = await Promise.all(
+    compared.map((e) =>
+      loadSecond({
         mainSigla: edition.sigla, mainBookAbbrev: book.abbrev, mainIndex: index, bookNum: book.bookNum, chapter,
-        mainRows: rows, withSigla: secondEdition.sigla, access: info.access, tradition,
-      })
-    : null;
+        mainRows: rows, withSigla: e.sigla, access: info.access, tradition,
+      }),
+    ),
+  );
 
-  const query = new URLSearchParams();
-  if (withSigla) query.set("with", withSigla);
-  if (tradition === "HEBREW") query.set("tradition", tradition);
-  const qs = query.size > 0 ? `?${query}` : "";
+  const qs = compareQuery({ with: withSiglas, view, tradition });
   const base = `/read/${editionSlug(edition.sigla)}`;
   const notice = noticeFor(current.truncated, info, edition.copyright);
   const redirectTo = `/${locale}${base}/${slugFor(book, index.books)}/${chapter}${qs}`;
   const t = await getTranslations("Reader");
+  // Columns need room (one per edition in the spread; the others go below); interlinear reads at a single
+  // edition's width.
+  const columns = 1 + seconds.filter((x) => x.mode === "aligned").length;
+  const width = columns === 1 || view === "interlinear" ? "max-w-3xl" : columns === 2 ? "max-w-6xl" : "max-w-7xl";
 
   return (
-    <main className={`mx-auto w-full ${secondEdition ? "max-w-6xl" : "max-w-3xl"} p-4 sm:p-6`}>
+    <main className={`mx-auto w-full ${width} p-4 sm:p-6`}>
       <ReaderBar
         locale={locale}
         edition={edition.sigla}
@@ -115,29 +119,36 @@ export default async function ChapterPage({ params, searchParams }: { params: Pr
         book={slugFor(book, index.books)}
         bookNum={book.bookNum}
         chapter={chapter}
-        withSigla={withSigla}
+        withSiglas={withSiglas}
+        view={view}
         esther={tradition !== undefined}
         tradition={tradition}
       />
-      {secondEdition && second ? (
+      {compared.length > 0 ? (
         await Interlinear({
           heading: t("heading", { book: book.name, chapter }),
           main: { sigla: edition.sigla, name: edition.fullname, lang: edition.language || undefined },
-          other: { sigla: secondEdition.sigla, name: secondEdition.fullname, lang: secondEdition.language || undefined },
+          others: compared.map((e, i) => {
+            const second = seconds[i];
+            return {
+              side: { sigla: e.sigla, name: e.fullname, lang: e.language || undefined },
+              second,
+              // A compared edition's cap, told the same way as the main one's.
+              notice: second.mode === "aligned" || second.mode === "whole-chapter" ? noticeFor(second.truncated, info, e.copyright) : null,
+            };
+          }),
           rows,
-          second,
           bookNum: book.bookNum,
           bookName: book.name,
           chapter,
           truncated: current.truncated,
-          // The second edition's cap, told the same way as the main one's.
-          secondNotice: second.mode === "aligned" || second.mode === "whole-chapter" ? noticeFor(second.truncated, info, secondEdition.copyright) : null,
+          view,
           redirectTo,
         })
       ) : (
         <BookPage heading={t("heading", { book: book.name, chapter })} chapter={chapter} rows={rows} lang={edition.language || undefined} />
       )}
-      {notice && await CappedNotice({ kind: notice, redirectTo, ...(secondEdition && { edition: edition.fullname }) })}
+      {notice && await CappedNotice({ kind: notice, redirectTo, ...(compared.length > 0 && { edition: edition.fullname }) })}
       {await ChapterNav({ index, bookNum: book.bookNum, chapter, base, query: qs })}
     </main>
   );
