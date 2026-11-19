@@ -2,7 +2,7 @@
 
 import { useTranslations } from "next-intl";
 import { useRouter } from "next/navigation";
-import { editionSlug } from "@/components/EditionCard";
+import { editionSlug } from "@/lib/slug";
 import type { Tradition } from "@/lib/esther";
 
 export type ReaderBarProps = {

@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { render, screen, within } from "@testing-library/react";
+import { fireEvent, render, screen, within } from "@testing-library/react";
 import { NextIntlClientProvider } from "next-intl";
 import en from "@/messages/en.json";
 
@@ -49,6 +49,7 @@ const ed = (sigla: string, language: string, fullname = sigla, year = "2000", co
   year,
   language,
   copyrightHolder,
+  notes: "",
   copyright,
 });
 const book = (bookNum: number, name: string, abbrev: string, chapters: number) => ({
@@ -69,23 +70,105 @@ beforeEach(() => {
 });
 
 describe("home", () => {
-  it("homeListsTheSevenEditionsByLanguage", async () => {
-    getEditions.mockResolvedValue([
-      ed("BLPD", "es", "Libro del Pueblo de Dios", "2015", "Fundación Palabra de Vida"),
-      ed("CEI2008", "it"),
-      ed("DRB", "en", "Douay-Rheims"),
-      ed("LUZZI", "it"),
-      ed("NABRE", "en"),
-      ed("NVBSE", "es"),
-      ed("VGCL", "la"),
-    ]);
-    render(wrap(await HomePage({ params: Promise.resolve({ locale: "en" }) })));
-    expect(screen.getAllByRole("link")).toHaveLength(7);
+  const shelf = () => [
+    ed("BLPD", "es", "Libro del Pueblo de Dios", "2015", "Fundación Palabra de Vida"),
+    ed("CEI2008", "it", "Testo Sintetico", "2008"),
+    { ...ed("DRB", "en", "Douay-Rheims", "1899", "", false), notes: "" },
+    { ...ed("LUZZI", "it", "Luzzi Sintetico", "1924", "", false) },
+    { ...ed("NABRE", "en", "Synthetic English", "1970", "Some Holder"), notes: "First note line.\nSecond note line." },
+    ed("NVBSE", "es", "Nueva Sintetica", "1990"),
+    ed("VGCL", "la", "Vulgata Synthetica", "1592", "", false),
+  ];
+  const home = async () => render(wrap(await HomePage({ params: Promise.resolve({ locale: "en" }) })));
+
+  it("navListsOneLinkPerLanguagePointingAtItsSection", async () => {
+    getEditions.mockResolvedValue(shelf());
+    await home();
+    const nav = screen.getByRole("navigation", { name: "Languages" });
+    const links = within(nav).getAllByRole("link");
+    expect(links.map((a) => a.textContent)).toEqual(["English", "Italian", "Latin", "Spanish"]);
+    expect(links.map((a) => a.getAttribute("href"))).toEqual(["#lang-en", "#lang-it", "#lang-la", "#lang-es"]);
+  });
+
+  it("eachLanguageSectionHasItsIdAndHeading", async () => {
+    getEditions.mockResolvedValue(shelf());
+    const { container } = await home();
     expect(screen.getAllByRole("heading", { level: 2 }).map((h) => h.textContent)).toEqual(["English", "Italian", "Latin", "Spanish"]);
-    const spanish = screen.getByRole("heading", { name: "Spanish" }).closest("section")!;
-    expect(within(spanish).getByText(/Fundación Palabra de Vida/)).toBeInTheDocument();
-    expect(within(spanish).getByText(/2015/)).toBeInTheDocument();
-    expect(within(spanish).getByRole("link", { name: /Libro del Pueblo de Dios/ })).toHaveAttribute("href", "/en/read/blpd");
+    for (const [code, name] of [["en", "English"], ["it", "Italian"], ["la", "Latin"], ["es", "Spanish"]]) {
+      const section = container.querySelector(`#lang-${code}`)!;
+      expect(section.tagName).toBe("SECTION");
+      expect(within(section as HTMLElement).getByRole("heading", { level: 2 })).toHaveTextContent(name);
+    }
+  });
+
+  it("eachBookLinksToItsEditionOrderedByYear", async () => {
+    getEditions.mockResolvedValue(shelf());
+    const { container } = await home();
+    const english = container.querySelector("#lang-en") as HTMLElement;
+    const books = within(english).getAllByRole("link");
+    expect(books).toEqual(["Douay-Rheims, 1899", "Synthetic English, 1970"].map((name) => within(english).getByRole("link", { name })));
+    // The name comes from the cover's own text, not an aria-label, so the title can carry its language.
+    expect(books[0]).not.toHaveAttribute("aria-label");
+    expect(within(english).getByRole("link", { name: "Douay-Rheims, 1899" })).toHaveAttribute("href", "/en/read/drb");
+    const spanish = container.querySelector("#lang-es") as HTMLElement;
+    expect(within(spanish).getByRole("link", { name: "Nueva Sintetica, 1990" })).toHaveAttribute("href", "/en/read/nvbse");
+    expect(within(spanish).getByRole("link", { name: "Libro del Pueblo de Dios, 2015" })).toHaveAttribute("href", "/en/read/blpd");
+  });
+
+  it("theEditionsTitleAndNotesCarryItsLanguage", async () => {
+    getEditions.mockResolvedValue(shelf());
+    await home();
+    const link = screen.getByRole("link", { name: "Libro del Pueblo de Dios, 2015" });
+    expect(within(link).getByText("Libro del Pueblo de Dios")).toHaveAttribute("lang", "es");
+    const button = screen.getByRole("button", { name: "About Synthetic English, 1970" });
+    const back = document.getElementById(button.getAttribute("aria-controls")!)!;
+    expect(within(back).getByText("Synthetic English")).toHaveAttribute("lang", "en");
+    expect(within(back).getByText("First note line.").closest("[lang]")).toHaveAttribute("lang", "en");
+  });
+
+  it("anEditionWithoutALanguageIsShelvedLastUnderOtherLanguages", async () => {
+    getEditions.mockResolvedValue([...shelf(), ed("ZZZ", "", "Nameless Synthetic", "1800")]);
+    const { container } = await home();
+    const nav = screen.getByRole("navigation", { name: "Languages" });
+    const links = within(nav).getAllByRole("link");
+    expect(links.map((a) => a.textContent)).toEqual(["English", "Italian", "Latin", "Spanish", "Other languages"]);
+    const id = links.at(-1)!.getAttribute("href")!.slice(1);
+    const section = container.querySelector(`#${id}`) as HTMLElement;
+    expect(within(section).getByRole("heading", { level: 2 })).toHaveTextContent("Other languages");
+    const link = within(section).getByRole("link", { name: "Nameless Synthetic, 1800" });
+    expect(within(link).getByText("Nameless Synthetic")).not.toHaveAttribute("lang");
+  });
+
+  it("aCopyrightedEditionHasTheDarkBinding", async () => {
+    getEditions.mockResolvedValue(shelf());
+    await home();
+    expect(screen.getByRole("link", { name: "Synthetic English, 1970" })).toHaveAttribute("data-tone", "dark");
+    expect(screen.getByRole("link", { name: "Douay-Rheims, 1899" })).toHaveAttribute("data-tone", "bright");
+  });
+
+  it("theCopyrightButtonTurnsTheBookToItsBackCover", async () => {
+    getEditions.mockResolvedValue(shelf());
+    await home();
+    const button = screen.getByRole("button", { name: "About Synthetic English, 1970" });
+    expect(button).toHaveAttribute("aria-expanded", "false");
+    const back = document.getElementById(button.getAttribute("aria-controls")!)!;
+    expect(back).toHaveAttribute("inert");
+    fireEvent.click(button);
+    expect(button).toHaveAttribute("aria-expanded", "true");
+    expect(back).not.toHaveAttribute("inert");
+    expect(screen.getByRole("link", { name: "Synthetic English, 1970" }).closest("[inert]")).not.toBeNull();
+    expect(within(back).getByText("Some Holder")).toBeInTheDocument();
+    expect(within(back).getByText("First note line.")).toBeInTheDocument();
+    expect(within(back).getByText("Second note line.")).toBeInTheDocument();
+    expect(within(back).getByText("1970")).toBeInTheDocument();
+    // The endpaper scrolls, so it is a focusable, named region.
+    const endpaper = within(back).getByRole("region", { name: "Colophon of Synthetic English, 1970" });
+    expect(endpaper).toHaveAttribute("tabindex", "0");
+    expect(button).not.toHaveAttribute("title");
+    // The button comes before the turned book in tab order, so Tab from it reaches the back cover.
+    expect(button.compareDocumentPosition(endpaper) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    fireEvent.click(button);
+    expect(button).toHaveAttribute("aria-expanded", "false");
   });
 });
 
