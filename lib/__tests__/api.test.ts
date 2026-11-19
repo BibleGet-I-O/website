@@ -191,19 +191,37 @@ describe("getVerses", () => {
   });
 });
 
+/** The slug of a book that is alone in its edition. */
+const slugOf = (name: string) => slugFor({ bookNum: 1, name }, [{ bookNum: 1, name }]);
+
 describe("slugFor", () => {
   it("slugForStripsDiacritics", () => {
-    expect(slugFor({ name: "Génesis" })).toBe("genesis");
-    expect(slugFor({ name: "1 Maccabees" })).toBe("1-maccabees");
+    expect(slugOf("Génesis")).toBe("genesis");
+    expect(slugOf("1 Maccabees")).toBe("1-maccabees");
   });
 });
 
 describe("slugFor edge cases", () => {
   it("makesCleanSlugs", () => {
-    expect(slugFor({ name: "1 Samuel" })).toBe("1-samuel");
-    expect(slugFor({ name: "Cantico dei Cantici" })).toBe("cantico-dei-cantici");
-    expect(slugFor({ name: "Song of Songs / Canticles" })).toBe("song-of-songs-canticles");
-    expect(slugFor({ name: "Sirach (Ben Sira)'s" })).toBe("sirach-ben-sira-s");
+    expect(slugOf("1 Samuel")).toBe("1-samuel");
+    expect(slugOf("Cantico dei Cantici")).toBe("cantico-dei-cantici");
+    expect(slugOf("Song of Songs / Canticles")).toBe("song-of-songs-canticles");
+    expect(slugOf("Sirach (Ben Sira)'s")).toBe("sirach-ben-sira-s");
+  });
+
+  it("aNameWithNoLatinLettersFallsBackToTheBookNumber", () => {
+    const books = [{ bookNum: 1, name: "Γένεσις" }];
+    expect(slugFor(books[0], books)).toBe("book-1");
+  });
+
+  it("twoDifferentNonLatinNamesGetDistinctSlugs", () => {
+    const books = [{ bookNum: 1, name: "Γένεσις" }, { bookNum: 2, name: "Ἔξοδος" }];
+    expect(books.map((b) => slugFor(b, books))).toEqual(["book-1", "book-2"]);
+  });
+
+  it("collidingSlugsAreSuffixedWithTheBookNumber", () => {
+    const books = [{ bookNum: 1, name: "Genesis" }, { bookNum: 9, name: "1 Samuel" }, { bookNum: 10, name: "1. Samuel" }];
+    expect(books.map((b) => slugFor(b, books))).toEqual(["genesis", "1-samuel-9", "1-samuel-10"]);
   });
 });
 
@@ -212,6 +230,13 @@ describe("bookBySlug", () => {
   it("findsAndMissesBooks", () => {
     expect(bookBySlug(index, "genesis")?.abbrev).toBe("Gn");
     expect(bookBySlug(index, "exodus")).toBeUndefined();
+  });
+
+  it("reachesEveryBookOfAnEditionWithNonLatinOrCollidingNames", () => {
+    const book = (bookNum: number, name: string) => ({ bookNum, name, abbrev: `B${bookNum}`, chapters: 1, versesPerChapter: [1] });
+    const greek = { sigla: "G", books: [book(1, "Γένεσις"), book(2, "Ἔξοδος"), book(9, "Samuel"), book(10, "Samuel")] };
+    for (const b of greek.books) expect(bookBySlug(greek, slugFor(b, greek.books))?.bookNum).toBe(b.bookNum);
+    expect(bookBySlug(greek, "samuel")).toBeUndefined();
   });
 });
 

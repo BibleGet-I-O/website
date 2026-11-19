@@ -108,17 +108,43 @@ export async function getIndex(sigla: string): Promise<EditionIndex> {
   return { sigla, books };
 }
 
-export function slugFor(book: Pick<Book, "name">): string {
-  return book.name
+type Sluggable = Pick<Book, "bookNum" | "name">;
+
+/** The name's Latin letters and digits, hyphenated; `book-{n}` when none are left (a Greek-only name). */
+function baseSlug(book: Sluggable): string {
+  const latin = book.name
     .normalize("NFD")
     .replace(/\p{M}/gu, "")
     .toLowerCase()
     .replace(/[^a-z0-9]+/g, "-")
     .replace(/^-+|-+$/g, "");
+  return latin || `book-${book.bookNum}`;
+}
+
+const slugCache = new WeakMap<readonly Sluggable[], Map<number, string>>();
+
+/** Every book's slug in one edition: the base slug, suffixed `-{bookNum}` where two books would share it. */
+function editionSlugs(books: readonly Sluggable[]): Map<number, string> {
+  const cached = slugCache.get(books);
+  if (cached) return cached;
+  const bases = books.map(baseSlug);
+  const count = new Map<string, number>();
+  for (const b of bases) count.set(b, (count.get(b) ?? 0) + 1);
+  const slugs = new Map(books.map((b, i) => [b.bookNum, count.get(bases[i])! > 1 ? `${bases[i]}-${b.bookNum}` : bases[i]]));
+  slugCache.set(books, slugs);
+  return slugs;
+}
+
+/**
+ * A book's URL slug, unique and non-empty within its edition (`books`: the edition's index). Route
+ * generation and bookBySlug both use it, so every book of the edition is reachable.
+ */
+export function slugFor(book: Sluggable, books: readonly Sluggable[]): string {
+  return editionSlugs(books).get(book.bookNum) ?? baseSlug(book);
 }
 
 export function bookBySlug(index: EditionIndex, slug: string): Book | undefined {
-  return index.books.find((b) => slugFor(b) === slug);
+  return index.books.find((b) => slugFor(b, index.books) === slug);
 }
 
 type RawRow = {

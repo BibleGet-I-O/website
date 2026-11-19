@@ -50,7 +50,7 @@ export default async function BooksPage({ params }: { params: Promise<{ locale: 
                   {Array.from({ length: b.chapters }, (_, i) => i + 1).map((n) => (
                     <li key={n}>
                       <Link
-                        href={`${base}/${slugFor(b)}/${n}`}
+                        href={`${base}/${slugFor(b, books)}/${n}`}
                         className="block min-w-9 rounded border border-slate-200 px-2 py-1 text-center text-sm hover:border-slate-400 dark:border-slate-800 dark:hover:border-slate-600"
                       >
                         {n}

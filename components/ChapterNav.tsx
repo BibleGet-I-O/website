@@ -11,10 +11,10 @@ export function neighbours(index: EditionIndex, bookNum: number, chapter: number
   if (i < 0) return {};
   const book = index.books[i];
   const out: { prev?: ChapterRef; next?: ChapterRef } = {};
-  if (chapter > 1) out.prev = { slug: slugFor(book), chapter: chapter - 1 };
-  else if (i > 0) out.prev = { slug: slugFor(index.books[i - 1]), chapter: index.books[i - 1].chapters };
-  if (chapter < book.chapters) out.next = { slug: slugFor(book), chapter: chapter + 1 };
-  else if (i < index.books.length - 1) out.next = { slug: slugFor(index.books[i + 1]), chapter: 1 };
+  if (chapter > 1) out.prev = { slug: slugFor(book, index.books), chapter: chapter - 1 };
+  else if (i > 0) out.prev = { slug: slugFor(index.books[i - 1], index.books), chapter: index.books[i - 1].chapters };
+  if (chapter < book.chapters) out.next = { slug: slugFor(book, index.books), chapter: chapter + 1 };
+  else if (i < index.books.length - 1) out.next = { slug: slugFor(index.books[i + 1], index.books), chapter: 1 };
   return out;
 }
 

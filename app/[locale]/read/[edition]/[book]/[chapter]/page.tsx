@@ -102,7 +102,7 @@ export default async function ChapterPage({ params, searchParams }: { params: Pr
   const qs = query.size > 0 ? `?${query}` : "";
   const base = `/read/${editionSlug(edition.sigla)}`;
   const notice = noticeFor(current.truncated, info, edition.copyright);
-  const redirectTo = `/${locale}${base}/${slugFor(book)}/${chapter}${qs}`;
+  const redirectTo = `/${locale}${base}/${slugFor(book, index.books)}/${chapter}${qs}`;
   const t = await getTranslations("Reader");
 
   return (
@@ -111,8 +111,8 @@ export default async function ChapterPage({ params, searchParams }: { params: Pr
         locale={locale}
         edition={edition.sigla}
         editions={editions.map((e) => ({ sigla: e.sigla, fullname: e.fullname }))}
-        books={index.books.map((b) => ({ slug: slugFor(b), name: b.name, chapters: b.chapters }))}
-        book={slugFor(book)}
+        books={index.books.map((b) => ({ slug: slugFor(b, index.books), name: b.name, chapters: b.chapters }))}
+        book={slugFor(book, index.books)}
         chapter={chapter}
         withSigla={withSigla}
         esther={tradition !== undefined}
