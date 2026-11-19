@@ -3,8 +3,11 @@ import type { EditionIndex, VerseRow } from "./types";
 /** The Psalms in the Catholic canon numbering of the endpoint's index. */
 export const PSALMS = 23;
 
-/** One line of the interlinear: a verse of the main edition (`a`), of the second (`b`), or both. */
-export type ParallelRow = { key: string; a?: VerseRow; b?: VerseRow };
+/**
+ * One line of the comparison: a verse of the main edition (`a`) and of each compared edition (`others`, in
+ * the order of the compared editions; a hole where an edition has no such verse).
+ */
+export type ParallelRow = { key: string; a?: VerseRow; others: (VerseRow | undefined)[] };
 
 /**
  * What pairs two editions' verses: in the Psalms the Hebrew reference every row carries (VGCL 9:22 is
@@ -16,23 +19,30 @@ export function alignKey(row: VerseRow, book: number): string {
 }
 
 /**
- * Two editions' verses as rows, in the order of `a`: each row of `b` joins the first unpaired row of `a`
- * with its key; a row of `b` without one gets a row of its own after the row of its preceding match.
+ * The editions' verses as rows, in the order of the main edition `a`. Each compared edition is merged in
+ * turn: each of its rows joins the first row with its key that has none of that edition yet (so two compared
+ * editions share the row of a verse the main edition lacks); a row without one gets a row of its own after
+ * the row of the edition's preceding match.
  */
-export function buildRows(a: VerseRow[], b: VerseRow[], book: number): ParallelRow[] {
-  const rows: ParallelRow[] = a.map((r) => ({ key: alignKey(r, book), a: r }));
-  let after = -1;
-  for (const r of b) {
-    const key = alignKey(r, book);
-    const at = rows.findIndex((x) => x.key === key && x.a && !x.b);
-    if (at >= 0) {
-      rows[at].b = r;
-      after = at;
-    } else {
-      after += 1;
-      rows.splice(after, 0, { key, b: r });
+export function buildRows(a: VerseRow[], others: VerseRow[][], book: number): ParallelRow[] {
+  const n = others.length;
+  const rows: ParallelRow[] = a.map((r) => ({ key: alignKey(r, book), a: r, others: new Array(n).fill(undefined) }));
+  others.forEach((list, k) => {
+    let after = -1;
+    for (const r of list) {
+      const key = alignKey(r, book);
+      const at = rows.findIndex((x) => x.key === key && !x.others[k]);
+      if (at >= 0) {
+        rows[at].others[k] = r;
+        after = at;
+      } else {
+        after += 1;
+        const cells: (VerseRow | undefined)[] = new Array(n).fill(undefined);
+        cells[k] = r;
+        rows.splice(after, 0, { key, others: cells });
+      }
     }
-  }
+  });
   return rows;
 }
 

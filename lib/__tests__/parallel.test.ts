@@ -25,17 +25,37 @@ describe("alignment", () => {
     expect(alignKey(row(9, 22, "10:1"), PSALMS)).toBe("10:1");
     expect(alignKey(row(5, 3), 47)).toBe("5:3");
     const nabre10 = Array.from({ length: 18 }, (_, i) => row(10, i + 1, `10:${i + 1}`));
-    const rows = buildRows(vgcl9, nabre10, PSALMS);
+    const rows = buildRows(vgcl9, [nabre10], PSALMS);
     const r = rows.find((x) => x.a?.verse === 22)!;
-    expect(r.b).toMatchObject({ chapter: 10, verse: 1 });
+    expect(r.others[0]).toMatchObject({ chapter: 10, verse: 1 });
     expect(rows).toHaveLength(39);
-    expect(rows.filter((x) => x.a && x.b)).toHaveLength(18);
+    expect(rows.filter((x) => x.a && x.others[0])).toHaveLength(18);
   });
 
   it("insertsUnmatchedSecondRowsAfterTheirPrecedingMatch", () => {
     const a = [row(2, 1, "2:1"), row(2, 2, "2:2")];
     const b = [row(2, 1, "2:1"), row(2, 15, "2:1a"), row(2, 2, "2:2"), row(2, 3, "2:3")];
-    expect(buildRows(a, b, PSALMS).map((r) => r.key)).toEqual(["2:1", "2:1a", "2:2", "2:3"]);
+    expect(buildRows(a, [b], PSALMS).map((r) => r.key)).toEqual(["2:1", "2:1a", "2:2", "2:3"]);
+  });
+
+  it("twoComparedEditionsShareTheRowOfAVerseTheMainLacks", () => {
+    // NVBSE omits Mt 17:21; VGCL and DRB have it (synthetic text).
+    const nvbse = [row(17, 20), row(17, 22)];
+    const vgcl = [row(17, 20), row(17, 21), row(17, 22)];
+    const drb = [row(17, 20), row(17, 21), row(17, 22)];
+    const rows = buildRows(nvbse, [vgcl, drb], 47);
+    expect(rows.map((r) => r.key)).toEqual(["17:20", "17:21", "17:22"]);
+    expect(rows[1].a).toBeUndefined();
+    expect(rows[1].others.map((x) => x?.verse)).toEqual([21, 21]);
+    expect(rows.every((r) => r.others.length === 2)).toBe(true);
+  });
+
+  it("aThirdEditionAlignsAgainstTheMainLikeTheSecond", () => {
+    const a = [row(5, 1), row(5, 2)];
+    const b = [row(5, 1), row(5, 2)];
+    const c = [row(5, 1), row(5, 2), row(5, 3)];
+    const rows = buildRows(a, [b, c], 47);
+    expect(rows.map((r) => [r.a?.verse, r.others[0]?.verse, r.others[1]?.verse])).toEqual([[1, 1, 1], [2, 2, 2], [undefined, undefined, 3]]);
   });
 
   it("psalmChaptersAreTheDistinctHebrewPsalmsInOrder", () => {
@@ -184,7 +204,7 @@ describe("loadSecond", () => {
       const rows = second.mode === "aligned" ? second.rows : [];
       expect(rows.map((r) => `${r.chapter}:${r.verse}`)).toEqual(["7:53", "8:1", "8:2", "8:3"]);
       expect(queriesOf(quotes).sort()).toEqual(["Io7:53", "Io8"]);
-      expect(buildRows(mainRows, rows, 50).filter((x) => x.a && x.b).map((x) => x.key)).toEqual(["7:53", "8:1", "8:2", "8:3"]);
+      expect(buildRows(mainRows, [rows], 50).filter((x) => x.a && x.others[0]).map((x) => x.key)).toEqual(["7:53", "8:1", "8:2", "8:3"]);
     });
 
     it("isNotDuplicatedWhenTheChapterAlreadyHasIt", async () => {
