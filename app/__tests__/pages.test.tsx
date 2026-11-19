@@ -419,6 +419,17 @@ describe("chapter", () => {
     expect(screen.getByRole("link", { name: /Next chapter/ })).toHaveAttribute("href", "/en/read/drb/wisdom/12?with=NABRE&view=interlinear");
   });
 
+  it("thePageWidthFollowsTheEditionsInTheSpread", async () => {
+    // LUZZI divides Wisdom 11 differently (another verse count): it goes below, so two columns, not three.
+    getIndex.mockImplementation(async (sigla: string) =>
+      sigla === "LUZZI" ? { sigla, books: [{ ...book(27, "Sapienza", "Sap", 19), versesPerChapter: Array(19).fill(5) }] } : drbIndex);
+    getChapter.mockResolvedValue({ rows: [verse(11, 1)], truncated: false, expectedVerses: 1 });
+    getVerses.mockResolvedValue([]);
+    render(wrap(await ChapterPage(params("drb", "wisdom", "11", { with: "NABRE,LUZZI" }))));
+    expect(screen.getAllByTestId("column-name")).toHaveLength(2);
+    expect(screen.getByRole("main")).toHaveClass("max-w-6xl");
+  });
+
   it("theViewWithoutAComparedEditionIsIgnored", async () => {
     getIndex.mockResolvedValue(drbIndex);
     getChapter.mockResolvedValue({ rows: [verse(11, 1)], truncated: false, expectedVerses: 1 });

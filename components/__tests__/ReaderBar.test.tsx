@@ -188,4 +188,39 @@ describe("ReaderBar", () => {
     openMenu();
     expect(item(/Compare with another edition/)).toBeDisabled();
   });
+
+  it("thePopupReplacesTheMenuItemsAndCancelReturnsFocusToTheItem", () => {
+    render(wrap(<ReaderBar {...props} withSiglas={["CEI2008"]} />));
+    openMenu();
+    fireEvent.click(item(/Add a third edition/));
+    const dialog = screen.getByRole("dialog");
+    expect(dialog).not.toHaveAttribute("aria-modal");
+    // Nothing behind the popup to tab to: the menu items give way to it.
+    expect(screen.queryByRole("button", { name: /Stop comparing/ })).toBeNull();
+    expect(screen.queryByLabelText("Interlinear")).toBeNull();
+    fireEvent.click(within(dialog).getByRole("button", { name: "Cancel" }));
+    expect(item(/Add a third edition/)).toHaveFocus();
+    fireEvent.click(item(/Change second edition/));
+    fireEvent.keyDown(document, { key: "Escape" });
+    expect(item(/Change second edition/)).toHaveFocus();
+  });
+
+  it("theMenuClosesWhenTheReaderMovesOn", () => {
+    const { rerender } = render(wrap(<ReaderBar {...props} withSiglas={["CEI2008"]} />));
+    openMenu();
+    fireEvent.click(screen.getByLabelText("Interlinear"));
+    rerender(wrap(<ReaderBar {...props} withSiglas={["CEI2008"]} view="interlinear" />));
+    expect(screen.getByRole("button", { name: "Reading settings" })).toHaveAttribute("aria-expanded", "false");
+    openMenu();
+    rerender(wrap(<ReaderBar {...props} chapter={4} withSiglas={["CEI2008"]} view="interlinear" />));
+    expect(screen.getByRole("button", { name: "Reading settings" })).toHaveAttribute("aria-expanded", "false");
+  });
+
+  it("theButtonControlsThePanelOnlyWhileItIsOpen", () => {
+    render(wrap(<ReaderBar {...props} />));
+    const button = screen.getByRole("button", { name: "Reading settings" });
+    expect(button).not.toHaveAttribute("aria-controls");
+    openMenu();
+    expect(document.getElementById(button.getAttribute("aria-controls")!)).not.toBeNull();
+  });
 });

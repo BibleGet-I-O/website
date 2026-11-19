@@ -87,6 +87,7 @@ export function ReaderBar(p: ReaderBarProps) {
           view={p.view}
           esther={p.esther}
           tradition={p.tradition}
+          routeKey={[p.edition, p.book, p.chapter, p.withSiglas.join(","), p.view, p.tradition ?? ""].join("|")}
           onChange={go}
         />
       </span>

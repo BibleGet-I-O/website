@@ -151,4 +151,15 @@ describe("Spread", () => {
     render(wrap(<Spread sides={[A, B]} rows={buildRows([row(5, 1)], [[row(5, 1)]], 47)} chapter={5} />));
     expect(screen.queryByTestId("heading-a")).toBeNull();
   });
+
+  it("interlinearPutsEachEditionsHeadingsWithItsOwnVerseTagged", () => {
+    // Only the compared edition has a heading at 1:1 (synthetic text).
+    const rows = buildRows([row(1, 1)], [[{ ...row(1, 1), titles: ["Titolo"] }]], 1);
+    render(wrap(<Spread sides={[A, B]} rows={rows} chapter={1} view="interlinear" />));
+    expect(screen.queryByTestId("heading-a")).toBeNull();
+    const cellB = screen.getByTestId("cell-b");
+    const kids = Array.from(cellB.querySelectorAll("[data-testid=sigla], h2, [data-testid=verse-line]")).map((e) => e.tagName === "H2" ? "h2" : e.getAttribute("data-testid"));
+    expect(kids).toEqual(["sigla", "h2", "verse-line"]);
+    expect(within(screen.getByTestId("cell-a")).queryByRole("heading")).toBeNull();
+  });
 });

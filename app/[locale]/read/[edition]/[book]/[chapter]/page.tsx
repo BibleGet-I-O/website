@@ -104,8 +104,10 @@ export default async function ChapterPage({ params, searchParams }: { params: Pr
   const notice = noticeFor(current.truncated, info, edition.copyright);
   const redirectTo = `/${locale}${base}/${slugFor(book, index.books)}/${chapter}${qs}`;
   const t = await getTranslations("Reader");
-  // Columns need room; interlinear reads at a single edition's width.
-  const width = compared.length === 0 || view === "interlinear" ? "max-w-3xl" : compared.length === 1 ? "max-w-6xl" : "max-w-7xl";
+  // Columns need room (one per edition in the spread; the others go below); interlinear reads at a single
+  // edition's width.
+  const columns = 1 + seconds.filter((x) => x.mode === "aligned").length;
+  const width = columns === 1 || view === "interlinear" ? "max-w-3xl" : columns === 2 ? "max-w-6xl" : "max-w-7xl";
 
   return (
     <main className={`mx-auto w-full ${width} p-4 sm:p-6`}>

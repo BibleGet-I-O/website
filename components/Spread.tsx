@@ -17,8 +17,9 @@ const COLUMNS: Record<number, string> = { 1: "grid-cols-1", 2: "grid-cols-2", 3:
  * edition's name; interlinear is one column, each compared verse under the main one, tagged with its
  * edition's sigla.
  *
- * Section headings get a row of their own above their verse, so that one edition's headings never push its
- * verse below its counterparts (CEI2008 Gn 1:1 under two headings stays level with the Nova Vulgata's 1:1).
+ * Side by side, section headings get a row of their own above their verse, so that one edition's headings
+ * never push its verse below its counterparts (CEI2008 Gn 1:1 under two headings stays level with the Nova
+ * Vulgata's 1:1). Interlinear, each edition's headings sit in its own cell, under its tag, above its verse.
  *
  * A row an edition has no verse in gets the "absent" note on that side, except where the emptiness is not
  * the edition's: the rest of an edition after its own cap (`truncated`, by side), and, for a compared
@@ -57,7 +58,8 @@ export function Spread({ sides, rows, chapter, truncated = [], view = "side-by-s
         const titles = cellsOf(r).map((v) => headingsBefore(v));
         return (
           <Fragment key={i}>
-            {titles.some((h) => h.length > 0) && sides.map((side, s) => (
+            {/* Side by side: a row of their own. Interlinear: each edition's in its own cell, under its tag. */}
+            {!interlinear && titles.some((h) => h.length > 0) && sides.map((side, s) => (
               <div key={`h${s}`} data-testid={`heading-${LETTERS[s]}`} lang={side.lang} className={muted(s)}>
                 <Headings titles={titles[s]} compact={compact} />
               </div>
@@ -72,9 +74,10 @@ export function Spread({ sides, rows, chapter, truncated = [], view = "side-by-s
                   lang={side.lang}
                   className={`py-0.5 ${muted(s)} ${interlinear && last ? "mb-3" : ""}`}
                 >
-                  {interlinear && s > 0 && content && (
+                  {interlinear && s > 0 && (content || titles[s].length > 0) && (
                     <span data-testid="sigla" className="ml-10 font-sans text-xs text-slate-500 dark:text-slate-400">{side.sigla}</span>
                   )}
+                  {interlinear && <Headings titles={titles[s]} compact={compact} />}
                   {content}
                 </div>
               );
