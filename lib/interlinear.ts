@@ -1,5 +1,5 @@
 import "server-only";
-import { ApiUnavailable, getChapter, getIndex, NotFound } from "./api";
+import { ApiUnavailable, getChapter, getIndex, getVerses, NotFound } from "./api";
 import { hasBothEstherTexts } from "./esther";
 import { hebrewRef, pairingMode, psalmChapters, PSALMS } from "./parallel";
 import type { Access, Book, EditionIndex, VerseRow } from "./types";
@@ -106,7 +106,33 @@ async function load(p: SecondParams): Promise<Second> {
   const mode = pairingMode(p.mainIndex, bIndex, p.bookNum, p.chapter, p.tradition);
   const second = await orMissing(getChapter({ ...request, chapter: p.chapter }));
   if (!second) return mode === "whole-chapter" ? { mode, rows: [], truncated: false, book } : { mode: "missing", reason: "chapter" };
-  return { mode, rows: second.rows, truncated: second.truncated, book };
+  if (mode === "whole-chapter") return { mode, rows: second.rows, truncated: second.truncated, book };
+  return { mode, rows: await withForeignVerses(p, request, second.rows), truncated: second.truncated, book };
+}
+
+/**
+ * The second edition's chapter plus its own copy of each main verse printed on this page from another
+ * chapter (NABRE prints John 7:53 at the start of John 8: it is fetched as the second edition's John 7:53),
+ * so the two pair. Earlier chapters' verses go first, later ones last; a verse the chapter already has is
+ * neither fetched nor repeated.
+ */
+async function withForeignVerses(
+  p: SecondParams,
+  request: { sigla: string; bookAbbrev: string; access: Access; tradition?: string },
+  rows: VerseRow[],
+): Promise<VerseRow[]> {
+  const key = (r: VerseRow) => `${r.chapter}:${r.verse}`;
+  const have = new Set(rows.map(key));
+  const wanted: { chapter: number; verse: number }[] = [];
+  for (const r of p.mainRows) {
+    if (r.chapter === p.chapter || have.has(key(r))) continue;
+    have.add(key(r));
+    wanted.push({ chapter: r.chapter, verse: r.verse });
+  }
+  if (wanted.length === 0) return rows;
+  const fetched = await Promise.all(wanted.map((w) => orMissing(getVerses({ ...request, ...w }))));
+  const extra = fetched.flatMap((x, i) => (x ?? []).filter((r) => key(r) === `${wanted[i].chapter}:${wanted[i].verse}`));
+  return [...extra.filter((r) => r.chapter < p.chapter), ...rows, ...extra.filter((r) => r.chapter > p.chapter)];
 }
 
 /**

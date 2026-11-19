@@ -168,6 +168,34 @@ describe("loadSecond", () => {
     expect(second).toMatchObject({ mode: "aligned", truncated: true });
   });
 
+  describe("a main verse printed in this chapter from another one", () => {
+    // NABRE prints John 7:53 at the start of John 8; VGCL keeps it in its own chapter 7.
+    const verses = [10, 10, 10, 10, 10, 10, 53, 3];
+    const nabre = idx("NABRE", [book(50, "Jn", verses)]);
+    const printedHere = (chapter: number, verse: number, label: string | null = null): VerseRow => ({ ...row(chapter, verse), printedChapter: 8, label });
+    const queriesOf = (quotes: () => URL[]) => quotes().filter((u) => u.searchParams.get("version") === "VGCL").map((u) => u.searchParams.get("query"));
+
+    it("isFetchedFromTheSecondEditionsOwnChapterAndPaired", async () => {
+      const quotes = mockFetch({ VGCL: [{ abbrev: "Io", bookNum: 50, verses }] }, (_v, q) =>
+        q === "Io7:53" ? [raw(7, 53)] : [raw(8, 1), raw(8, 2), raw(8, 3)]);
+      const mainRows = [printedHere(7, 53), printedHere(7, 53, "53b"), row(8, 1), row(8, 2), row(8, 3)];
+      const second = await loadSecond({ ...main("NABRE", "Jn", nabre), bookNum: 50, chapter: 8, mainRows, withSigla: "VGCL" });
+      expect(second.mode).toBe("aligned");
+      const rows = second.mode === "aligned" ? second.rows : [];
+      expect(rows.map((r) => `${r.chapter}:${r.verse}`)).toEqual(["7:53", "8:1", "8:2", "8:3"]);
+      expect(queriesOf(quotes).sort()).toEqual(["Io7:53", "Io8"]);
+      expect(buildRows(mainRows, rows, 50).filter((x) => x.a && x.b).map((x) => x.key)).toEqual(["7:53", "8:1", "8:2", "8:3"]);
+    });
+
+    it("isNotDuplicatedWhenTheChapterAlreadyHasIt", async () => {
+      const quotes = mockFetch({ VGCL: [{ abbrev: "Io", bookNum: 50, verses }] }, () => [raw(7, 53), raw(8, 1), raw(8, 2), raw(8, 3)]);
+      const mainRows = [printedHere(7, 53), row(8, 1), row(8, 2), row(8, 3)];
+      const second = await loadSecond({ ...main("NABRE", "Jn", nabre), bookNum: 50, chapter: 8, mainRows, withSigla: "VGCL" });
+      expect(second.mode === "aligned" && second.rows.map((r) => `${r.chapter}:${r.verse}`)).toEqual(["7:53", "8:1", "8:2", "8:3"]);
+      expect(queriesOf(quotes)).toEqual(["Io8"]);
+    });
+  });
+
   it("aSecondEditionWithoutTheBookIsMissing", async () => {
     mockFetch({ NABRE: psalmsOf("Ps") }, () => []);
     const second = await loadSecond({ ...main("VGCL", "Tob", idx("VGCL", [book(17, "Tob", [22])])), bookNum: 17, chapter: 1, mainRows: [row(1, 1)], withSigla: "NABRE" });
