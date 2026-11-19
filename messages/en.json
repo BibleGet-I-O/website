@@ -95,5 +95,11 @@
       "website": "Website",
       "api": "API"
     }
+  },
+  "Theme": {
+    "label": "Theme",
+    "system": "System",
+    "light": "Light",
+    "dark": "Dark"
   }
 }

@@ -90,4 +90,24 @@ describe("Spread", () => {
     render(wrap(<VerseLines rows={[r]} chapter={5} />));
     expect(screen.getByTestId("verse-line")).toHaveTextContent("1First. MidSecond.");
   });
+
+  it("headingsGetTheirOwnRowSoTheVersesStayLevel", () => {
+    // CEI2008 Gn 1 opens with two headings; the Nova Vulgata has none (synthetic text).
+    const a = [row(1, 1), row(1, 2)];
+    const b = [{ ...row(1, 1), titles: ["Creazione", "La creazione"] }, row(1, 2)];
+    render(wrap(<Spread a={A} b={B} rows={buildRows(a, b, 1)} chapter={1} />));
+    const order = Array.from(screen.getByTestId("spread").querySelectorAll("[data-testid^=cell-],[data-testid^=heading-]"))
+      .map((e) => e.getAttribute("data-testid"));
+    // The headings row comes first, then verse 1 of both editions side by side.
+    expect(order).toEqual(["heading-a", "heading-b", "cell-a", "cell-b", "cell-a", "cell-b"]);
+    const [ha, hb] = [screen.getByTestId("heading-a"), screen.getByTestId("heading-b")];
+    expect(ha.querySelectorAll("h2")).toHaveLength(0);
+    expect(within(hb).getAllByRole("heading").map((h) => h.textContent)).toEqual(["Creazione", "La creazione"]);
+    for (const c of screen.getAllByTestId("cell-b")) expect(c.querySelector("h2")).toBeNull();
+  });
+
+  it("rowsWithoutHeadingsGetNoHeadingRow", () => {
+    render(wrap(<Spread a={A} b={B} rows={buildRows([row(5, 1)], [row(5, 1)], 47)} chapter={5} />));
+    expect(screen.queryByTestId("heading-a")).toBeNull();
+  });
 });

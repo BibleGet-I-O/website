@@ -95,5 +95,11 @@
       "website": "Sitio web",
       "api": "API"
     }
+  },
+  "Theme": {
+    "label": "Tema",
+    "system": "Sistema",
+    "light": "Claro",
+    "dark": "Oscuro"
   }
 }
