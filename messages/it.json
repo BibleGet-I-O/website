@@ -53,7 +53,16 @@
     "secondNoBook": "{book} non è presente in {second}.",
     "dividedNoChapter": "{main} e {second} dividono diversamente i capitoli di questo libro: {second} non ha il capitolo {chapter}.",
     "estherAdditions": "{second} riporta il testo di questi capitoli come aggiunte all'interno dei capitoli 1–10 di Ester.",
-    "secondUnavailable": "Non è stato possibile caricare {second}, quindi è mostrata solo {main}. Riprova più tardi."
+    "secondUnavailable": "Non è stato possibile caricare {second}. Riprova più tardi.",
+    "settings": "Impostazioni di lettura",
+    "compare": "Confronta con un'altra edizione…",
+    "changeSecond": "Cambia la seconda edizione…",
+    "addThird": "Aggiungi una terza edizione…",
+    "changeThird": "Cambia la terza edizione…",
+    "removeThird": "Rimuovi la terza edizione",
+    "stopComparing": "Termina il confronto",
+    "thirdEdition": "Terza edizione",
+    "cancel": "Annulla"
   },
   "Notice": {
     "signIn": "Questa edizione mostra ai visitatori i primi 30 versetti di ogni capitolo. Accedi per leggere il capitolo intero.",

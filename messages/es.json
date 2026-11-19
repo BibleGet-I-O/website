@@ -53,7 +53,16 @@
     "secondNoBook": "{second} no tiene {book}.",
     "dividedNoChapter": "{main} y {second} dividen de forma distinta los capítulos de este libro: {second} no tiene capítulo {chapter}.",
     "estherAdditions": "{second} imprime el texto de estos capítulos como adiciones dentro de los capítulos 1–10 de Ester.",
-    "secondUnavailable": "No se pudo cargar {second}, así que solo se muestra {main}. Inténtalo más tarde."
+    "secondUnavailable": "No se pudo cargar {second}. Inténtalo más tarde.",
+    "settings": "Opciones de lectura",
+    "compare": "Comparar con otra edición…",
+    "changeSecond": "Cambiar la segunda edición…",
+    "addThird": "Añadir una tercera edición…",
+    "changeThird": "Cambiar la tercera edición…",
+    "removeThird": "Quitar la tercera edición",
+    "stopComparing": "Dejar de comparar",
+    "thirdEdition": "Tercera edición",
+    "cancel": "Cancelar"
   },
   "Notice": {
     "signIn": "Esta edición muestra a los visitantes los primeros 30 versículos de cada capítulo. Inicia sesión para leer el capítulo completo.",

@@ -1,68 +1,88 @@
 import { Fragment, type ReactNode } from "react";
 import { GapNote } from "@/components/GapNote";
 import { Headings, VerseLine, headingsBefore } from "@/components/VerseLines";
+import type { View } from "@/lib/compare";
 import type { ParallelRow } from "@/lib/parallel";
 
 export type SpreadSide = { sigla: string; name: string; lang?: string };
 
+/** Cell test ids by side: the main edition is `a`, the compared ones `b` and `c`. */
+const LETTERS = "abc";
+/** Static class names, so Tailwind sees them. */
+const COLUMNS: Record<number, string> = { 1: "grid-cols-1", 2: "grid-cols-2", 3: "grid-cols-3" };
+
 /**
- * Two editions as facing pages, one verse per line, each row level with its counterpart. Side by side from
- * the md breakpoint and in landscape; in portrait below md the grid has one column, so each verse of the
- * second edition sits under its counterpart (tagged with the edition's sigla).
+ * The main edition (`sides[0]`) and up to two compared ones, one verse per line, each row level with its
+ * counterparts. Side by side (the default) is a column per edition at every width, each headed by its
+ * edition's name; interlinear is one column, each compared verse under the main one, tagged with its
+ * edition's sigla.
  *
- * Section headings get a row of their own above their verse, so that one edition's headings never push its
- * verse below its counterpart (CEI2008 Gn 1:1 under two headings stays level with the Nova Vulgata's 1:1).
+ * Side by side, section headings get a row of their own above their verse, so that one edition's headings
+ * never push its verse below its counterparts (CEI2008 Gn 1:1 under two headings stays level with the Nova
+ * Vulgata's 1:1). Interlinear, each edition's headings sit in its own cell, under its tag, above its verse.
  *
- * A one-sided row gets the "absent" note on its empty side, except where the emptiness is not the
- * edition's: the rest of either edition after the other's cap (`aTruncated`, `bTruncated`), and a verse of
- * another chapter the main edition prints on this page (the second prints it in its own chapter).
+ * A row an edition has no verse in gets the "absent" note on that side, except where the emptiness is not
+ * the edition's: the rest of an edition after its own cap (`truncated`, by side), and, for a compared
+ * edition, a verse of another chapter the main edition prints on this page (the compared edition prints it
+ * in its own chapter).
  */
-export function Spread({ a, b, rows, chapter, aTruncated = false, bTruncated = false }: {
-  a: SpreadSide; b: SpreadSide; rows: ParallelRow[]; chapter: number; aTruncated?: boolean; bTruncated?: boolean;
+export function Spread({ sides, rows, chapter, truncated = [], view = "side-by-side" }: {
+  sides: SpreadSide[]; rows: ParallelRow[]; chapter: number; truncated?: boolean[]; view?: View;
 }) {
-  let lastA = -1;
-  let lastB = -1;
-  rows.forEach((r, i) => {
-    if (r.a) lastA = i;
-    if (r.b) lastB = i;
-  });
-  const cellA = (r: ParallelRow, i: number): ReactNode => {
-    if (r.a) return <VerseLine row={r.a} chapter={chapter} headings={false} />;
-    return aTruncated && i > lastA ? null : <GapNote edition={a.name} />;
-  };
-  const cellB = (r: ParallelRow, i: number): ReactNode => {
+  const interlinear = view === "interlinear";
+  const cols = interlinear ? 1 : sides.length;
+  const compact = cols === 3;
+  const cellsOf = (r: ParallelRow) => [r.a, ...r.others];
+  const last = sides.map((_, s) => rows.reduce((at, r, i) => (cellsOf(r)[s] ? i : at), -1));
+  const cell = (r: ParallelRow, i: number, s: number): ReactNode => {
+    const v = cellsOf(r)[s];
     // Numbered against the main chapter: VGCL 9:22 beside NABRE Psalm 10 reads "9:22".
-    if (r.b) return <VerseLine row={r.b} chapter={chapter} headings={false} />;
-    if (bTruncated && i > lastB) return null;
-    return r.a && r.a.chapter !== chapter ? null : <GapNote edition={b.name} />;
+    if (v) return <VerseLine row={v} chapter={chapter} headings={false} compact={compact} />;
+    if (truncated[s] && i > last[s]) return null;
+    if (s > 0 && r.a && r.a.chapter !== chapter) return null;
+    return <GapNote edition={sides[s].name} />;
   };
+  // Three columns on a phone: a smaller text so the words fit.
+  const size = cols === 3 ? "text-base sm:text-lg" : "text-lg";
+  const gap = cols === 3 ? "gap-x-3 sm:gap-x-6" : "gap-x-4 sm:gap-x-8";
+  const muted = (s: number) => (s > 0 ? "text-slate-700 dark:text-slate-300" : "");
+
   return (
-    <div data-testid="spread" className="grid grid-cols-1 gap-x-8 font-serif text-lg leading-relaxed md:grid-cols-2 landscape:grid-cols-2">
-      <p className="mb-2 hidden text-center font-sans text-sm font-semibold text-slate-600 md:block landscape:block dark:text-slate-400">{a.name}</p>
-      <p className="mb-2 hidden text-center font-sans text-sm font-semibold text-slate-600 md:block landscape:block dark:text-slate-400">{b.name}</p>
+    <div data-testid="spread" className={`grid ${COLUMNS[cols]} ${gap} font-serif ${size} leading-relaxed`}>
+      {!interlinear && sides.map((side) => (
+        <p key={side.sigla} data-testid="column-name" className="mb-2 text-center font-sans text-sm font-semibold text-slate-600 dark:text-slate-400">
+          {side.name}
+        </p>
+      ))}
       {rows.map((r, i) => {
-        const b2 = cellB(r, i);
-        const [ha, hb] = [headingsBefore(r.a), headingsBefore(r.b)];
+        const titles = cellsOf(r).map((v) => headingsBefore(v));
         return (
-        <Fragment key={i}>
-          {(ha.length > 0 || hb.length > 0) && (
-            <>
-              <div data-testid="heading-a" lang={a.lang}>
-                <Headings titles={ha} />
+          <Fragment key={i}>
+            {/* Side by side: a row of their own. Interlinear: each edition's in its own cell, under its tag. */}
+            {!interlinear && titles.some((h) => h.length > 0) && sides.map((side, s) => (
+              <div key={`h${s}`} data-testid={`heading-${LETTERS[s]}`} lang={side.lang} className={muted(s)}>
+                <Headings titles={titles[s]} compact={compact} />
               </div>
-              <div data-testid="heading-b" lang={b.lang} className="text-slate-700 dark:text-slate-300">
-                <Headings titles={hb} />
-              </div>
-            </>
-          )}
-          <div data-testid="cell-a" lang={a.lang} className="py-0.5">
-            {cellA(r, i)}
-          </div>
-          <div data-testid="cell-b" lang={b.lang} className="mb-2 py-0.5 text-slate-700 md:mb-0 landscape:mb-0 dark:text-slate-300">
-            {b2 && <span className="ml-10 font-sans text-xs text-slate-500 md:hidden landscape:hidden dark:text-slate-400">{b.sigla}</span>}
-            {b2}
-          </div>
-        </Fragment>
+            ))}
+            {sides.map((side, s) => {
+              const content = cell(r, i, s);
+              const last = s === sides.length - 1;
+              return (
+                <div
+                  key={s}
+                  data-testid={`cell-${LETTERS[s]}`}
+                  lang={side.lang}
+                  className={`py-0.5 ${muted(s)} ${interlinear && last ? "mb-3" : ""}`}
+                >
+                  {interlinear && s > 0 && (content || titles[s].length > 0) && (
+                    <span data-testid="sigla" className="ml-10 font-sans text-xs text-slate-500 dark:text-slate-400">{side.sigla}</span>
+                  )}
+                  {interlinear && <Headings titles={titles[s]} compact={compact} />}
+                  {content}
+                </div>
+              );
+            })}
+          </Fragment>
         );
       })}
     </div>
