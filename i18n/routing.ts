@@ -12,4 +12,10 @@ export const LOCALE_NAMES: Record<Locale, string> = {
   en: "English", it: "Italiano", es: "Español", fr: "Français", de: "Deutsch", pt: "Português",
 };
 
-export const routing = defineRouting({ locales: LOCALES, defaultLocale: "en", localePrefix: "always" });
+export const routing = defineRouting({
+  locales: LOCALES,
+  defaultLocale: "en",
+  localePrefix: "always",
+  // next-intl writes the cookie too (on a locale switch): the same year-long lifetime as the picker's.
+  localeCookie: { name: LOCALE_COOKIE, maxAge: 31536000 },
+});
