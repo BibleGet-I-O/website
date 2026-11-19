@@ -5,10 +5,21 @@
   },
   "Home": {
     "title": "BibleGet",
-    "placeholder": "The reader is coming soon."
+    "intro": "Choose an edition to read."
   },
   "Auth": {
     "signIn": "Sign in",
     "signOut": "Sign out"
+  },
+  "Books": {
+    "ot": "Old Testament",
+    "nt": "New Testament",
+    "allEditions": "All editions",
+    "chapters": "Chapters of {book}"
+  },
+  "NotFound": {
+    "title": "Page not found",
+    "body": "That page does not exist.",
+    "home": "Back to the editions"
   }
 }
