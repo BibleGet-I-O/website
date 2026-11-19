@@ -5,7 +5,16 @@
   },
   "Home": {
     "title": "BibleGet",
-    "intro": "Choose an edition to read."
+    "intro": "Choose an edition to read.",
+    "languages": "Languages",
+    "bookName": "{name}, {year}",
+    "aboutNamed": "About {name}",
+    "colophon": "Colophon of {name}",
+    "year": "Year",
+    "rights": "Rights",
+    "publicDomain": "Public domain",
+    "notes": "Notes",
+    "otherLanguage": "Other languages"
   },
   "Auth": {
     "signIn": "Sign in",

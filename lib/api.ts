@@ -68,8 +68,10 @@ export async function getEditions(): Promise<Edition[]> {
   const copyrighted = new Set(body.copyrightversions ?? []);
   const names = body.validversions_fullname ?? {};
   return (body.validversions ?? []).map((sigla) => {
-    const [fullname = sigla, year = "", language = "", , , copyrightHolder = ""] = (names[sigla] ?? "").split("|");
-    return { sigla, fullname, year, language, copyrightHolder, copyright: copyrighted.has(sigla) };
+    const [fullname = sigla, year = "", language = "", , , copyrightHolder = "", ...rest] = (names[sigla] ?? "").split("|");
+    // The notes are the last field: a "|" inside them must not cut them short.
+    const notes = rest.join("|");
+    return { sigla, fullname, year, language, copyrightHolder, notes, copyright: copyrighted.has(sigla) };
   });
 }
 

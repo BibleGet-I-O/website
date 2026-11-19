@@ -6,6 +6,8 @@ export type Edition = {
   year: string;
   language: string;
   copyrightHolder: string;
+  /** The edition's notes from the endpoint; may hold several paragraphs separated by newlines. */
+  notes: string;
   /** Listed by the API as copyrighted (`copyrightversions`): visitors get a capped chapter. */
   copyright: boolean;
 };

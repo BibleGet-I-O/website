@@ -5,7 +5,7 @@ import { routing } from "@/i18n/routing";
 import { BookPage } from "@/components/BookPage";
 import { CappedNotice, noticeFor } from "@/components/CappedNotice";
 import { ChapterNav } from "@/components/ChapterNav";
-import { editionSlug } from "@/components/EditionCard";
+import { editionSlug } from "@/lib/slug";
 import { ReaderBar } from "@/components/ReaderBar";
 import { Interlinear } from "@/components/Interlinear";
 import { getAccess } from "@/lib/access";
