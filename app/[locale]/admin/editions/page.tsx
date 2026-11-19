@@ -2,7 +2,7 @@ import { hasLocale } from "next-intl";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import { notFound } from "next/navigation";
 import { auth } from "@/auth";
-import { FullTextSwitch } from "@/components/FullTextSwitch";
+import { EditionFlagSwitch } from "@/components/EditionFlagSwitch";
 import { Link } from "@/i18n/navigation";
 import { routing } from "@/i18n/routing";
 import { getAccessToken } from "@/lib/access";
@@ -57,6 +57,7 @@ export default async function AdminEditionsPage({ params }: { params: Promise<{ 
               <th>{t("year")}</th>
               <th>{t("copyright")}</th>
               <th>{t("fullText")}</th>
+              <th>{t("liturgical")}</th>
             </tr>
           </thead>
           <tbody>
@@ -68,7 +69,11 @@ export default async function AdminEditionsPage({ params }: { params: Promise<{ 
                 <td>{v.year}</td>
                 <td>{v.copyright ? t("copyrighted") : t("publicDomain")}</td>
                 <td>
-                  <FullTextSwitch sigla={v.sigla} initial={v.reader_full_text} />
+                  <EditionFlagSwitch sigla={v.sigla} field="reader_full_text" initial={v.reader_full_text} />
+                </td>
+                <td>
+                  {/* An endpoint that predates the flag omits it: shown off. */}
+                  <EditionFlagSwitch sigla={v.sigla} field="liturgical" initial={v.liturgical === true} />
                 </td>
               </tr>
             ))}

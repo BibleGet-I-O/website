@@ -48,9 +48,11 @@ const ed = (sigla: string, language: string, fullname = sigla, year = "2000", co
   fullname,
   year,
   language,
+  canon: "",
   copyrightHolder,
   notes: "",
   copyright,
+  liturgical: false,
 });
 const book = (bookNum: number, name: string, abbrev: string, chapters: number) => ({
   bookNum,
@@ -101,12 +103,12 @@ describe("home", () => {
     }
   });
 
-  it("eachBookLinksToItsEditionOrderedByYear", async () => {
+  it("eachBookLinksToItsEditionNewestFirst", async () => {
     getEditions.mockResolvedValue(shelf());
     const { container } = await home();
     const english = container.querySelector("#lang-en") as HTMLElement;
     const books = within(english).getAllByRole("link");
-    expect(books).toEqual(["Douay-Rheims, 1899", "Synthetic English, 1970"].map((name) => within(english).getByRole("link", { name })));
+    expect(books).toEqual(["Synthetic English, 1970", "Douay-Rheims, 1899"].map((name) => within(english).getByRole("link", { name })));
     // The name comes from the cover's own text, not an aria-label, so the title can carry its language.
     expect(books[0]).not.toHaveAttribute("aria-label");
     expect(within(english).getByRole("link", { name: "Douay-Rheims, 1899" })).toHaveAttribute("href", "/en/read/drb");
@@ -137,6 +139,54 @@ describe("home", () => {
     expect(within(section).getByRole("heading", { level: 2 })).toHaveTextContent("Other languages");
     const link = within(section).getByRole("link", { name: "Nameless Synthetic, 1800" });
     expect(within(link).getByText("Nameless Synthetic")).not.toHaveAttribute("lang");
+  });
+
+  describe("shelf order and the liturgical stamp", () => {
+    const it_ = (sigla: string, fullname: string, year: string, extra: object = {}) => ({ ...ed(sigla, "it", fullname, year), ...extra });
+    const catholic = { canon: "CATHOLIC" };
+    const liturgical = { canon: "CATHOLIC", liturgical: true };
+    const italian = () => [
+      it_("PROTA", "Synthetic Protestant Old", "1924", { canon: "PROTESTANT" }),
+      it_("CATHA", "Synthetic Catholic Old", "1974", catholic),
+      it_("LITA", "Synthetic Liturgical Old", "1974", liturgical),
+      it_("NOCAN", "Synthetic Uncanoned New", "2020"),
+      it_("CATHB", "Synthetic Catholic New", "2015", catholic),
+      it_("LITB", "Synthetic Liturgical New", "2008", liturgical),
+      it_("PROTB", "Synthetic Protestant New", "2011", { canon: "PROTESTANT" }),
+      it_("NOYEAR", "Synthetic Catholic Undated", "", catholic),
+    ];
+    const order = (container: HTMLElement) =>
+      within(container.querySelector("#lang-it") as HTMLElement).getAllByRole("link").map((a) => a.getAttribute("href"));
+
+    it("shelvesLiturgicalThenOtherCatholicThenTheRestEachNewestFirst", async () => {
+      getEditions.mockResolvedValue(italian());
+      const { container } = await home();
+      expect(order(container)).toEqual(
+        ["litb", "lita", "cathb", "catha", "noyear", "nocan", "protb", "prota"].map((s) => `/en/read/${s}`),
+      );
+    });
+
+    it("stampsOnlyTheLiturgicalEditions", async () => {
+      getEditions.mockResolvedValue(italian());
+      const { container } = await home();
+      const stamps = container.querySelectorAll('[data-marker="liturgical"]');
+      expect(stamps).toHaveLength(2);
+      for (const stamp of stamps) expect(stamp).toHaveTextContent(en.Home.liturgical);
+      // The stamp is part of the cover link's accessible name.
+      expect(screen.getByRole("link", { name: "Synthetic Liturgical New, 2008, Liturgical text" })).toHaveAttribute("href", "/en/read/litb");
+      expect(screen.getByRole("link", { name: "Synthetic Catholic New, 2015" })).toBeInTheDocument();
+      expect(screen.queryByRole("link", { name: /Catholic New.*Liturgical/ })).toBeNull();
+    });
+
+    it("withoutLiturgicalEditionsShelvesCatholicThenTheRest", async () => {
+      // An endpoint without `liturgicalversions`: getEditions marks none liturgical.
+      getEditions.mockResolvedValue(italian().map((e) => ({ ...e, liturgical: false })));
+      const { container } = await home();
+      expect(order(container)).toEqual(
+        ["cathb", "litb", "catha", "lita", "noyear", "nocan", "protb", "prota"].map((s) => `/en/read/${s}`),
+      );
+      expect(container.querySelector('[data-marker="liturgical"]')).toBeNull();
+    });
   });
 
   it("aCopyrightedEditionHasTheDarkBinding", async () => {

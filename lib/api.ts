@@ -33,6 +33,10 @@ function keyFor(access: Access): string {
 const UNAVAILABLE_4XX = new Set([401, 403, 408, 429]);
 
 async function request(path: string, access: Access, init: FetchInit): Promise<unknown> {
+  return (await requestWithHeaders(path, access, init)).body;
+}
+
+async function requestWithHeaders(path: string, access: Access, init: FetchInit): Promise<{ body: unknown; headers: Headers }> {
   let res: Response;
   try {
     res = await fetch(`${baseUrl()}${path}`, {
@@ -51,7 +55,7 @@ async function request(path: string, access: Access, init: FetchInit): Promise<u
   }
   if (res.status >= 400) throw new NotFound(`endpoint answered ${res.status}`);
   try {
-    return await res.json();
+    return { body: await res.json(), headers: res.headers };
   } catch {
     throw new ApiUnavailable("endpoint returned an unreadable body");
   }
@@ -59,20 +63,56 @@ async function request(path: string, access: Access, init: FetchInit): Promise<u
 
 const METADATA: FetchInit = { next: { revalidate: 86400 } };
 
+type RawVersions = {
+  validversions?: string[];
+  validversions_fullname?: Record<string, string>;
+  copyrightversions?: string[];
+  liturgicalversions?: string[];
+};
+
+/** The editions metadata, one cached request shared by getEditions and getApiVersion. */
+function bibleVersions(): Promise<{ body: unknown; headers: Headers }> {
+  return requestWithHeaders("/metadata/bibleversions", "visitor", METADATA);
+}
+
 export async function getEditions(): Promise<Edition[]> {
-  const body = (await request("/metadata/bibleversions", "visitor", METADATA)) as {
-    validversions?: string[];
-    validversions_fullname?: Record<string, string>;
-    copyrightversions?: string[];
-  };
+  const body = (await bibleVersions()).body as RawVersions;
   const copyrighted = new Set(body.copyrightversions ?? []);
+  // An endpoint that predates the liturgical flag sends no list: no edition is liturgical.
+  const liturgical = new Set(Array.isArray(body.liturgicalversions) ? body.liturgicalversions : []);
   const names = body.validversions_fullname ?? {};
   return (body.validversions ?? []).map((sigla) => {
-    const [fullname = sigla, year = "", language = "", , , copyrightHolder = "", ...rest] = (names[sigla] ?? "").split("|");
+    const [fullname = sigla, year = "", language = "", , canon = "", copyrightHolder = "", ...rest] = (names[sigla] ?? "").split("|");
     // The notes are the last field: a "|" inside them must not cut them short.
     const notes = rest.join("|");
-    return { sigla, fullname, year, language, copyrightHolder, notes, copyright: copyrighted.has(sigla) };
+    return {
+      sigla,
+      fullname,
+      year,
+      language,
+      canon: canon.trim().toUpperCase(),
+      copyrightHolder,
+      notes,
+      copyright: copyrighted.has(sigla),
+      liturgical: liturgical.has(sigla),
+    };
   });
+}
+
+/** Longest version string shown; anything longer is cut (the header is untrusted text). */
+const VERSION_MAX = 64;
+
+/**
+ * The endpoint's release (its `X-BibleGet-Version` header), read from the cached editions metadata request;
+ * null when the header is absent or empty, or the endpoint cannot be reached.
+ */
+export async function getApiVersion(): Promise<string | null> {
+  try {
+    const value = (await bibleVersions()).headers.get("X-BibleGet-Version")?.trim();
+    return value ? value.slice(0, VERSION_MAX) : null;
+  } catch {
+    return null;
+  }
 }
 
 type RawIndex = {

@@ -4,6 +4,7 @@ import { notFound } from "next/navigation";
 import "../globals.css";
 import { routing } from "@/i18n/routing";
 import { AuthStatus } from "@/components/AuthStatus";
+import { SiteFooter } from "@/components/SiteFooter";
 
 export function generateStaticParams() {
   return routing.locales.map((locale) => ({ locale }));
@@ -28,6 +29,7 @@ export default async function LocaleLayout({ children, params }: { children: Rea
             <AuthStatus />
           </header>
           {children}
+          <SiteFooter />
         </NextIntlClientProvider>
       </body>
     </html>

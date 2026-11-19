@@ -3,15 +3,17 @@
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
-import { setFullText } from "@/app/[locale]/admin/editions/actions";
+import { setEditionFlag, type EditionFlag } from "@/app/[locale]/admin/editions/actions";
 
 /**
- * One edition's full-text switch. A refused change (4xx) is rolled back with a message; a change whose
+ * One of an edition's switches (full text for readers, or liturgical text). A refused change (4xx) is rolled back with a message; a change whose
  * outcome is unknown (status 0: the request may have been applied) is not, the page is refreshed instead and
  * the switch waits, disabled, for the authoritative value. A changed `initial` (the list was refreshed) is
  * followed whenever no change is pending.
  */
-export function FullTextSwitch({ sigla, initial }: { sigla: string; initial: boolean }) {
+const LABELS = { reader_full_text: "fullTextFor", liturgical: "liturgicalFor" } as const;
+
+export function EditionFlagSwitch({ sigla, field, initial }: { sigla: string; field: EditionFlag; initial: boolean }) {
   const t = useTranslations("Admin");
   const router = useRouter();
   const [on, setOn] = useState(initial);
@@ -35,9 +37,9 @@ export function FullTextSwitch({ sigla, initial }: { sigla: string; initial: boo
     setError(null);
     setOn(next);
     startTransition(async () => {
-      let result: Awaited<ReturnType<typeof setFullText>>;
+      let result: Awaited<ReturnType<typeof setEditionFlag>>;
       try {
-        result = await setFullText(sigla, next);
+        result = await setEditionFlag(sigla, field, next);
       } catch {
         result = { ok: false, status: 0 };
       }
@@ -59,7 +61,7 @@ export function FullTextSwitch({ sigla, initial }: { sigla: string; initial: boo
         type="button"
         role="switch"
         aria-checked={on}
-        aria-label={t("fullTextFor", { sigla })}
+        aria-label={t(LABELS[field], { sigla })}
         disabled={pending || unknown}
         onClick={toggle}
         className={`relative h-6 w-11 rounded-full transition-colors disabled:opacity-60 ${on ? "bg-emerald-600" : "bg-slate-400"}`}

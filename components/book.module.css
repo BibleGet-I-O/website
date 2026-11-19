@@ -19,6 +19,11 @@
   overflow-wrap: anywhere; hyphens: auto;
 }
 .year { position: absolute; bottom: 1.4rem; left: 0.6rem; right: 0; text-align: center; font-size: 1.2rem; }
+/* The liturgical stamp: small gilt capitals at the foot of the cover, inside the frame and under the year. */
+.liturgical {
+  position: absolute; bottom: 0.75rem; left: 1.4rem; right: 0.8rem; text-align: center;
+  font-size: 0.5rem; line-height: 1; letter-spacing: 0.14em; text-transform: uppercase; opacity: 0.85;
+}
 .label { font-size: 0.75rem; color: #6b625b; text-align: center; letter-spacing: 0.06em; }
 
 /* The © button turns the book round; the back cover carries an endpaper with the colophon. */

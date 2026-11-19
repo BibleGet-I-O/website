@@ -5,11 +5,15 @@ export type Edition = {
   fullname: string;
   year: string;
   language: string;
+  /** The canon the edition follows, upper-cased ("CATHOLIC", "PROTESTANT"); empty when unknown. */
+  canon: string;
   copyrightHolder: string;
   /** The edition's notes from the endpoint; may hold several paragraphs separated by newlines. */
   notes: string;
   /** Listed by the API as copyrighted (`copyrightversions`): visitors get a capped chapter. */
   copyright: boolean;
+  /** Listed by the API as liturgical (`liturgicalversions`): the text read in the liturgy. */
+  liturgical: boolean;
 };
 
 export type Book = {

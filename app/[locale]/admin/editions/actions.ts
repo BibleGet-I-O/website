@@ -5,14 +5,21 @@ import { auth } from "@/auth";
 import { getAccessToken } from "@/lib/access";
 import { adminUrl } from "@/lib/admin";
 
-export type SetFullTextResult = { ok: true } | { ok: false; status: number };
+export type EditionFlag = "reader_full_text" | "liturgical";
+
+export type SetEditionFlagResult = { ok: true } | { ok: false; status: number };
+
+const FLAGS: ReadonlySet<string> = new Set<EditionFlag>(["reader_full_text", "liturgical"]);
 
 /**
- * Switches an edition's full text for signed-in readers. Runs in a Server Action so an
- * expired access token can be refreshed; the token never leaves this function.
+ * Switches one of an edition's flags: its full text for signed-in readers (`reader_full_text`) or its
+ * liturgical status (`liturgical`). Runs in a Server Action so an expired access token can be refreshed; the
+ * token never leaves this function.
  */
-export async function setFullText(sigla: string, on: boolean): Promise<SetFullTextResult> {
-  if (!/^[A-Z0-9]{2,16}$/.test(sigla) || typeof on !== "boolean") return { ok: false, status: 400 };
+export async function setEditionFlag(sigla: string, field: EditionFlag, on: boolean): Promise<SetEditionFlagResult> {
+  if (!/^[A-Z0-9]{2,16}$/.test(sigla) || typeof field !== "string" || !FLAGS.has(field) || typeof on !== "boolean") {
+    return { ok: false, status: 400 };
+  }
   const session = await auth();
   if (!session?.user || session.error || session.admin !== true) return { ok: false, status: 403 };
   const token = await getAccessToken();
@@ -26,15 +33,17 @@ export async function setFullText(sigla: string, on: boolean): Promise<SetFullTe
       method: "PATCH",
       cache: "no-store",
       headers: { Accept: "application/json", "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-      body: JSON.stringify({ reader_full_text: on }),
+      body: JSON.stringify({ [field]: on }),
     });
   } catch {
     return { ok: false, status: 0 };
   }
   if (!res.ok) return { ok: false, status: res.status };
 
-  // Visitor chapter fetches are cached for an hour; signed-in ones are not cached.
   revalidatePath("/[locale]/admin/editions", "page");
-  revalidatePath("/[locale]/read/[edition]/[book]/[chapter]", "page");
+  // The landing page shelves and marks the editions from the cached editions metadata.
+  revalidatePath("/[locale]", "page");
+  // Visitor chapter fetches are cached for an hour; signed-in ones are not cached.
+  if (field === "reader_full_text") revalidatePath("/[locale]/read/[edition]/[book]/[chapter]", "page");
   return { ok: true };
 }
