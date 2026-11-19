@@ -129,7 +129,11 @@ jobs:
           # in public/.
           mkdir -p .next/standalone/.next
           cp -r .next/static .next/standalone/.next/static
-          cp -r public .next/standalone/public
+          # The bundle always carries public/, even empty: it is the Plesk
+          # document root, which the extract step replaces wholesale. The
+          # repo has no public/ until the site ships static files.
+          mkdir -p .next/standalone/public
+          if [ -d public ]; then cp -r public/. .next/standalone/public/; fi
 
           # Hard guard: the bundle must carry no environment file.
           if find .next/standalone -maxdepth 1 -name '.env*' | grep -q .; then
