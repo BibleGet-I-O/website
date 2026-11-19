@@ -238,8 +238,8 @@ describe("books", () => {
     });
 
     it("opensTheSameChapterWhereTheEditionHasIt", async () => {
-      await expect(BooksPage(params("luzzi", { book: "1", chapter: "12", with: "DRB", tradition: "HEBREW" }))).rejects.toThrow(
-        "NEXT_REDIRECT /en/read/luzzi/genesi/12?with=DRB&tradition=HEBREW",
+      await expect(BooksPage(params("luzzi", { book: "1", chapter: "12", with: "DRB,NABRE", view: "interlinear", tradition: "HEBREW" }))).rejects.toThrow(
+        "NEXT_REDIRECT /en/read/luzzi/genesi/12?with=DRB,NABRE&view=interlinear&tradition=HEBREW",
       );
       await expect(BooksPage(params("luzzi", { book: "39", chapter: "3" }))).rejects.toThrow("NEXT_REDIRECT /en/read/luzzi/malachia/3");
     });
@@ -397,6 +397,37 @@ describe("chapter", () => {
     expect(publicDomain.queryByRole("note")).toBeNull();
   });
 
+  it("twoComparedEditionsLoadBothAndAlignThree", async () => {
+    getIndex.mockResolvedValue(drbIndex);
+    getChapter.mockResolvedValue({ rows: [verse(11, 1), verse(11, 2)], truncated: false, expectedVerses: 2 });
+    getVerses.mockResolvedValue([]);
+    render(wrap(await ChapterPage(params("drb", "wisdom", "11", { with: "nabre,LUZZI,DRB" }))));
+    for (const sigla of ["NABRE", "LUZZI"]) expect(getChapter).toHaveBeenCalledWith(expect.objectContaining({ sigla, chapter: 11 }));
+    expect(screen.getAllByTestId("column-name").map((e) => e.textContent)).toEqual(["Douay-Rheims", "NABRE", "LUZZI"]);
+    expect(screen.getByTestId("spread")).toHaveClass("grid-cols-3");
+    expect(screen.getByRole("link", { name: /Next chapter/ })).toHaveAttribute("href", "/en/read/drb/wisdom/12?with=NABRE,LUZZI");
+    expect(screen.getByRole("main")).toHaveClass("max-w-7xl");
+  });
+
+  it("interlinearViewIsPassedToTheLayoutAndTheChapterLinks", async () => {
+    getIndex.mockResolvedValue(drbIndex);
+    getChapter.mockResolvedValue({ rows: [verse(11, 1)], truncated: false, expectedVerses: 1 });
+    getVerses.mockResolvedValue([]);
+    render(wrap(await ChapterPage(params("drb", "wisdom", "11", { with: "NABRE", view: "interlinear" }))));
+    expect(screen.getByTestId("spread")).toHaveClass("grid-cols-1");
+    expect(screen.getByRole("main")).toHaveClass("max-w-3xl");
+    expect(screen.getByRole("link", { name: /Next chapter/ })).toHaveAttribute("href", "/en/read/drb/wisdom/12?with=NABRE&view=interlinear");
+  });
+
+  it("theViewWithoutAComparedEditionIsIgnored", async () => {
+    getIndex.mockResolvedValue(drbIndex);
+    getChapter.mockResolvedValue({ rows: [verse(11, 1)], truncated: false, expectedVerses: 1 });
+    getVerses.mockResolvedValue([]);
+    render(wrap(await ChapterPage(params("drb", "wisdom", "11", { view: "interlinear" }))));
+    expect(screen.queryByTestId("spread")).toBeNull();
+    expect(screen.getByRole("link", { name: /Next chapter/ })).toHaveAttribute("href", "/en/read/drb/wisdom/12");
+  });
+
   it("aFailedNeighbourVerseFetchStillShowsTheChapter", async () => {
     const error = vi.spyOn(console, "error").mockImplementation(() => {});
     getIndex.mockResolvedValue(drbIndex);
@@ -419,6 +450,7 @@ describe("chapter", () => {
     const chapters = screen.getByLabelText("Chapter") as HTMLSelectElement;
     expect(Array.from(chapters.options).map((o) => o.value)).toEqual(["1", "2", "3", "4", "5", "6", "7", "8", "9", "10"]);
     expect(screen.getByRole("link", { name: /Next chapter/ })).toHaveAttribute("href", "/en/read/nabre/1-maccabees/1");
+    fireEvent.click(screen.getByRole("button", { name: "Reading settings" }));
     expect(screen.getByLabelText("Esther text")).toHaveValue("GREEK");
     // The previous chapter's last verse is counted in the Greek text.
     expect(getVerses).toHaveBeenCalledWith(expect.objectContaining({ chapter: 9, verse: 12, tradition: "GREEK" }));
@@ -430,6 +462,7 @@ describe("chapter", () => {
     getVerses.mockResolvedValue([]);
     render(wrap(await ChapterPage(params("nabre", "esther", "1", { tradition: "HEBREW" }))));
     expect(getChapter).toHaveBeenCalledWith(expect.objectContaining({ tradition: "HEBREW" }));
+    fireEvent.click(screen.getByRole("button", { name: "Reading settings" }));
     expect(screen.getByLabelText("Esther text")).toHaveValue("HEBREW");
 
     getChapter.mockClear();

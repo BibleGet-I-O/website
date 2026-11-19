@@ -10,14 +10,14 @@ import type { Book } from "@/lib/types";
 /** Catholic canon numbering: books 1-46 are the Old Testament, 47-73 the New. */
 const LAST_OT_BOOK = 46;
 
-type Search = { book?: string | string[]; chapter?: string | string[]; with?: string | string[]; tradition?: string | string[] };
+type Search = { book?: string | string[]; chapter?: string | string[]; with?: string | string[]; view?: string | string[]; tradition?: string | string[] };
 
 const one = (v: string | string[] | undefined) => (Array.isArray(v) ? v[0] : v);
 const positive = (v: string | undefined) => (v !== undefined && /^[1-9]\d*$/.test(v) ? Number(v) : undefined);
 
 /**
  * The chapter the reader was on in another edition (`?book={bookNum}&chapter=`, from the reader bar's edition
- * switch), in this one: its path, with `with` and `tradition` passed on (the chapter page checks them), or null
+ * switch), in this one: its path, with `with`, `view` and `tradition` passed on (the chapter page checks them), or null
  * when this edition lacks the book (a deuterocanonical book in a Protestant canon) or the chapter.
  */
 function sameChapter(base: string, books: Book[], search: Search): string | null {
@@ -25,12 +25,13 @@ function sameChapter(base: string, books: Book[], search: Search): string | null
   const chapter = positive(one(search.chapter));
   const b = bookNum === undefined ? undefined : books.find((x) => x.bookNum === bookNum);
   if (!b || chapter === undefined || chapter > b.chapters) return null;
-  const qs = new URLSearchParams();
-  for (const k of ["with", "tradition"] as const) {
-    const v = one(search[k]);
-    if (v) qs.set(k, v);
-  }
-  return `${base}/${slugFor(b, books)}/${chapter}${qs.size > 0 ? `?${qs}` : ""}`;
+  // Passed on as they came (the chapter page checks them), the commas of `with` kept literal.
+  const qs = (["with", "view", "tradition"] as const)
+    .map((k) => [k, one(search[k])] as const)
+    .filter(([, v]) => v)
+    .map(([k, v]) => `${k}=${encodeURIComponent(v!).replace(/%2C/gi, ",")}`)
+    .join("&");
+  return `${base}/${slugFor(b, books)}/${chapter}${qs ? `?${qs}` : ""}`;
 }
 
 export default async function BooksPage({ params, searchParams }: { params: Promise<{ locale: string; edition: string }>; searchParams?: Promise<Search> }) {
