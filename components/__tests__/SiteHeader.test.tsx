@@ -1,7 +1,9 @@
-import { describe, it, expect } from "vitest";
-import { render, screen } from "@testing-library/react";
+import { describe, it, expect, vi } from "vitest";
+import { render, screen, within } from "@testing-library/react";
 import { NextIntlClientProvider } from "next-intl";
 import en from "@/messages/en.json";
+
+vi.mock("next/navigation", async (orig) => ({ ...(await orig<object>()), usePathname: () => "/en", useRouter: () => ({ replace: vi.fn(), push: vi.fn() }) }));
 
 import { SiteHeader } from "@/components/SiteHeader";
 
@@ -18,7 +20,18 @@ describe("SiteHeader", () => {
     expect(logo).toHaveAttribute("src", "/bibleget-logo.png");
     // The link text names it; the logo is decorative.
     expect(logo).toHaveAttribute("alt", "");
-    expect(screen.getByRole("banner")).toHaveTextContent("auth");
-    expect(screen.getByRole("combobox", { name: "Theme" })).toHaveValue("system");
+  });
+
+  it("foldsLanguageThemeAndSignInIntoTheMenu", () => {
+    render(
+      <NextIntlClientProvider locale="en" messages={en}>
+        <SiteHeader auth={<span>auth</span>} theme="dark" />
+      </NextIntlClientProvider>,
+    );
+    expect(screen.getByRole("button", { name: "Open menu" })).toHaveAttribute("aria-expanded", "false");
+    const nav = within(screen.getByRole("navigation", { hidden: true }));
+    expect(nav.getByRole("button", { name: "Language", hidden: true })).toBeInTheDocument();
+    expect(nav.getByRole("combobox", { name: "Theme", hidden: true })).toHaveValue("dark");
+    expect(nav.getByText("auth")).toBeInTheDocument();
   });
 });

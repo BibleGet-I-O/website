@@ -101,5 +101,11 @@
     "system": "System",
     "light": "Light",
     "dark": "Dark"
+  },
+  "Header": {
+    "openMenu": "Open menu",
+    "closeMenu": "Close menu",
+    "mainNav": "Main navigation",
+    "language": "Language"
   }
 }
