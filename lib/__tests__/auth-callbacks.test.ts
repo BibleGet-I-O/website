@@ -53,7 +53,12 @@ describe("session callback", () => {
 
   it("defaults emailVerified and admin to false when the token lacks them", async () => {
     const result = await callbacks.session({ session: session(), token } as never);
-    expect(result).toMatchObject({ emailVerified: false, admin: false });
+    expect(result).toMatchObject({ emailVerified: false, admin: false, reviewer: false });
+  });
+
+  it("exposesTheReviewerFlagAsABoolean", async () => {
+    const result = await callbacks.session({ session: session(), token: { ...token, reviewer: true } } as never);
+    expect(result).toMatchObject({ reviewer: true, admin: false });
   });
 
   it("has only whitelisted keys, even when the token carries secrets and roles", async () => {
@@ -61,7 +66,7 @@ describe("session callback", () => {
       session: session(),
       token: { ...token, admin: true, emailVerified: true, [ROLES]: { bibleget_admin: {} }, roles: ["x"] },
     } as never);
-    const allowed = ["user", "expires", "error", "emailVerified", "admin"];
+    const allowed = ["user", "expires", "error", "emailVerified", "admin", "reviewer"];
     expect(Object.keys(result).filter((k) => !allowed.includes(k))).toEqual([]);
   });
 });
@@ -85,6 +90,7 @@ describe("jwt callback", () => {
       expires_at: 1_700_000_000,
       emailVerified: false,
       admin: false,
+      reviewer: false,
     });
   });
 
@@ -94,7 +100,9 @@ describe("jwt callback", () => {
       account,
       profile: { email_verified: true, [ROLES]: { bibleget_admin: { "1": "x" } } },
     } as never);
-    expect(result).toMatchObject({ emailVerified: true, admin: true });
+    expect(result).toMatchObject({ emailVerified: true, admin: true, reviewer: false });
+    const reviewer = await callbacks.jwt({ token: { sub: "u" }, account, profile: { [ROLES]: { bibleget_reviewer: {} } } } as never);
+    expect(reviewer).toMatchObject({ reviewer: true, admin: false });
     expect(Object.keys(result as object)).not.toContain(ROLES);
     expect(Object.keys(result as object)).not.toContain("email_verified");
 

@@ -20,7 +20,8 @@
   "Auth": {
     "signIn": "Accedi",
     "signOut": "Esci",
-    "admin": "Amministrazione"
+    "admin": "Amministrazione",
+    "review": "Revisione"
   },
   "Books": {
     "ot": "Antico Testamento",
@@ -116,5 +117,46 @@
     "closeMenu": "Chiudi il menu",
     "mainNav": "Navigazione principale",
     "language": "Lingua"
+  },
+  "Review": {
+    "title": "Revisione",
+    "intro": "I collegamenti dai versetti di ogni edizione alle unità testuali della Nova Vulgata (CBTUDR). Le regole hanno collegato la maggior parte dei versetti; le bozze qui richiedono una revisione.",
+    "back": "Indietro",
+    "backToList": "Tutti i capitoli",
+    "edition": "Edizione",
+    "drafts": "Bozze",
+    "reviewed": "Rivisti",
+    "byRule": "Per regola",
+    "chaptersOf": "{edition}: capitoli da rivedere",
+    "chapters": "Capitoli da rivedere",
+    "chapterLine": "{name}: {drafts, plural, one {# bozza} other {# bozze}}, fiducia minima {percent}%",
+    "nothing": "Non resta nulla da rivedere in questa edizione.",
+    "chapterTitle": "{edition}: {name}",
+    "listFailed": "Non è stato possibile caricare i dati della revisione.",
+    "signInAgain": "Accedi di nuovo per continuare.",
+    "nova": "Nova Vulgata",
+    "noUnits": "Nessun corrispondente nella Nova Vulgata",
+    "confidence": "Fiducia {percent}%",
+    "statusRule": "Per regola",
+    "statusDraft": "Bozza",
+    "statusReviewed": "Rivisto",
+    "kindCorresponding": "passo corrispondente",
+    "accept": "Accetta",
+    "relink": "Ricollega",
+    "relinkTo": "Collega questo versetto a:",
+    "saveLinks": "Salva i collegamenti",
+    "cancel": "Annulla",
+    "noCounterpart": "Nessun corrispondente",
+    "split": "Da dividere",
+    "splitNote": "Che cosa va diviso, e dove?",
+    "flag": "Segnala",
+    "makeCorresponding": "Segna come corrispondente",
+    "makeSame": "Segna come stesso testo",
+    "acceptChapter": "Accetta tutte le bozze di questo capitolo",
+    "acceptedChapter": "{count, plural, one {# bozza accettata} other {# bozze accettate}}.",
+    "failed": "Non è stato possibile salvare la modifica.",
+    "changed": "Questo collegamento è cambiato nel frattempo.",
+    "reload": "Ricarica il capitolo",
+    "capped": "Qui le edizioni protette da copyright mostrano solo i primi 30 versetti: verifica il tuo indirizzo email, poi accedi di nuovo, per rivederle per intero."
   }
 }

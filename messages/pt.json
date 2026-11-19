@@ -20,7 +20,8 @@
   "Auth": {
     "signIn": "Entrar",
     "signOut": "Sair",
-    "admin": "Administração"
+    "admin": "Administração",
+    "review": "Revisão"
   },
   "Books": {
     "ot": "Antigo Testamento",
@@ -116,5 +117,46 @@
     "closeMenu": "Fechar o menu",
     "mainNav": "Navegação principal",
     "language": "Idioma"
+  },
+  "Review": {
+    "title": "Revisão",
+    "intro": "As ligações dos versículos de cada edição às unidades textuais da Nova Vulgata (CBTUDR). As regras ligaram a maioria dos versículos; os rascunhos aqui precisam de revisão.",
+    "back": "Voltar",
+    "backToList": "Todos os capítulos",
+    "edition": "Edição",
+    "drafts": "Rascunhos",
+    "reviewed": "Revisados",
+    "byRule": "Por regra",
+    "chaptersOf": "{edition}: capítulos a revisar",
+    "chapters": "Capítulos a revisar",
+    "chapterLine": "{name}: {drafts, plural, one {# rascunho} other {# rascunhos}}, confiança mínima {percent}%",
+    "nothing": "Não resta nada a revisar nesta edição.",
+    "chapterTitle": "{edition}: {name}",
+    "listFailed": "Não foi possível carregar os dados da revisão.",
+    "signInAgain": "Entre novamente para continuar.",
+    "nova": "Nova Vulgata",
+    "noUnits": "Sem correspondência na Nova Vulgata",
+    "confidence": "Confiança {percent}%",
+    "statusRule": "Por regra",
+    "statusDraft": "Rascunho",
+    "statusReviewed": "Revisado",
+    "kindCorresponding": "passagem correspondente",
+    "accept": "Aceitar",
+    "relink": "Religar",
+    "relinkTo": "Ligar este versículo a:",
+    "saveLinks": "Salvar as ligações",
+    "cancel": "Cancelar",
+    "noCounterpart": "Sem correspondência",
+    "split": "Precisa ser dividido",
+    "splitNote": "O que deve ser dividido, e onde?",
+    "flag": "Sinalizar",
+    "makeCorresponding": "Marcar como correspondente",
+    "makeSame": "Marcar como o mesmo texto",
+    "acceptChapter": "Aceitar todos os rascunhos deste capítulo",
+    "acceptedChapter": "{count, plural, one {# rascunho aceito} other {# rascunhos aceitos}}.",
+    "failed": "Não foi possível salvar a alteração.",
+    "changed": "Esta ligação mudou entretanto.",
+    "reload": "Recarregar o capítulo",
+    "capped": "Aqui as edições protegidas por direitos autorais mostram só os primeiros 30 versículos: confirme o seu endereço de e-mail e entre novamente para revisá-las por completo."
   }
 }

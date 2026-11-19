@@ -1,7 +1,7 @@
 import NextAuth, { type NextAuthConfig } from "next-auth";
 import Zitadel from "next-auth/providers/zitadel";
 import type { ZitadelToken } from "@/lib/zitadel-token";
-import { isAdmin, ROLES_CLAIM } from "@/lib/roles";
+import { isAdmin, isReviewer, ROLES_CLAIM } from "@/lib/roles";
 
 // Exported so the callbacks can be unit tested without booting a provider.
 // The test that matters asserts the access token never reaches the Session —
@@ -23,6 +23,7 @@ export const callbacks = {
         emailVerified: claims?.email_verified === true,
         // A boolean only, never the roles claim: the Session copies it.
         admin: isAdmin(claims?.[ROLES_CLAIM]),
+        reviewer: isReviewer(claims?.[ROLES_CLAIM]),
       };
     }
     // Deliberately no refresh here. This callback also runs under auth() in
@@ -38,7 +39,7 @@ export const callbacks = {
     // the token from the encrypted JWT cookie through getAccessToken() instead.
     //
     // Built from scratch so only whitelisted keys can ever leave: `error` is a
-    // string like "RefreshAccessTokenError", and the two flags are booleans.
+    // string like "RefreshAccessTokenError", and the flags are booleans.
     const current = token as ZitadelToken;
     return {
       user: session.user,
@@ -46,6 +47,7 @@ export const callbacks = {
       ...(current.error ? { error: current.error } : {}),
       emailVerified: token.emailVerified === true,
       admin: token.admin === true,
+      reviewer: token.reviewer === true,
     };
   },
 } satisfies NonNullable<NextAuthConfig["callbacks"]>;

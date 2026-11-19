@@ -20,7 +20,8 @@
   "Auth": {
     "signIn": "Sign in",
     "signOut": "Sign out",
-    "admin": "Admin"
+    "admin": "Admin",
+    "review": "Review"
   },
   "Books": {
     "ot": "Old Testament",
@@ -116,5 +117,46 @@
     "closeMenu": "Close menu",
     "mainNav": "Main navigation",
     "language": "Language"
+  },
+  "Review": {
+    "title": "Review",
+    "intro": "Links from each edition's verses to the textual units of the Nova Vulgata (CBTUDR). Rules linked most verses; the drafts here need a reviewer.",
+    "back": "Back",
+    "backToList": "All chapters",
+    "edition": "Edition",
+    "drafts": "Drafts",
+    "reviewed": "Reviewed",
+    "byRule": "By rule",
+    "chaptersOf": "{edition}: chapters to review",
+    "chapters": "Chapters to review",
+    "chapterLine": "{name}: {drafts, plural, one {# draft} other {# drafts}}, lowest confidence {percent}%",
+    "nothing": "Nothing left to review in this edition.",
+    "chapterTitle": "{edition}: {name}",
+    "listFailed": "The review data could not be loaded.",
+    "signInAgain": "Sign in again to continue.",
+    "nova": "Nova Vulgata",
+    "noUnits": "No counterpart in the Nova Vulgata",
+    "confidence": "Confidence {percent}%",
+    "statusRule": "By rule",
+    "statusDraft": "Draft",
+    "statusReviewed": "Reviewed",
+    "kindCorresponding": "corresponding passage",
+    "accept": "Accept",
+    "relink": "Relink",
+    "relinkTo": "Link this verse to:",
+    "saveLinks": "Save links",
+    "cancel": "Cancel",
+    "noCounterpart": "No counterpart",
+    "split": "Needs a split",
+    "splitNote": "What should be split, and where?",
+    "flag": "Flag",
+    "makeCorresponding": "Mark as corresponding",
+    "makeSame": "Mark as same text",
+    "acceptChapter": "Accept all drafts in this chapter",
+    "acceptedChapter": "{count, plural, one {# draft accepted} other {# drafts accepted}}.",
+    "failed": "The change could not be saved.",
+    "changed": "This link changed meanwhile.",
+    "reload": "Reload the chapter",
+    "capped": "Copyrighted editions show only their first 30 verses here: verify your email address, then sign in again, to review them in full."
   }
 }

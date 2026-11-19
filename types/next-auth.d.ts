@@ -7,6 +7,7 @@ declare module "next-auth" {
     error?: string;
     emailVerified: boolean;
     admin: boolean;
+    reviewer: boolean;
   }
 }
 
@@ -19,5 +20,6 @@ declare module "next-auth/jwt" {
     error?: string;
     emailVerified?: boolean;
     admin?: boolean;
+    reviewer?: boolean;
   }
 }

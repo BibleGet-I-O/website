@@ -20,7 +20,8 @@
   "Auth": {
     "signIn": "Se connecter",
     "signOut": "Se déconnecter",
-    "admin": "Administration"
+    "admin": "Administration",
+    "review": "Relecture"
   },
   "Books": {
     "ot": "Ancien Testament",
@@ -116,5 +117,46 @@
     "closeMenu": "Fermer le menu",
     "mainNav": "Navigation principale",
     "language": "Langue"
+  },
+  "Review": {
+    "title": "Relecture",
+    "intro": "Les liens des versets de chaque édition vers les unités textuelles de la Nova Vulgata (CBTUDR). Des règles ont lié la plupart des versets ; les brouillons ci-dessous attendent une relecture.",
+    "back": "Retour",
+    "backToList": "Tous les chapitres",
+    "edition": "Édition",
+    "drafts": "Brouillons",
+    "reviewed": "Relus",
+    "byRule": "Par règle",
+    "chaptersOf": "{edition} : chapitres à relire",
+    "chapters": "Chapitres à relire",
+    "chapterLine": "{name} : {drafts, plural, one {# brouillon} other {# brouillons}}, confiance minimale {percent} %",
+    "nothing": "Plus rien à relire dans cette édition.",
+    "chapterTitle": "{edition} : {name}",
+    "listFailed": "Les données de relecture n'ont pas pu être chargées.",
+    "signInAgain": "Reconnectez-vous pour continuer.",
+    "nova": "Nova Vulgata",
+    "noUnits": "Aucune correspondance dans la Nova Vulgata",
+    "confidence": "Confiance {percent} %",
+    "statusRule": "Par règle",
+    "statusDraft": "Brouillon",
+    "statusReviewed": "Relu",
+    "kindCorresponding": "passage correspondant",
+    "accept": "Accepter",
+    "relink": "Relier autrement",
+    "relinkTo": "Relier ce verset à :",
+    "saveLinks": "Enregistrer les liens",
+    "cancel": "Annuler",
+    "noCounterpart": "Aucune correspondance",
+    "split": "À diviser",
+    "splitNote": "Que faut-il diviser, et où ?",
+    "flag": "Signaler",
+    "makeCorresponding": "Marquer comme correspondant",
+    "makeSame": "Marquer comme même texte",
+    "acceptChapter": "Accepter tous les brouillons de ce chapitre",
+    "acceptedChapter": "{count, plural, one {# brouillon accepté} other {# brouillons acceptés}}.",
+    "failed": "La modification n'a pas pu être enregistrée.",
+    "changed": "Ce lien a changé entre-temps.",
+    "reload": "Recharger le chapitre",
+    "capped": "Les éditions protégées par le droit d'auteur n'affichent ici que leurs 30 premiers versets : vérifiez votre adresse e-mail, puis reconnectez-vous, pour les relire en entier."
   }
 }
