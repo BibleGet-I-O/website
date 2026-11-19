@@ -29,7 +29,7 @@ export async function AuthStatus() {
   }
 
   return (
-    <div className="flex items-center gap-3 text-sm">
+    <div className="flex flex-col items-start gap-3 text-sm sm:flex-row sm:items-center">
       {session.admin === true && (
         <Link href="/admin/editions" className="underline">
           {t("admin")}

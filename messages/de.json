@@ -1,87 +1,87 @@
 {
   "Metadata": {
     "siteName": "BibleGet",
-    "siteDescription": "Read the Bible in many editions and languages."
+    "siteDescription": "Die Bibel in vielen Ausgaben und Sprachen lesen."
   },
   "Home": {
     "title": "BibleGet",
-    "intro": "Choose an edition to read.",
-    "languages": "Languages",
+    "intro": "Wählen Sie eine Ausgabe zum Lesen.",
+    "languages": "Sprachen",
     "bookName": "{name}, {year}",
-    "aboutNamed": "About {name}",
-    "colophon": "Colophon of {name}",
-    "year": "Year",
-    "rights": "Rights",
-    "publicDomain": "Public domain",
-    "notes": "Notes",
-    "otherLanguage": "Other languages",
+    "aboutNamed": "Über {name}",
+    "colophon": "Kolophon von {name}",
+    "year": "Jahr",
+    "rights": "Rechte",
+    "publicDomain": "Gemeinfrei",
+    "notes": "Anmerkungen",
+    "otherLanguage": "Weitere Sprachen",
     "liturgical": "Liturgischer Text"
   },
   "Auth": {
-    "signIn": "Sign in",
-    "signOut": "Sign out",
-    "admin": "Admin"
+    "signIn": "Anmelden",
+    "signOut": "Abmelden",
+    "admin": "Verwaltung"
   },
   "Books": {
-    "ot": "Old Testament",
-    "nt": "New Testament",
-    "allEditions": "All editions",
-    "chapters": "Chapters of {book}"
+    "ot": "Altes Testament",
+    "nt": "Neues Testament",
+    "allEditions": "Alle Ausgaben",
+    "chapters": "Kapitel von {book}"
   },
   "NotFound": {
-    "title": "Page not found",
-    "body": "That page does not exist.",
-    "home": "Back to the editions"
+    "title": "Seite nicht gefunden",
+    "body": "Diese Seite existiert nicht.",
+    "home": "Zurück zu den Ausgaben"
   },
   "Reader": {
-    "toolbar": "Reading options",
-    "edition": "Edition",
-    "book": "Book",
-    "chapter": "Chapter",
+    "toolbar": "Leseoptionen",
+    "edition": "Ausgabe",
+    "book": "Buch",
+    "chapter": "Kapitel",
     "interlinear": "Interlinear",
-    "secondEdition": "Second edition",
-    "estherText": "Esther text",
-    "greek": "Greek",
-    "hebrew": "Hebrew",
-    "chapterNav": "Chapters",
-    "previous": "Previous chapter",
-    "next": "Next chapter",
+    "secondEdition": "Zweite Ausgabe",
+    "estherText": "Esther-Text",
+    "greek": "Griechisch",
+    "hebrew": "Hebräisch",
+    "chapterNav": "Kapitel",
+    "previous": "Vorheriges Kapitel",
+    "next": "Nächstes Kapitel",
     "heading": "{book} {chapter}",
-    "gapAbsent": "Not in {edition}",
-    "dividedDifferently": "{main} and {second} divide the chapters of this book differently: {second}'s chapter {chapter} is shown whole below.",
-    "secondMissing": "{second} does not have {book} {chapter}.",
-    "secondNoBook": "{second} does not have {book}.",
-    "dividedNoChapter": "{main} and {second} divide the chapters of this book differently: {second} has no chapter {chapter}.",
-    "estherAdditions": "{second} prints the text of these chapters as additions within chapters 1–10 of Esther.",
-    "secondUnavailable": "{second} could not be loaded, so only {main} is shown. Try again later."
+    "gapAbsent": "Nicht in {edition}",
+    "dividedDifferently": "{main} und {second} teilen die Kapitel dieses Buches unterschiedlich ein: Kapitel {chapter} von {second} wird unten vollständig angezeigt.",
+    "secondMissing": "{second} enthält {book} {chapter} nicht.",
+    "secondNoBook": "{second} enthält {book} nicht.",
+    "dividedNoChapter": "{main} und {second} teilen die Kapitel dieses Buches unterschiedlich ein: {second} hat kein Kapitel {chapter}.",
+    "estherAdditions": "{second} druckt den Text dieser Kapitel als Zusätze innerhalb der Kapitel 1–10 von Esther.",
+    "secondUnavailable": "{second} konnte nicht geladen werden, daher wird nur {main} angezeigt. Versuchen Sie es später erneut."
   },
   "Notice": {
-    "signIn": "This edition shows visitors the first 30 verses of each chapter. Sign in to read the whole chapter.",
-    "verify": "Verify your email address to read the whole chapter: we sent you a link when you signed up. Then sign out and sign in again.",
-    "unavailable": "The full text is not available for this edition at the moment: only the first 30 verses of each chapter are shown."
+    "signIn": "Diese Ausgabe zeigt Besuchern die ersten 30 Verse jedes Kapitels. Melden Sie sich an, um das ganze Kapitel zu lesen.",
+    "verify": "Bestätigen Sie Ihre E-Mail-Adresse, um das ganze Kapitel zu lesen: Wir haben Ihnen bei der Registrierung einen Link gesendet. Melden Sie sich danach ab und wieder an.",
+    "unavailable": "Der vollständige Text dieser Ausgabe ist derzeit nicht verfügbar: Es werden nur die ersten 30 Verse jedes Kapitels angezeigt."
   },
   "Error": {
-    "title": "Something went wrong",
-    "unavailable": "The Bible service is unavailable, try again.",
-    "generic": "This page could not be shown.",
-    "retry": "Try again"
+    "title": "Etwas ist schiefgelaufen",
+    "unavailable": "Der Bibeldienst ist nicht verfügbar, versuchen Sie es erneut.",
+    "generic": "Diese Seite konnte nicht angezeigt werden.",
+    "retry": "Erneut versuchen"
   },
   "Admin": {
-    "title": "Editions",
-    "intro": "Choose which editions signed-in readers may read in full.",
-    "edition": "Edition",
-    "year": "Year",
-    "copyright": "Copyright",
-    "copyrighted": "Copyrighted",
-    "publicDomain": "Public domain",
-    "fullText": "Full text",
-    "fullTextFor": "Full text for {sigla}",
-    "signInAgain": "Your session has expired. Sign in again to manage editions.",
-    "listFailed": "The editions could not be loaded.",
-    "forbidden": "You are not allowed to change this.",
-    "switchFailed": "The change could not be saved. Try again.",
-    "switchUnknown": "Could not confirm the change — reload.",
-    "back": "Home",
+    "title": "Ausgaben",
+    "intro": "Wählen Sie, welche Ausgaben angemeldete Leser vollständig lesen dürfen.",
+    "edition": "Ausgabe",
+    "year": "Jahr",
+    "copyright": "Urheberrecht",
+    "copyrighted": "Urheberrechtlich geschützt",
+    "publicDomain": "Gemeinfrei",
+    "fullText": "Volltext",
+    "fullTextFor": "Volltext für {sigla}",
+    "signInAgain": "Ihre Sitzung ist abgelaufen. Melden Sie sich erneut an, um die Ausgaben zu verwalten.",
+    "listFailed": "Die Ausgaben konnten nicht geladen werden.",
+    "forbidden": "Sie dürfen dies nicht ändern.",
+    "switchFailed": "Die Änderung konnte nicht gespeichert werden. Versuchen Sie es erneut.",
+    "switchUnknown": "Die Änderung konnte nicht bestätigt werden — neu laden.",
+    "back": "Startseite",
     "liturgical": "Liturgischer Text",
     "liturgicalFor": "Liturgischer Text für {sigla}"
   },
@@ -101,5 +101,11 @@
     "system": "System",
     "light": "Hell",
     "dark": "Dunkel"
+  },
+  "Header": {
+    "openMenu": "Menü öffnen",
+    "closeMenu": "Menü schließen",
+    "mainNav": "Hauptnavigation",
+    "language": "Sprache"
   }
 }
