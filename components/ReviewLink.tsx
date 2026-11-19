@@ -49,8 +49,15 @@ export function ReviewLink(p: ReviewLinkProps) {
   const apply = async (change: ReviewChange) => {
     setBusy(true);
     setFailed(false);
-    const r = await reviewLink(link.id, change);
-    setBusy(false);
+    let r: Awaited<ReturnType<typeof reviewLink>>;
+    try {
+      r = await reviewLink(link.id, change);
+    } catch {
+      // The request itself failed (the network, or the server action): nothing was confirmed.
+      r = { ok: false, status: 0 };
+    } finally {
+      setBusy(false);
+    }
     if (r.ok) {
       setLink(r.link);
       setChosen(r.link.units);

@@ -21,9 +21,14 @@ export function AcceptChapterButton({ edition, book, chapter, drafts }: { editio
         disabled={state === "busy" || drafts === 0}
         onClick={async () => {
           setState("busy");
-          const r = await acceptChapter(edition, book, chapter);
-          setState(r.ok ? r.accepted : "failed");
-          if (r.ok) router.refresh();
+          try {
+            const r = await acceptChapter(edition, book, chapter);
+            setState(r.ok ? r.accepted : "failed");
+            if (r.ok) router.refresh();
+          } catch {
+            // The request itself failed: nothing was confirmed.
+            setState("failed");
+          }
         }}
       >
         {t("acceptChapter")}

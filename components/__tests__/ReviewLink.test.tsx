@@ -74,4 +74,12 @@ describe("ReviewLink", () => {
     render(wrap(<ReviewLink link={draft} text="x" units={[stretch[0]]} stretch={stretch} />));
     expect(screen.getByRole("region", { name: "5:2" })).toBeInTheDocument();
   });
+
+  it("aRejectedRequestSaysSoAndFreesTheButtons", async () => {
+    reviewLink.mockRejectedValue(new Error("network"));
+    render(wrap(<ReviewLink link={draft} text="x" units={[stretch[0]]} stretch={stretch} />));
+    fireEvent.click(screen.getByRole("button", { name: "Accept" }));
+    expect(await screen.findByRole("alert")).toHaveTextContent("The change could not be saved.");
+    expect(screen.getByRole("button", { name: "Accept" })).toBeEnabled();
+  });
 });
