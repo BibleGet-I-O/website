@@ -26,6 +26,9 @@ vi.mock("next/navigation", async () => ({
   notFound: () => {
     throw new Error("NEXT_NOT_FOUND");
   },
+  redirect: (url: string) => {
+    throw new Error(`NEXT_REDIRECT ${url}`);
+  },
   useRouter: () => ({ push: vi.fn() }),
   unstable_rethrow: (e: unknown) => {
     throw e;
@@ -223,7 +226,33 @@ describe("home", () => {
 });
 
 describe("books", () => {
-  const params = (edition: string) => ({ params: Promise.resolve({ locale: "en", edition }) });
+  const params = (edition: string, search: Record<string, string> = {}) => ({
+    params: Promise.resolve({ locale: "en", edition }),
+    searchParams: Promise.resolve(search),
+  });
+
+  describe("switching edition from a chapter", () => {
+    beforeEach(() => {
+      getEditions.mockResolvedValue([ed("LUZZI", "it"), ed("DRB", "en")]);
+      getIndex.mockResolvedValue({ sigla: "LUZZI", books: [book(1, "Genesi", "Gen", 50), book(39, "Malachia", "Mal", 3)] });
+    });
+
+    it("opensTheSameChapterWhereTheEditionHasIt", async () => {
+      await expect(BooksPage(params("luzzi", { book: "1", chapter: "12", with: "DRB", tradition: "HEBREW" }))).rejects.toThrow(
+        "NEXT_REDIRECT /en/read/luzzi/genesi/12?with=DRB&tradition=HEBREW",
+      );
+      await expect(BooksPage(params("luzzi", { book: "39", chapter: "3" }))).rejects.toThrow("NEXT_REDIRECT /en/read/luzzi/malachia/3");
+    });
+
+    it("showsTheBooksWhereTheEditionLacksTheBookOrChapter", async () => {
+      // Tobit (17) is not in a Protestant canon; Malachi 4 is DRB's numbering, not Luzzi's.
+      for (const search of [{ book: "17", chapter: "1" } as Record<string, string>, { book: "39", chapter: "4" }, { book: "1", chapter: "x" }, { book: "1" }]) {
+        const { unmount } = render(wrap(await BooksPage(params("luzzi", search))));
+        expect(screen.getByRole("heading", { level: 1 })).toBeInTheDocument();
+        unmount();
+      }
+    });
+  });
 
   it("booksPageUsesTheEditionsOwnNames", async () => {
     getEditions.mockResolvedValue([ed("DRB", "en", "Douay-Rheims")]);
