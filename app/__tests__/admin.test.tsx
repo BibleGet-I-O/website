@@ -10,8 +10,10 @@ const getAccessToken = vi.fn();
 vi.mock("@/lib/access", () => ({ getAccessToken: () => getAccessToken() }));
 const revalidatePath = vi.fn();
 vi.mock("next/cache", () => ({ revalidatePath: (...a: unknown[]) => revalidatePath(...a) }));
+const refresh = vi.fn();
 vi.mock("next/navigation", async () => ({
   ...(await vi.importActual<object>("next/navigation")),
+  useRouter: () => ({ refresh }),
   notFound: () => {
     throw new Error("NEXT_NOT_FOUND");
   },
@@ -151,12 +153,76 @@ describe("FullTextSwitch", () => {
     await waitFor(() => expect(screen.getByRole("alert")).toHaveTextContent(en.Admin.signInAgain));
   });
 
+  /** An action result the test settles itself, so the pending state can be observed. */
+  function deferred() {
+    let resolve!: (v: { ok: true } | { ok: false; status: number }) => void;
+    const promise = new Promise<{ ok: true } | { ok: false; status: number }>((r) => (resolve = r));
+    return { promise, resolve };
+  }
+
   it("keeps the new state after success", async () => {
-    setFullTextMock.mockResolvedValue({ ok: true });
+    const result = deferred();
+    setFullTextMock.mockReturnValue(result.promise);
     render(wrap(<FullTextSwitch sigla="NABRE" initial={true} />));
     const sw = screen.getByRole("switch", { name: /NABRE/ });
     fireEvent.click(sw);
-    await waitFor(() => expect(sw).not.toBeChecked());
+    await waitFor(() => expect(sw).toBeDisabled());
+    result.resolve({ ok: true });
+    await waitFor(() => expect(sw).toBeEnabled());
+    expect(sw).not.toBeChecked();
     expect(screen.queryByRole("alert")).toBeNull();
+  });
+
+  it("follows a changed initial value when no change is pending", () => {
+    const { rerender } = render(wrap(<FullTextSwitch sigla="NABRE" initial={true} />));
+    const sw = screen.getByRole("switch", { name: /NABRE/ });
+    expect(sw).toBeChecked();
+    rerender(wrap(<FullTextSwitch sigla="NABRE" initial={false} />));
+    expect(sw).not.toBeChecked();
+    rerender(wrap(<FullTextSwitch sigla="NABRE" initial={true} />));
+    expect(sw).toBeChecked();
+  });
+
+  it("keeps the optimistic value while a change is pending", async () => {
+    const result = deferred();
+    setFullTextMock.mockReturnValue(result.promise);
+    const { rerender } = render(wrap(<FullTextSwitch sigla="NABRE" initial={true} />));
+    const sw = screen.getByRole("switch", { name: /NABRE/ });
+    fireEvent.click(sw);
+    await waitFor(() => expect(sw).toBeDisabled());
+    rerender(wrap(<FullTextSwitch sigla="NABRE" initial={false} />));
+    rerender(wrap(<FullTextSwitch sigla="NABRE" initial={true} />));
+    expect(sw).not.toBeChecked();
+    result.resolve({ ok: true });
+    await waitFor(() => expect(sw).toBeEnabled());
+    expect(sw).not.toBeChecked();
+  });
+
+  it("an unknown outcome (status 0) is not rolled back: it asks to reload and refreshes", async () => {
+    refresh.mockReset();
+    setFullTextMock.mockResolvedValue({ ok: false, status: 0 });
+    const { rerender } = render(wrap(<FullTextSwitch sigla="NABRE" initial={true} />));
+    const sw = screen.getByRole("switch", { name: /NABRE/ });
+    fireEvent.click(sw);
+    await waitFor(() => expect(screen.getByRole("alert")).toHaveTextContent(en.Admin.switchUnknown));
+    expect(refresh).toHaveBeenCalled();
+    expect(sw).not.toBeChecked();
+    expect(sw).toBeDisabled();
+    // The refresh brings the authoritative value.
+    rerender(wrap(<FullTextSwitch sigla="NABRE" initial={false} />));
+    expect(sw).not.toBeChecked();
+    expect(sw).toBeEnabled();
+    expect(screen.queryByRole("alert")).toBeNull();
+  });
+
+  it("a confirmed rejection is rolled back without a refresh", async () => {
+    refresh.mockReset();
+    setFullTextMock.mockResolvedValue({ ok: false, status: 400 });
+    render(wrap(<FullTextSwitch sigla="NABRE" initial={true} />));
+    const sw = screen.getByRole("switch", { name: /NABRE/ });
+    fireEvent.click(sw);
+    await waitFor(() => expect(screen.getByRole("alert")).toHaveTextContent(en.Admin.switchFailed));
+    expect(sw).toBeChecked();
+    expect(refresh).not.toHaveBeenCalled();
   });
 });

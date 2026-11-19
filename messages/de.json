@@ -70,6 +70,7 @@
     "listFailed": "The editions could not be loaded.",
     "forbidden": "You are not allowed to change this.",
     "switchFailed": "The change could not be saved. Try again.",
+    "switchUnknown": "Could not confirm the change — reload.",
     "back": "Home"
   }
 }
