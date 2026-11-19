@@ -2,6 +2,8 @@
 
 import { useTranslations } from "next-intl";
 import { useRouter } from "next/navigation";
+import { ReaderSettings, type SettingsChange } from "@/components/ReaderSettings";
+import { compareQuery, type View } from "@/lib/compare";
 import { editionSlug } from "@/lib/slug";
 import type { Tradition } from "@/lib/esther";
 
@@ -14,8 +16,9 @@ export type ReaderBarProps = {
   /** The book's number, the same in every edition (its slug is not): another edition opens on it. */
   bookNum: number;
   chapter: number;
-  /** The interlinear edition (`?with=`), when the toggle is on. */
-  withSigla?: string;
+  /** The compared editions (`?with=`), in order; empty when reading one edition. */
+  withSiglas: string[];
+  view: View;
   /** Whether the edition has both Esther texts and this is Esther: then the Greek / Hebrew choice shows. */
   esther: boolean;
   tradition?: Tradition;
@@ -23,32 +26,29 @@ export type ReaderBarProps = {
 
 const selectClass = "rounded border border-slate-300 bg-white px-2 py-1 dark:border-slate-700 dark:bg-slate-900";
 
-/** The reader's top bar: edition, book and chapter, the interlinear toggle and edition, and Esther's text. */
+/** The reader's top bar: edition, book and chapter, and the ⚙ menu (comparison, its layout, Esther's text). */
 export function ReaderBar(p: ReaderBarProps) {
   const t = useTranslations("Reader");
   const router = useRouter();
-  const others = p.editions.filter((e) => e.sigla !== p.edition);
   const current = p.books.find((b) => b.slug === p.book);
 
-  const go = (o: { book?: string; chapter?: number; with?: string | null; tradition?: Tradition }) => {
+  const go = (o: SettingsChange & { book?: string; chapter?: number }) => {
     const book = o.book ?? p.book;
     const chapter = o.chapter ?? p.chapter;
-    const qs = new URLSearchParams();
-    const w = o.with === undefined ? p.withSigla : o.with;
-    if (w) qs.set("with", w);
     // The tradition belongs to Esther: kept only while the book stays the same; Greek is the default.
     const tradition = o.tradition ?? (book === p.book ? p.tradition : undefined);
-    if (p.esther && tradition === "HEBREW") qs.set("tradition", tradition);
-    const q = qs.toString();
-    router.push(`/${p.locale}/read/${editionSlug(p.edition)}/${book}/${chapter}${q ? `?${q}` : ""}`);
+    const qs = compareQuery({ with: o.with ?? p.withSiglas, view: o.view ?? p.view, tradition: p.esther ? tradition : undefined });
+    router.push(`/${p.locale}/read/${editionSlug(p.edition)}/${book}/${chapter}${qs}`);
   };
 
   // The edition's books page opens this chapter when the edition has it, and lists the books when it does not.
   const switchEdition = (sigla: string) => {
-    const qs = new URLSearchParams({ book: String(p.bookNum), chapter: String(p.chapter) });
-    if (p.withSigla && p.withSigla !== sigla) qs.set("with", p.withSigla);
-    if (p.esther && p.tradition === "HEBREW") qs.set("tradition", p.tradition);
-    router.push(`/${p.locale}/read/${editionSlug(sigla)}?${qs}`);
+    const rest = compareQuery({
+      with: p.withSiglas.filter((s) => s !== sigla),
+      view: p.view,
+      tradition: p.esther ? p.tradition : undefined,
+    });
+    router.push(`/${p.locale}/read/${editionSlug(sigla)}?book=${p.bookNum}&chapter=${p.chapter}${rest.replace("?", "&")}`);
   };
 
   return (
@@ -56,7 +56,7 @@ export function ReaderBar(p: ReaderBarProps) {
       <label className="sr-only" htmlFor="rb-edition">{t("edition")}</label>
       <select
         id="rb-edition"
-        className={selectClass}
+        className={`${selectClass} min-w-0 max-w-full`}
         value={p.edition}
         onChange={(e) => switchEdition(e.target.value)}
       >
@@ -79,43 +79,16 @@ export function ReaderBar(p: ReaderBarProps) {
         ))}
       </select>
 
-      {p.esther && (
-        <>
-          <label className="sr-only" htmlFor="rb-tradition">{t("estherText")}</label>
-          <select
-            id="rb-tradition"
-            className={selectClass}
-            value={p.tradition ?? "GREEK"}
-            onChange={(e) => go({ tradition: e.target.value === "HEBREW" ? "HEBREW" : "GREEK" })}
-          >
-            <option value="GREEK">{t("greek")}</option>
-            <option value="HEBREW">{t("hebrew")}</option>
-          </select>
-        </>
-      )}
-
-      <span className="ml-auto flex items-center gap-2">
-        <input
-          id="rb-interlinear"
-          type="checkbox"
-          checked={Boolean(p.withSigla)}
-          disabled={others.length === 0}
-          onChange={(e) => go({ with: e.target.checked ? others[0]?.sigla ?? null : null })}
+      <span className="ml-auto">
+        <ReaderSettings
+          editions={p.editions}
+          main={p.edition}
+          withSiglas={p.withSiglas}
+          view={p.view}
+          esther={p.esther}
+          tradition={p.tradition}
+          onChange={go}
         />
-        <label htmlFor="rb-interlinear">{t("interlinear")}</label>
-        <label className="sr-only" htmlFor="rb-with">{t("secondEdition")}</label>
-        <select
-          id="rb-with"
-          className={selectClass}
-          value={p.withSigla ?? ""}
-          disabled={!p.withSigla}
-          onChange={(e) => go({ with: e.target.value || null })}
-        >
-          {!p.withSigla && <option value="">—</option>}
-          {others.map((e) => (
-            <option key={e.sigla} value={e.sigla}>{e.fullname}</option>
-          ))}
-        </select>
       </span>
     </div>
   );
