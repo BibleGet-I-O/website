@@ -25,8 +25,11 @@
   .bg-bq, .bg-bqf, .bg-bql { margin-left: 1.5em; margin-right: 1.5em; }
   .bg-bqf { margin-top: 0.75em; }
   .bg-bql { margin-bottom: 0.75em; }
-  /* A poetic line opened by a speaker sits slightly left, so the words line up with the lines around it. */
-  .bg-line.bg-has-speaker { left: -0.35em; }
+  /*
+   * A poetic line opened by a speaker sits slightly left, so the words line up with the lines around it.
+   * Not when the verse number hangs in it: the shift would push the number past the paragraph's edge.
+   */
+  .bg-line.bg-has-speaker:not(:has(> .bg-vnum-hang)) { left: -0.35em; }
 
   /* The verse number of a verse that opens with an indented line hangs in that line's indent. */
   .bg-vnum-hang {

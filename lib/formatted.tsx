@@ -81,7 +81,8 @@ function parse(text: string): { nodes: Node[]; plain: boolean }[] {
   for (const line of lines) {
     let nodes = parseLine(line);
     const tagged = nodes.some(isLine);
-    if (tagged) nodes = nodes.filter((n) => !isBlank(n));
+    // Only whitespace next to a line tag goes: `<i>a</i> <sm>b</sm>` keeps its space.
+    if (tagged) nodes = nodes.filter((n, i, all) => !(isBlank(n) && (isLine(all[i - 1]) || isLine(all[i + 1]))));
     if (nodes.length === 0 || nodes.every(isBlank)) continue;
     out.push({ nodes, plain: !tagged && lines.length > 1 });
   }
@@ -156,7 +157,7 @@ export function renderFormatted(text: string): ReactNode {
 const defaultHeadingClass = (j: number) =>
   j === 0 ? "mt-6 mb-2 block text-xl font-semibold" : "mb-2 block text-base font-semibold italic";
 
-const labelClass = "mr-0.5 font-sans text-xs text-slate-500 dark:text-slate-400";
+const labelClass = "font-sans text-xs text-slate-500 dark:text-slate-400";
 
 /**
  * One verse: its number, its text, and its mid-verse headings.
@@ -190,6 +191,7 @@ export function renderVerse({ label, text, titles = [], titlePosition = null, he
   const lines = parse(marked.trimStart());
   const first = lines[0]?.nodes[0];
   const hang = !lines[0]?.plain && first?.k === "el" && HANGING.has(first.tag);
-  const lead = label ? <sup className={hang ? `${labelClass} bg-vnum-hang` : labelClass}>{label}</sup> : undefined;
+  // The hanging number is spaced by its padding (app/globals.css), so "12:1" still fits the indent.
+  const lead = label ? <sup className={hang ? `${labelClass} bg-vnum-hang` : `${labelClass} mr-0.5`}>{label}</sup> : undefined;
   return renderParsed(lines, { marker, lead });
 }

@@ -67,6 +67,12 @@ describe("renderFormatted", () => {
     expect(lines[0]).toHaveClass("bg-plain");
   });
 
+  it("keepsSpacesBetweenInlineTagsOnATaggedLine", () => {
+    const root = html(renderFormatted("<i>a</i> <sm>b</sm> <pof>c</pof>"));
+    expect(root.textContent).toBe("a bc");
+    expect(root.querySelector(".bg-pof")?.textContent).toBe("c");
+  });
+
   it("marksALineThatOpensWithASpeaker", () => {
     const root = html(renderFormatted("<pof><speaker>W</speaker> Let him kiss me</pof>"));
     expect(root.querySelector(".bg-pof")).toHaveClass("bg-has-speaker");
@@ -117,6 +123,26 @@ describe("renderVerse", () => {
     const root = html(renderVerse({ label: "8", text, titles: ["Aleph"], titlePosition: "<pol>end of a stanza.</pol>".length }));
     const kids = Array.from(root.children).map((e) => e.textContent);
     expect(kids).toEqual(["8end of a stanza.", "Aleph", "Start of the next"]);
+  });
+
+  it("placesAHeadingAfterASuperscriptionLine", () => {
+    // VGCL Ps 118:1 (public domain): the offset falls after the line break, as in every poetic mid-verse row.
+    const text = "Alleluja.\n<pof>Beati immaculati in via,</pof>\n<po>qui ambulant in lege Domini.</po>";
+    const root = html(renderVerse({ label: "1", text, titles: ["Aleph"], titlePosition: 10 }));
+    const kids = Array.from(root.children);
+    expect(kids.map((e) => e.textContent)).toEqual(["1Alleluja.", "Aleph", "Beati immaculati in via,", "qui ambulant in lege Domini."]);
+    expect(kids[0]).toHaveClass("bg-plain");
+    expect(kids[0].firstElementChild).not.toHaveClass("bg-vnum-hang");
+    expect(kids[1]).toHaveAttribute("role", "heading");
+    expect(kids[2]).toHaveClass("bg-pof");
+    expect(kids[3]).toHaveClass("bg-po");
+  });
+
+  it("givesTheHangingNumberNoExtraMargin", () => {
+    const root = html(renderVerse({ label: "12:1", text: "<pof>x</pof>" }));
+    const num = root.querySelector(".bg-vnum-hang");
+    expect(num?.textContent).toBe("12:1");
+    expect(num?.className).not.toMatch(/\bmr-/);
   });
 
   it("countsTitlePositionInCodePoints", () => {
