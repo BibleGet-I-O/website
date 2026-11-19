@@ -159,6 +159,7 @@ type RawRow = {
   title1?: string | null;
   title2?: string | null;
   title3?: string | null;
+  title_position?: number | null;
   psalm_hebrew?: string | null;
 };
 
@@ -170,6 +171,7 @@ function toRow(r: RawRow): VerseRow {
     printedChapter: r.printed_chapter ?? null,
     text: r.text,
     titles: [r.title1, r.title2, r.title3].filter((t): t is string => !!t),
+    titlePosition: r.title_position ?? null,
   };
   if (r.psalm_hebrew) row.psalmHebrew = r.psalm_hebrew;
   return row;
