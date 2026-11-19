@@ -86,6 +86,8 @@
     "liturgicalFor": "Texte liturgique pour {sigla}"
   },
   "Footer": {
+    "copyright": "© {year} <link>Catholic Digital Commons Foundation</link>. Tous droits réservés.",
+    "rights": "Les textes de chaque édition appartiennent à leurs ayants droit, nommés au dos de chaque livre.",
     "apiVersion": "API {version}",
     "siteVersion": "Site {version}",
     "sourceCode": "Code source :",

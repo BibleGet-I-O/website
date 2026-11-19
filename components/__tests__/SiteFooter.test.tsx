@@ -71,4 +71,14 @@ describe("SiteFooter", () => {
     expect(screen.getByRole("link", { name: "Website" })).toHaveAttribute("href", "https://github.com/BibleGet-I-O/website");
     expect(screen.getByRole("link", { name: "API" })).toHaveAttribute("href", "https://github.com/BibleGet-I-O/endpoint");
   });
+
+  it("carriesTheFoundationsCopyrightForTheCurrentYear", async () => {
+    const { el } = await footer(null);
+    expect(el).toHaveTextContent(`© ${new Date().getFullYear()} Catholic Digital Commons Foundation. All rights reserved.`);
+    expect(screen.getByRole("link", { name: "Catholic Digital Commons Foundation" })).toHaveAttribute(
+      "href",
+      "https://catholicdigitalcommons.org",
+    );
+    expect(el).toHaveTextContent("The texts of each edition belong to their rights holders, named on the back of each book.");
+  });
 });
