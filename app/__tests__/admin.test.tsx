@@ -149,9 +149,10 @@ describe.each(["reader_full_text", "liturgical"] as const)("setEditionFlag(%s)",
     expect(fetchMock).not.toHaveBeenCalled();
   });
 
-  it("reports a network failure as status 0", async () => {
+  it("reports a network failure as status 0 and still revalidates (the change may have been applied)", async () => {
     fetchMock.mockRejectedValue(new Error("down"));
     expect(await actions.setEditionFlag("NABRE", field, false)).toEqual({ ok: false, status: 0 });
+    expect(revalidatePath).toHaveBeenCalledWith("/[locale]", "page");
   });
 });
 

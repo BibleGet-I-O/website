@@ -87,6 +87,6 @@
   },
   "Footer": {
     "apiVersion": "API BibleGet {version}",
-    "siteRelease": "Sito {release}"
+    "siteRelease": "Versione del sito {release}"
   }
 }

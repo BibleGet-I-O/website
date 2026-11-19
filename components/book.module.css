@@ -22,7 +22,7 @@
 /* The liturgical stamp: small gilt capitals at the foot of the cover, inside the frame and under the year. */
 .liturgical {
   position: absolute; bottom: 0.75rem; left: 1.4rem; right: 0.8rem; text-align: center;
-  font-size: 0.5rem; line-height: 1; letter-spacing: 0.14em; text-transform: uppercase; opacity: 0.85;
+  font-size: 0.6rem; line-height: 1; letter-spacing: 0.12em; text-transform: uppercase;
 }
 .label { font-size: 0.75rem; color: #6b625b; text-align: center; letter-spacing: 0.06em; }
 

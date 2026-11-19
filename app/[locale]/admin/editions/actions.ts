@@ -36,14 +36,19 @@ export async function setEditionFlag(sigla: string, field: EditionFlag, on: bool
       body: JSON.stringify({ [field]: on }),
     });
   } catch {
+    // The change may have been applied: drop the cached pages it would affect, and report the unknown outcome.
+    revalidate(field);
     return { ok: false, status: 0 };
   }
   if (!res.ok) return { ok: false, status: res.status };
+  revalidate(field);
+  return { ok: true };
+}
 
+function revalidate(field: EditionFlag): void {
   revalidatePath("/[locale]/admin/editions", "page");
   // The landing page shelves and marks the editions from the cached editions metadata.
   revalidatePath("/[locale]", "page");
   // Visitor chapter fetches are cached for an hour; signed-in ones are not cached.
   if (field === "reader_full_text") revalidatePath("/[locale]/read/[edition]/[book]/[chapter]", "page");
-  return { ok: true };
 }

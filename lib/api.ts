@@ -71,15 +71,16 @@ type RawVersions = {
 };
 
 /** The editions metadata, one cached request shared by getEditions and getApiVersion. */
-function bibleVersions(): Promise<{ body: unknown; headers: Headers }> {
-  return requestWithHeaders("/metadata/bibleversions", "visitor", METADATA);
+function bibleVersions(init: FetchInit = METADATA): Promise<{ body: unknown; headers: Headers }> {
+  return requestWithHeaders("/metadata/bibleversions", "visitor", init);
 }
 
 export async function getEditions(): Promise<Edition[]> {
   const body = (await bibleVersions()).body as RawVersions;
   const copyrighted = new Set(body.copyrightversions ?? []);
-  // An endpoint that predates the liturgical flag sends no list: no edition is liturgical.
-  const liturgical = new Set(Array.isArray(body.liturgicalversions) ? body.liturgicalversions : []);
+  // An endpoint that predates the liturgical flag sends no list: no edition is liturgical (so too a malformed one).
+  const list: unknown = body.liturgicalversions;
+  const liturgical = new Set(Array.isArray(list) && list.every((v) => typeof v === "string") ? (list as string[]) : []);
   const names = body.validversions_fullname ?? {};
   return (body.validversions ?? []).map((sigla) => {
     const [fullname = sigla, year = "", language = "", , canon = "", copyrightHolder = "", ...rest] = (names[sigla] ?? "").split("|");
@@ -102,16 +103,31 @@ export async function getEditions(): Promise<Edition[]> {
 /** Longest version string shown; anything longer is cut (the header is untrusted text). */
 const VERSION_MAX = 64;
 
+/** How long the footer waits for the endpoint before showing no version. */
+const VERSION_TIMEOUT_MS = 3000;
+
 /**
  * The endpoint's release (its `X-BibleGet-Version` header), read from the cached editions metadata request;
- * null when the header is absent or empty, or the endpoint cannot be reached.
+ * null when the header is absent or empty, or the endpoint cannot be reached within three seconds. The
+ * request carries an abort signal, and a timer bounds the wait as well, since a revalidating fetch ignores
+ * the signal.
  */
 export async function getApiVersion(): Promise<string | null> {
+  let timer: ReturnType<typeof setTimeout> | undefined;
+  const timeout = new Promise<null>((resolve) => {
+    timer = setTimeout(() => resolve(null), VERSION_TIMEOUT_MS);
+  });
+  const version = bibleVersions({ ...METADATA, signal: AbortSignal.timeout(VERSION_TIMEOUT_MS) }).then(
+    ({ headers }) => {
+      const value = headers.get("X-BibleGet-Version")?.trim();
+      return value ? value.slice(0, VERSION_MAX) : null;
+    },
+    () => null,
+  );
   try {
-    const value = (await bibleVersions()).headers.get("X-BibleGet-Version")?.trim();
-    return value ? value.slice(0, VERSION_MAX) : null;
-  } catch {
-    return null;
+    return await Promise.race([version, timeout]);
+  } finally {
+    clearTimeout(timer);
   }
 }
 

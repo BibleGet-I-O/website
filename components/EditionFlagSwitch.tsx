@@ -5,14 +5,14 @@ import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { setEditionFlag, type EditionFlag } from "@/app/[locale]/admin/editions/actions";
 
-/**
- * One of an edition's switches (full text for readers, or liturgical text). A refused change (4xx) is rolled back with a message; a change whose
- * outcome is unknown (status 0: the request may have been applied) is not, the page is refreshed instead and
- * the switch waits, disabled, for the authoritative value. A changed `initial` (the list was refreshed) is
- * followed whenever no change is pending.
- */
 const LABELS = { reader_full_text: "fullTextFor", liturgical: "liturgicalFor" } as const;
 
+/**
+ * One of an edition's switches (full text for readers, or liturgical text). A refused change (4xx) is rolled
+ * back with a message; a change whose outcome is unknown (status 0: the request may have been applied) is
+ * not, the page is refreshed instead and the switch waits, disabled, for the authoritative value. A changed
+ * `initial` (the list was refreshed) is followed whenever no change is pending.
+ */
 export function EditionFlagSwitch({ sigla, field, initial }: { sigla: string; field: EditionFlag; initial: boolean }) {
   const t = useTranslations("Admin");
   const router = useRouter();

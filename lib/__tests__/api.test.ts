@@ -272,7 +272,7 @@ describe("getEditions", () => {
   });
 
   it("treatsAMissingOrMalformedLiturgicalListAsNoLiturgicalEditions", async () => {
-    for (const extra of [{}, { liturgicalversions: "CEI2008" }, { liturgicalversions: null }]) {
+    for (const extra of [{}, { liturgicalversions: "CEI2008" }, { liturgicalversions: null }, { liturgicalversions: ["CEI2008", null] }]) {
       vi.stubGlobal("fetch", vi.fn(async () => json({ validversions: ["CEI2008"], validversions_fullname: { CEI2008: "Synthetic|2008|it|1|CATHOLIC||" }, ...extra })));
       expect((await getEditions())[0].liturgical).toBe(false);
     }
@@ -307,6 +307,23 @@ describe("getApiVersion", () => {
     expect(await getApiVersion()).toBeNull();
     vi.stubGlobal("fetch", vi.fn(async () => new Response("", { status: 503 })));
     expect(await getApiVersion()).toBeNull();
+  });
+
+  it("resolvesNullAfterThreeSecondsWhenTheEndpointHangs", async () => {
+    vi.useFakeTimers();
+    try {
+      const fn = vi.fn((_url: string, _init?: RequestInit) => new Promise<Response>(() => {}));
+      vi.stubGlobal("fetch", fn);
+      let settled: string | null | undefined;
+      void getApiVersion().then((v) => (settled = v));
+      await vi.advanceTimersByTimeAsync(2999);
+      expect(settled).toBeUndefined();
+      await vi.advanceTimersByTimeAsync(1);
+      expect(settled).toBeNull();
+      expect(fn.mock.calls[0][1]?.signal).toBeInstanceOf(AbortSignal);
+    } finally {
+      vi.useRealTimers();
+    }
   });
 
   it("cutsAnOverlongValue", async () => {
