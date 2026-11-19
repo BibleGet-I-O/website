@@ -6,5 +6,9 @@
   "Home": {
     "title": "BibleGet",
     "placeholder": "The reader is coming soon."
+  },
+  "Auth": {
+    "signIn": "Sign in",
+    "signOut": "Sign out"
   }
 }
