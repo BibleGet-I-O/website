@@ -11,6 +11,8 @@ export type ReaderBarProps = {
   editions: { sigla: string; fullname: string }[];
   books: { slug: string; name: string; chapters: number }[];
   book: string;
+  /** The book's number, the same in every edition (its slug is not): another edition opens on it. */
+  bookNum: number;
   chapter: number;
   /** The interlinear edition (`?with=`), when the toggle is on. */
   withSigla?: string;
@@ -41,6 +43,14 @@ export function ReaderBar(p: ReaderBarProps) {
     router.push(`/${p.locale}/read/${editionSlug(p.edition)}/${book}/${chapter}${q ? `?${q}` : ""}`);
   };
 
+  // The edition's books page opens this chapter when the edition has it, and lists the books when it does not.
+  const switchEdition = (sigla: string) => {
+    const qs = new URLSearchParams({ book: String(p.bookNum), chapter: String(p.chapter) });
+    if (p.withSigla && p.withSigla !== sigla) qs.set("with", p.withSigla);
+    if (p.esther && p.tradition === "HEBREW") qs.set("tradition", p.tradition);
+    router.push(`/${p.locale}/read/${editionSlug(sigla)}?${qs}`);
+  };
+
   return (
     <div role="toolbar" aria-label={t("toolbar")} className="mb-6 flex flex-wrap items-center gap-2 text-sm">
       <label className="sr-only" htmlFor="rb-edition">{t("edition")}</label>
@@ -48,8 +58,7 @@ export function ReaderBar(p: ReaderBarProps) {
         id="rb-edition"
         className={selectClass}
         value={p.edition}
-        // Book names differ between editions, so another edition opens on its books page.
-        onChange={(e) => router.push(`/${p.locale}/read/${editionSlug(e.target.value)}`)}
+        onChange={(e) => switchEdition(e.target.value)}
       >
         {p.editions.map((e) => (
           <option key={e.sigla} value={e.sigla}>{e.fullname}</option>

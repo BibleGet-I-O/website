@@ -113,6 +113,7 @@ export default async function ChapterPage({ params, searchParams }: { params: Pr
         editions={editions.map((e) => ({ sigla: e.sigla, fullname: e.fullname }))}
         books={index.books.map((b) => ({ slug: slugFor(b, index.books), name: b.name, chapters: b.chapters }))}
         book={slugFor(book, index.books)}
+        bookNum={book.bookNum}
         chapter={chapter}
         withSigla={withSigla}
         esther={tradition !== undefined}

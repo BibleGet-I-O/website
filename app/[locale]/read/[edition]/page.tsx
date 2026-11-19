@@ -1,6 +1,6 @@
 import { hasLocale } from "next-intl";
 import { getTranslations, setRequestLocale } from "next-intl/server";
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import { routing } from "@/i18n/routing";
 import { Link } from "@/i18n/navigation";
 import { editionSlug } from "@/lib/slug";
@@ -10,7 +10,30 @@ import type { Book } from "@/lib/types";
 /** Catholic canon numbering: books 1-46 are the Old Testament, 47-73 the New. */
 const LAST_OT_BOOK = 46;
 
-export default async function BooksPage({ params }: { params: Promise<{ locale: string; edition: string }> }) {
+type Search = { book?: string | string[]; chapter?: string | string[]; with?: string | string[]; tradition?: string | string[] };
+
+const one = (v: string | string[] | undefined) => (Array.isArray(v) ? v[0] : v);
+const positive = (v: string | undefined) => (v !== undefined && /^[1-9]\d*$/.test(v) ? Number(v) : undefined);
+
+/**
+ * The chapter the reader was on in another edition (`?book={bookNum}&chapter=`, from the reader bar's edition
+ * switch), in this one: its path, with `with` and `tradition` passed on (the chapter page checks them), or null
+ * when this edition lacks the book (a deuterocanonical book in a Protestant canon) or the chapter.
+ */
+function sameChapter(base: string, books: Book[], search: Search): string | null {
+  const bookNum = positive(one(search.book));
+  const chapter = positive(one(search.chapter));
+  const b = bookNum === undefined ? undefined : books.find((x) => x.bookNum === bookNum);
+  if (!b || chapter === undefined || chapter > b.chapters) return null;
+  const qs = new URLSearchParams();
+  for (const k of ["with", "tradition"] as const) {
+    const v = one(search[k]);
+    if (v) qs.set(k, v);
+  }
+  return `${base}/${slugFor(b, books)}/${chapter}${qs.size > 0 ? `?${qs}` : ""}`;
+}
+
+export default async function BooksPage({ params, searchParams }: { params: Promise<{ locale: string; edition: string }>; searchParams?: Promise<Search> }) {
   const { locale, edition: editionParam } = await params;
   if (!hasLocale(routing.locales, locale)) notFound();
   setRequestLocale(locale);
@@ -25,12 +48,15 @@ export default async function BooksPage({ params }: { params: Promise<{ locale: 
     throw err;
   }
 
+  const base = `/read/${editionSlug(edition.sigla)}`;
+  const target = sameChapter(base, books, (await searchParams) ?? {});
+  if (target) redirect(`/${locale}${target}`);
+
   const t = await getTranslations("Books");
   const groups = [
     { key: "ot", title: t("ot"), books: books.filter((b) => b.bookNum <= LAST_OT_BOOK) },
     { key: "nt", title: t("nt"), books: books.filter((b) => b.bookNum > LAST_OT_BOOK) },
   ].filter((g) => g.books.length > 0);
-  const base = `/read/${editionSlug(edition.sigla)}`;
 
   return (
     <main className="mx-auto w-full max-w-3xl p-4 sm:p-6">

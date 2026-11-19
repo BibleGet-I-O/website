@@ -147,7 +147,7 @@ describe("ReaderBar", () => {
     { slug: "tobit", name: "Tobit", chapters: 14 },
     { slug: "esther", name: "Esther", chapters: 10 },
   ];
-  const props = { locale: "en", edition: "NABRE", editions, books, book: "esther", chapter: 1 };
+  const props = { locale: "en", edition: "NABRE", editions, books, book: "esther", bookNum: 19, chapter: 1 };
 
   it("estherOffersGreekAndHebrewOnlyForEditionsWithBoth", () => {
     const { unmount } = render(wrap(<ReaderBar {...props} esther />));
@@ -172,8 +172,19 @@ describe("ReaderBar", () => {
     expect(push).toHaveBeenLastCalledWith("/en/read/nabre/esther/1?with=DRB");
     fireEvent.click(screen.getByLabelText("Interlinear"));
     expect(push).toHaveBeenLastCalledWith("/en/read/nabre/tobit/3");
+  });
+
+  it("anotherEditionOpensOnTheSameBookAndChapterByNumber", () => {
+    // Slugs are each edition's own book names, so the edition page finds the book by its number.
+    render(wrap(<ReaderBar {...props} book="tobit" bookNum={17} chapter={3} withSigla="LUZZI" esther={false} editions={[...editions, { sigla: "LUZZI", fullname: "Luzzi" }]} />));
     fireEvent.change(screen.getByLabelText("Edition"), { target: { value: "DRB" } });
-    expect(push).toHaveBeenLastCalledWith("/en/read/drb");
+    expect(push).toHaveBeenLastCalledWith("/en/read/drb?book=17&chapter=3&with=LUZZI");
+  });
+
+  it("anotherEditionDropsTheSecondEditionWhenItIsTheSameOne", () => {
+    render(wrap(<ReaderBar {...props} esther tradition="HEBREW" withSigla="DRB" />));
+    fireEvent.change(screen.getByLabelText("Edition"), { target: { value: "DRB" } });
+    expect(push).toHaveBeenLastCalledWith("/en/read/drb?book=19&chapter=1&tradition=HEBREW");
   });
 
   it("turningInterlinearOnPicksAnotherEdition", () => {
