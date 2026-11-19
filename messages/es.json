@@ -86,7 +86,12 @@
     "liturgicalFor": "Texto litúrgico de {sigla}"
   },
   "Footer": {
-    "apiVersion": "API de BibleGet {version}",
-    "siteRelease": "Sitio {release}"
+    "apiVersion": "API {version}",
+    "siteVersion": "Sitio {version}",
+    "sourceCode": "Código fuente:",
+    "repos": {
+      "website": "Sitio web",
+      "api": "API"
+    }
   }
 }

@@ -118,6 +118,7 @@ jobs:
         env:
           # Inlined by next.config.ts; served by /api/version for the smoke test.
           BIBLEGET_RELEASE: ${{ env.BUNDLE_TAG }}
+          BIBLEGET_COMMIT: ${{ github.sha }}
         run: npm run build
 
       - name: Assemble the standalone bundle
