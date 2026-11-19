@@ -19,7 +19,11 @@ const stretch = [
   { id: "btu:tb.5.3", ref: "5:3", text: "NV three" },
 ];
 
-beforeEach(() => reviewLink.mockReset());
+// Each test sets its own implementation; mockClear (not mockReset) keeps a rejection the component handles from
+// being reported as the test's own error.
+beforeEach(() => {
+  reviewLink.mockClear();
+});
 
 describe("ReviewLink", () => {
   it("relinkOffersOnlyTheStretchsUnits", async () => {
@@ -76,7 +80,11 @@ describe("ReviewLink", () => {
   });
 
   it("aRejectedRequestSaysSoAndFreesTheButtons", async () => {
-    reviewLink.mockRejectedValue(new Error("network"));
+    // A failed request, as a Server Action delivers it: a promise that rejects.
+    reviewLink.mockImplementation(async () => {
+      await Promise.resolve();
+      throw new Error("network");
+    });
     render(wrap(<ReviewLink link={draft} text="x" units={[stretch[0]]} stretch={stretch} />));
     fireEvent.click(screen.getByRole("button", { name: "Accept" }));
     expect(await screen.findByRole("alert")).toHaveTextContent("The change could not be saved.");

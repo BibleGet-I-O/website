@@ -10,7 +10,9 @@ const { AcceptChapterButton } = await import("@/components/AcceptChapterButton")
 
 describe("AcceptChapterButton", () => {
   it("aRejectedRequestSaysSoAndFreesTheButton", async () => {
-    acceptChapter.mockRejectedValue(new Error("network"));
+    acceptChapter.mockImplementation(async () => {
+      throw new Error("network");
+    });
     render(<NextIntlClientProvider locale="en" messages={en}><AcceptChapterButton edition="VGCL" book={17} chapter={5} drafts={2} /></NextIntlClientProvider>);
     fireEvent.click(screen.getByRole("button", { name: /Accept all drafts/ }));
     expect(await screen.findByRole("alert")).toHaveTextContent("The change could not be saved.");
