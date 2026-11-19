@@ -15,13 +15,13 @@ describe("/api/version", () => {
     const res = GET();
     expect(dynamic).toBe("force-dynamic");
     expect(res.headers.get("cache-control")).toBe("no-store");
-    expect(await res.json()).toEqual({ release: "12345-1" });
+    expect(await res.json()).toEqual({ release: "12345-1", commit: null });
   });
 
   it("reports dev for a build without a release id", async () => {
     vi.stubEnv("BIBLEGET_RELEASE", "");
     const { GET } = await import("@/app/api/version/route");
-    expect(await GET().json()).toEqual({ release: "dev" });
+    expect(await GET().json()).toEqual({ release: "dev", commit: null });
   });
 
   it("is not routed through the i18n proxy", () => {

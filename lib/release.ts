@@ -2,3 +2,5 @@
 // sets it to its bundle tag; it is not a secret). Read once, when the module loads, so a process still
 // running an older build keeps reporting that build even after the tree on disk is replaced.
 export const RELEASE = process.env.BIBLEGET_RELEASE || "dev";
+// The commit this build was made from (the deploy's GITHUB_SHA), or "" locally.
+export const COMMIT = process.env.BIBLEGET_COMMIT || "";
