@@ -34,6 +34,8 @@ export type EditionIndex = { sigla: string; books: Book[] };
 export type VerseRow = {
   chapter: number;
   verse: number;
+  /** The verse's letter where the edition divides it (NVBSE Esther 1:1a, CEI2008 Is 10:18b); null otherwise. */
+  segment?: string | null;
   label: string | null;
   printedChapter: number | null;
   text: string;

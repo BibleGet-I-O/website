@@ -11,11 +11,11 @@ export type ParallelRow = { key: string; a?: VerseRow; others: (VerseRow | undef
 
 /**
  * What pairs two editions' verses: in the Psalms the Hebrew reference every row carries (VGCL 9:22 is
- * Hebrew 10:1), elsewhere the chapter and verse.
+ * Hebrew 10:1), elsewhere the chapter and verse, with its letter (Esther 1:1a is not 1:1).
  */
 export function alignKey(row: VerseRow, book: number): string {
   if (book === PSALMS && row.psalmHebrew) return row.psalmHebrew;
-  return `${row.chapter}:${row.verse}`;
+  return `${row.chapter}:${row.verse}${row.segment ?? ""}`;
 }
 
 /**

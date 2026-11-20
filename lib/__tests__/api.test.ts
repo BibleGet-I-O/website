@@ -82,6 +82,14 @@ describe("getChapter", () => {
     expect(r.titlePosition).toBeNull();
   });
 
+  it("mapsTheVerseSegment", async () => {
+    // NVBSE Esther 1:1a: the Greek addition's letter.
+    mockFetch(() => json(quote([raw(1, { verse_segment: "a" }), raw(1)])), 2);
+    const [a, plain] = (await getChapter(base)).rows;
+    expect(a.segment).toBe("a");
+    expect(plain.segment).toBeNull();
+  });
+
   it("mapsTitlePosition", async () => {
     mockFetch(() => json(quote([raw(1, { title1: "Mid", title_position: 12 })])), 1);
     const [r] = (await getChapter(base)).rows;

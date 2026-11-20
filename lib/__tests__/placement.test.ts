@@ -44,3 +44,16 @@ describe("placeAsPrinted", () => {
     expect(printedLabel(eight[0], 8)).toBe("7:53");
   });
 });
+
+describe("printedLabel with letters", () => {
+  const row = (verse: number, segment: string | null, label: string | null = null) =>
+    ({ chapter: 1, verse, segment, label, printedChapter: null, text: "", titles: [] });
+
+  it("printsTheVerseLetterWhenTheEditionPrintsNoOtherLabel", () => {
+    expect(printedLabel(row(1, "a"), 1)).toBe("1a");
+    expect(printedLabel(row(1, null), 1)).toBe("1");
+    // The edition's own label still wins (NABRE prints Esther's additions as A:1).
+    expect(printedLabel(row(1, "a", "A:1"), 1)).toBe("A:1");
+  });
+});
+
