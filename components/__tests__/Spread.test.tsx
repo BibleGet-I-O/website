@@ -172,10 +172,12 @@ describe("Spread", () => {
       render(wrap(<Spread sides={[LXX, MT]} rows={buildRows([row(1, 1)], [[row(1, 1)]], 19)} chapter={1} />));
       const [lxx, mt] = screen.getAllByTestId("column-name");
       expect(lxx).toHaveClass("text-red-700");
-      expect(within(lxx).getByText("Septuagint")).toHaveClass("hidden", "sm:inline");
+      // On phones the short name shows; screen readers always get the full one.
+      expect(within(lxx).getByText("Septuagint")).toHaveClass("sr-only", "sm:not-sr-only");
       expect(within(lxx).getByText("LXX")).toHaveClass("sm:hidden");
-      expect(within(mt).getByText("Masoretic text")).toHaveClass("hidden", "sm:inline");
-      expect(within(mt).getByText("MT")).toHaveClass("sm:hidden");
+      expect(within(lxx).getByText("LXX")).toHaveAttribute("aria-hidden", "true");
+      expect(within(mt).getByText("Masoretic text")).toHaveClass("sr-only", "sm:not-sr-only");
+      expect(within(mt).getByText("MT")).toHaveAttribute("aria-hidden", "true");
     });
 
     it("withoutGapNotesAnEmptyCellStaysEmpty", () => {
@@ -195,7 +197,10 @@ describe("Spread", () => {
 
     it("interlinearTagsARubricSideWithItsShortName", () => {
       render(wrap(<Spread sides={[LXX, MT]} rows={buildRows([row(1, 1)], [[row(1, 1)]], 19)} chapter={1} view="interlinear" />));
-      expect(screen.getByTestId("sigla")).toHaveTextContent(/^MT$/);
+      // Both texts are tagged, each named in full for screen readers.
+      const tags = screen.getAllByTestId("sigla");
+      expect(tags.map((e) => e.textContent)).toEqual(["LXX", "MT"]);
+      expect(tags.map((e) => e.getAttribute("title"))).toEqual(["Septuagint", "Masoretic text"]);
     });
   });
 });

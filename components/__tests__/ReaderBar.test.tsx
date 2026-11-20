@@ -168,6 +168,12 @@ describe("ReaderBar", () => {
     expect(screen.queryByRole("dialog")).toBeNull();
   });
 
+  it("switchingEditionFromEstherReadAloneKeepsTheView", () => {
+    render(wrap(<ReaderBar {...props} book="esther" bookNum={19} chapter={3} esther view="interlinear" />));
+    fireEvent.change(screen.getByLabelText("Edition"), { target: { value: "DRB" } });
+    expect(push).toHaveBeenLastCalledWith("/en/read/drb?book=19&chapter=3&view=interlinear");
+  });
+
   it("theMenuHasNoEstherTextAndOffersInterlinearForTheTwoTexts", () => {
     const { unmount } = render(wrap(<ReaderBar {...props} book="esther" bookNum={19} chapter={1} esther />));
     openMenu();

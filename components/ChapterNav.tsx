@@ -20,11 +20,19 @@ export function neighbours(index: EditionIndex, bookNum: number, chapter: number
 
 const linkClass = "rounded border border-slate-200 px-3 py-1 hover:border-slate-400 dark:border-slate-800 dark:hover:border-slate-600";
 
-/** Previous / next chapter links; `base` is the edition's locale-less path, `query` the kept query string. */
-export async function ChapterNav({ index, bookNum, chapter, base, query = "" }: { index: EditionIndex; bookNum: number; chapter: number; base: string; query?: string }) {
+/**
+ * Previous / next chapter links; `base` is the edition's locale-less path, `query` the kept query string, and
+ * `leavingQuery` (when given) the one for a link into another book: what belongs to this book (Esther's
+ * texts) stays behind.
+ */
+export async function ChapterNav({ index, bookNum, chapter, base, query = "", leavingQuery }: {
+  index: EditionIndex; bookNum: number; chapter: number; base: string; query?: string; leavingQuery?: string;
+}) {
   const t = await getTranslations("Reader");
   const { prev, next } = neighbours(index, bookNum, chapter);
-  const href = (r: ChapterRef) => `${base}/${r.slug}/${r.chapter}${query}`;
+  const here = index.books.find((b) => b.bookNum === bookNum);
+  const sameBook = (r: ChapterRef) => here !== undefined && r.slug === slugFor(here, index.books);
+  const href = (r: ChapterRef) => `${base}/${r.slug}/${r.chapter}${sameBook(r) ? query : (leavingQuery ?? query)}`;
   return (
     <nav aria-label={t("chapterNav")} className="mt-8 flex justify-between text-sm">
       {prev ? (

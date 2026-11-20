@@ -58,8 +58,9 @@ export function Spread({ sides, rows, chapter, truncated = [], view = "side-by-s
     <div data-testid="spread" className={`grid ${COLUMNS[cols]} ${gap} font-serif ${size} leading-relaxed`}>
       {!interlinear && sides.map((side) => side.rubric ? (
         <p key={side.sigla} data-testid="column-name" className="mb-2 text-center font-sans text-xs font-semibold uppercase tracking-wide text-red-700 dark:text-red-400">
-          <span className="hidden sm:inline">{side.rubric.full}</span>
-          <span className="sm:hidden">{side.rubric.short}</span>
+          {/* On phones the short name shows; screen readers always read the full one. */}
+          <span className="sr-only sm:not-sr-only">{side.rubric.full}</span>
+          <span aria-hidden="true" className="sm:hidden">{side.rubric.short}</span>
         </p>
       ) : (
         <p key={side.sigla} data-testid="column-name" className="mb-2 text-center font-sans text-sm font-semibold text-slate-600 dark:text-slate-400">
@@ -86,8 +87,8 @@ export function Spread({ sides, rows, chapter, truncated = [], view = "side-by-s
                   lang={side.lang}
                   className={`py-0.5 ${muted(s)} ${interlinear && last ? "mb-3" : ""}`}
                 >
-                  {interlinear && s > 0 && (content || titles[s].length > 0) && (
-                    <span data-testid="sigla" className="ml-10 font-sans text-xs text-slate-500 dark:text-slate-400">{side.rubric?.short ?? side.sigla}</span>
+                  {interlinear && (s > 0 || side.rubric) && (content || titles[s].length > 0) && (
+                    <span data-testid="sigla" title={side.rubric?.full} className="ml-10 font-sans text-xs text-slate-500 dark:text-slate-400">{side.rubric?.short ?? side.sigla}</span>
                   )}
                   {interlinear && <Headings titles={titles[s]} compact={compact} />}
                   {content}

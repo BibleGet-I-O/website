@@ -113,10 +113,13 @@ export default async function ChapterPage({ params, searchParams }: { params: Pr
         : [];
     return { rows: placeAsPrinted(prevLast, current.rows, nextFirst, chapter), truncated: current.truncated };
   };
-  const main = await printed(twoTexts ? "GREEK" : tradition);
+  // The Masoretic text beside the Septuagint, loaded at the same time; when it cannot be loaded, the
+  // Septuagint alone with a note.
+  const [main, masoretic] = await Promise.all([
+    printed(twoTexts ? "GREEK" : tradition),
+    twoTexts ? masoreticText(printed) : Promise.resolve(null),
+  ]);
   const rows = main.rows;
-  // The Masoretic text beside the Septuagint; when it cannot be loaded, the Septuagint alone with a note.
-  const masoretic = twoTexts ? await masoreticText(printed) : null;
   const compared = withSiglas.map((sigla) => editions.find((e) => e.sigla === sigla)!);
   // The compared editions read with the main one's access; one that cannot be reached degrades to a note
   // (it does not show the error page).
@@ -207,7 +210,7 @@ export default async function ChapterPage({ params, searchParams }: { params: Pr
         <BookPage heading={t("heading", { book: book.name, chapter })} chapter={chapter} rows={rows} lang={edition.language || undefined} />
       )}
       {notice && await CappedNotice({ kind: notice, redirectTo, ...(compared.length > 0 && { edition: edition.fullname }) })}
-      {await ChapterNav({ index, bookNum: book.bookNum, chapter, base, query: qs })}
+      {await ChapterNav({ index, bookNum: book.bookNum, chapter, base, query: qs, leavingQuery: compareQuery({ with: withSiglas, view }) })}
     </main>
   );
 }

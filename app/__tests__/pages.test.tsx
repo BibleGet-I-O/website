@@ -509,8 +509,14 @@ describe("chapter", () => {
     it("readAloneInterlinearKeepsTheViewInTheChapterLinks", async () => {
       byText([verse(2, 1)], [verse(2, 1)]);
       render(wrap(await ChapterPage(params("nabre", "esther", "2", { view: "interlinear" }))));
-      expect(screen.getAllByTestId("sigla").map((e) => e.textContent)).toEqual(["MT"]);
+      expect(screen.getAllByTestId("sigla").map((e) => e.textContent)).toEqual(["LXX", "MT"]);
       expect(screen.getByRole("link", { name: /Next chapter/ })).toHaveAttribute("href", "/en/read/nabre/esther/3?view=interlinear");
+    });
+
+    it("leavingEstherDropsItsView", async () => {
+      byText([verse(10, 1)], [verse(10, 1)]);
+      render(wrap(await ChapterPage(params("nabre", "esther", "10", { view: "interlinear" }))));
+      expect(screen.getByRole("link", { name: /Next chapter/ })).toHaveAttribute("href", "/en/read/nabre/1-maccabees/1");
     });
 
     it("comparingEstherShowsTheSwitchAndOneText", async () => {
@@ -539,6 +545,24 @@ describe("chapter", () => {
       expect(screen.queryByTestId("spread")).toBeNull();
       expect(screen.getByRole("note")).toHaveTextContent("Masoretic text could not be loaded. Try again later.");
       error.mockRestore();
+    });
+
+    it("bothTextsLoadAtOnce", async () => {
+      // The Masoretic chapter is asked for while the Septuagint's is still on its way.
+      let hebrewAskedEarly = false;
+      let greekPending = false;
+      getChapter.mockImplementation(async (p: { tradition?: string }) => {
+        if (p.tradition === "HEBREW") {
+          hebrewAskedEarly = greekPending;
+          return { rows: [verse(1, 1)], truncated: false, expectedVerses: 1 };
+        }
+        greekPending = true;
+        await new Promise((r) => setTimeout(r, 20));
+        greekPending = false;
+        return { rows: [verse(1, 1)], truncated: false, expectedVerses: 1 };
+      });
+      render(wrap(await ChapterPage(params("nabre", "esther", "1"))));
+      expect(hebrewAskedEarly).toBe(true);
     });
 
     it("aMasoreticChapterNotFoundLeavesTheSeptuagintWithANote", async () => {

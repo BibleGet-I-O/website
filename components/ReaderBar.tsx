@@ -54,10 +54,13 @@ export function ReaderBar(p: ReaderBarProps) {
 
   // The edition's books page opens this chapter when the edition has it, and lists the books when it does not.
   const switchEdition = (sigla: string) => {
+    const remaining = p.withSiglas.filter((s) => s !== sigla);
     const rest = compareQuery({
-      with: p.withSiglas.filter((s) => s !== sigla),
+      with: remaining,
       view: p.view,
       tradition: p.esther ? p.tradition : undefined,
+      // Esther's two texts read alone keep their view; the chapter page checks the new edition has both.
+      twoTexts: p.esther && remaining.length === 0,
     });
     router.push(`/${p.locale}/read/${editionSlug(sigla)}?book=${p.bookNum}&chapter=${p.chapter}${rest.replace("?", "&")}`);
   };

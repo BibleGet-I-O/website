@@ -19,6 +19,17 @@ describe("neighbours", () => {
     expect(neighbours(index, 73, 22)).toEqual({ prev: { slug: "apocalypse", chapter: 21 } });
   });
 
+  it("linksLeavingTheBookUseTheirOwnQuery", async () => {
+    // Esther read interlinear: the view belongs to its two texts, not to the next book.
+    render(
+      <NextIntlClientProvider locale="en" messages={en}>
+        {await ChapterNav({ index, bookNum: 47, chapter: 28, base: "/read/drb", query: "?view=interlinear", leavingQuery: "" })}
+      </NextIntlClientProvider>,
+    );
+    expect(screen.getByRole("link", { name: /Previous chapter/ })).toHaveAttribute("href", "/en/read/drb/matthew/27?view=interlinear");
+    expect(screen.getByRole("link", { name: /Next chapter/ })).toHaveAttribute("href", "/en/read/drb/mark/1");
+  });
+
   it("linksToTheNeighboursKeepingTheQuery", async () => {
     render(
       <NextIntlClientProvider locale="en" messages={en}>
