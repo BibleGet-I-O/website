@@ -168,6 +168,15 @@ describe("Esther with both texts", () => {
     expect(mac.greekVersesPerChapter).toBeUndefined();
   });
 
+  it("nvbsePrintsEstherOnceAsItsFullText", async () => {
+    // The Nova Vulgata prints Esther once, the Hebrew text with the Greek additions as lettered verses; its
+    // Hebrew run in the database repeats the unlettered verses. One text: the Greek run's counts, all of it.
+    stub({ indexes: { NVBSE: { ...nabreIndex.indexes.NABRE } } }, () => []);
+    const [est] = (await getIndex("NVBSE")).books;
+    expect(est).toMatchObject({ bookNum: 19, chapters: 10, versesPerChapter: greek });
+    expect(est.greekVersesPerChapter).toBeUndefined();
+  });
+
   it("keepsAVulgateShapedSixteenChapterEsther", async () => {
     stub(vgclIndex, () => []);
     const [est] = (await getIndex("VGCL")).books;

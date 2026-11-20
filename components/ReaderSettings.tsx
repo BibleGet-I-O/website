@@ -3,9 +3,8 @@
 import { useEffect, useId, useRef, useState } from "react";
 import { useTranslations } from "next-intl";
 import { MAX_COMPARED, type View } from "@/lib/compare";
-import type { Tradition } from "@/lib/esther";
 
-export type SettingsChange = { with?: string[]; view?: View; tradition?: Tradition };
+export type SettingsChange = { with?: string[]; view?: View };
 
 export type ReaderSettingsProps = {
   /** Every edition, the main one included. */
@@ -14,9 +13,8 @@ export type ReaderSettingsProps = {
   /** The compared editions, in order (at most MAX_COMPARED). */
   withSiglas: string[];
   view: View;
-  /** This is Esther in an edition with both texts: the Greek / Hebrew choice shows. */
+  /** This is Esther in an edition with both texts: read alone, its two texts can be read interlinear. */
   esther: boolean;
-  tradition?: Tradition;
   /** Changes whenever the page shows something else (edition, book, chapter, query): the menu then closes. */
   routeKey: string;
   onChange: (o: SettingsChange) => void;
@@ -27,7 +25,7 @@ const selectClass = "rounded border border-slate-300 bg-white px-2 py-1 dark:bor
 
 /**
  * The reader's ⚙ menu: compare with another edition, then change it, add, change or remove a third, switch
- * between side by side and interlinear, stop comparing; and Esther's text. An edition is chosen in a popup
+ * between side by side and interlinear (also for Esther's two texts read alone), stop comparing. An edition is chosen in a popup
  * whose dropdown offers neither the main edition nor the one in the other slot; picking one applies it.
  * The popup takes the menu items' place, so nothing behind it can be reached; Escape or Cancel close it and
  * return focus to the item that opened it, a second Escape closes the menu. A click outside, Back/Forward
@@ -111,6 +109,18 @@ export function ReaderSettings(p: ReaderSettingsProps) {
     p.onChange(o);
   };
 
+  // Comparing, or reading Esther's two texts: side by side or one under the other.
+  const interlinearToggle = (
+    <label className="flex items-center gap-2 px-3 py-2">
+      <input
+        type="checkbox"
+        checked={p.view === "interlinear"}
+        onChange={(e) => p.onChange({ view: e.target.checked ? "interlinear" : "side-by-side" })}
+      />
+      {t("interlinear")}
+    </label>
+  );
+
   return (
     <div ref={rootRef} className="relative">
       <button
@@ -134,9 +144,12 @@ export function ReaderSettings(p: ReaderSettingsProps) {
           className="absolute right-0 top-full z-50 mt-2 flex w-64 flex-col gap-1 rounded border border-slate-200 bg-white p-2 text-sm shadow-lg dark:border-slate-800 dark:bg-slate-950"
         >
           {slot === null && (n === 0 ? (
-            <button ref={(e) => { openers.current[0] = e; }} type="button" className={itemClass} disabled={choices(0).length === 0} onClick={() => setSlot(0)}>
-              {t("compare")}
-            </button>
+            <>
+              <button ref={(e) => { openers.current[0] = e; }} type="button" className={itemClass} disabled={choices(0).length === 0} onClick={() => setSlot(0)}>
+                {t("compare")}
+              </button>
+              {p.esther && interlinearToggle}
+            </>
           ) : (
             <>
               <button ref={(e) => { openers.current[0] = e; }} type="button" className={itemClass} onClick={() => setSlot(0)}>{t("changeSecond")}</button>
@@ -152,31 +165,10 @@ export function ReaderSettings(p: ReaderSettingsProps) {
                   </button>
                 </>
               )}
-              <label className="flex items-center gap-2 px-3 py-2">
-                <input
-                  type="checkbox"
-                  checked={p.view === "interlinear"}
-                  onChange={(e) => p.onChange({ view: e.target.checked ? "interlinear" : "side-by-side" })}
-                />
-                {t("interlinear")}
-              </label>
+              {interlinearToggle}
               <button type="button" className={itemClass} onClick={() => apply({ with: [] })}>{t("stopComparing")}</button>
             </>
           ))}
-
-          {slot === null && p.esther && (
-            <label className="flex items-center justify-between gap-2 border-t border-slate-200 px-3 pt-3 pb-1 dark:border-slate-800">
-              {t("estherText")}
-              <select
-                className={selectClass}
-                value={p.tradition ?? "GREEK"}
-                onChange={(e) => apply({ tradition: e.target.value === "HEBREW" ? "HEBREW" : "GREEK" })}
-              >
-                <option value="GREEK">{t("greek")}</option>
-                <option value="HEBREW">{t("hebrew")}</option>
-              </select>
-            </label>
-          )}
 
           {slot !== null && (
             <div

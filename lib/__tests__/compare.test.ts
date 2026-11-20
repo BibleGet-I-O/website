@@ -32,6 +32,13 @@ describe("compare address", () => {
 
   it("theViewNeedsAComparedEdition", () => {
     expect(compareQuery({ with: [], view: "interlinear" })).toBe("");
-    expect(compareQuery({ with: [], view: "interlinear", tradition: "HEBREW" })).toBe("?tradition=HEBREW");
+    // Esther's text is chosen only while comparing: read alone, both texts are shown.
+    expect(compareQuery({ with: [], view: "interlinear", tradition: "HEBREW" })).toBe("");
+  });
+
+  it("twoTextsKeepTheViewInTheQuery", () => {
+    expect(compareQuery({ with: [], view: "interlinear", twoTexts: true })).toBe("?view=interlinear");
+    expect(compareQuery({ with: [], view: "side-by-side", tradition: "HEBREW", twoTexts: true })).toBe("");
+    expect(compareQuery({ with: ["DRB"], view: "side-by-side", tradition: "HEBREW" })).toBe("?with=DRB&tradition=HEBREW");
   });
 });

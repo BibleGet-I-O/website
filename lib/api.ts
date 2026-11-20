@@ -141,6 +141,14 @@ type RawIndex = {
 
 const ESTHER_CHAPTERS = 10;
 
+/**
+ * Editions whose index reports Esther's two texts (20 chapters) but which print it once. The Nova Vulgata prints
+ * the Hebrew text with the Greek additions as lettered verses; its Hebrew run in the database repeats the
+ * unlettered verses, kept for queries until CBTUDR's links make it unnecessary (see the endpoint wiki,
+ * Esther-Greek-and-Hebrew-Variants). It reads as one text: the Greek run, which is all of it.
+ */
+const ESTHER_PRINTED_ONCE = new Set(["NVBSE"]);
+
 export async function getIndex(sigla: string): Promise<EditionIndex> {
   const body = (await request(`/metadata/versionindex?versions=${encodeURIComponent(sigla)}`, "visitor", METADATA)) as {
     indexes?: Record<string, RawIndex>;
@@ -158,8 +166,12 @@ export async function getIndex(sigla: string): Promise<EditionIndex> {
     // An edition with both Esther texts reports 20 chapters: the Hebrew 1-10, then the Greek 1-10.
     if (book.bookNum === ESTHER && book.chapters === 2 * ESTHER_CHAPTERS) {
       book.chapters = ESTHER_CHAPTERS;
-      book.greekVersesPerChapter = book.versesPerChapter.slice(ESTHER_CHAPTERS);
-      book.versesPerChapter = book.versesPerChapter.slice(0, ESTHER_CHAPTERS);
+      if (ESTHER_PRINTED_ONCE.has(sigla)) {
+        book.versesPerChapter = book.versesPerChapter.slice(ESTHER_CHAPTERS);
+      } else {
+        book.greekVersesPerChapter = book.versesPerChapter.slice(ESTHER_CHAPTERS);
+        book.versesPerChapter = book.versesPerChapter.slice(0, ESTHER_CHAPTERS);
+      }
     }
     return book;
   });

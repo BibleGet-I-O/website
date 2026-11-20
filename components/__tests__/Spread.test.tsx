@@ -162,4 +162,45 @@ describe("Spread", () => {
     expect(kids).toEqual(["sigla", "h2", "verse-line"]);
     expect(within(screen.getByTestId("cell-a")).queryByRole("heading")).toBeNull();
   });
+
+  describe("Esther's two texts", () => {
+    const LXX = { sigla: "NABRE", name: "NABRE", rubric: { full: "Septuagint", short: "LXX" } };
+    const MT = { sigla: "NABRE-MT", name: "NABRE", rubric: { full: "Masoretic text", short: "MT" } };
+    const lettered = (verse: number, segment: string | null): VerseRow => ({ ...row(1, verse), segment });
+
+    it("rubricSidesAreHeadedInRedWithTheShortNameOnPhones", () => {
+      render(wrap(<Spread sides={[LXX, MT]} rows={buildRows([row(1, 1)], [[row(1, 1)]], 19)} chapter={1} />));
+      const [lxx, mt] = screen.getAllByTestId("column-name");
+      expect(lxx).toHaveClass("text-red-700");
+      // On phones the short name shows; screen readers always get the full one.
+      expect(within(lxx).getByText("Septuagint")).toHaveClass("sr-only", "sm:not-sr-only");
+      expect(within(lxx).getByText("LXX")).toHaveClass("sm:hidden");
+      expect(within(lxx).getByText("LXX")).toHaveAttribute("aria-hidden", "true");
+      expect(within(mt).getByText("Masoretic text")).toHaveClass("sr-only", "sm:not-sr-only");
+      expect(within(mt).getByText("MT")).toHaveAttribute("aria-hidden", "true");
+    });
+
+    it("withoutGapNotesAnEmptyCellStaysEmpty", () => {
+      const rows = buildRows([lettered(1, "a"), lettered(1, null)], [[lettered(1, null)]], 19);
+      const { unmount } = render(wrap(<Spread sides={[LXX, MT]} rows={rows} chapter={1} gapNotes={false} />));
+      expect(screen.queryByText(/Not in/)).toBeNull();
+      expect(screen.getAllByTestId("cell-b")[0]).toBeEmptyDOMElement();
+      unmount();
+      render(wrap(<Spread sides={[LXX, MT]} rows={rows} chapter={1} />));
+      expect(screen.getAllByText(/Not in/)).toHaveLength(1);
+    });
+
+    it("twoTextsOfOneEditionAreEqualNeitherGreyed", () => {
+      render(wrap(<Spread sides={[LXX, MT]} rows={buildRows([row(1, 1)], [[row(1, 1)]], 19)} chapter={1} />));
+      expect(screen.getByTestId("cell-b").className).not.toMatch(/text-slate-700/);
+    });
+
+    it("interlinearTagsARubricSideWithItsShortName", () => {
+      render(wrap(<Spread sides={[LXX, MT]} rows={buildRows([row(1, 1)], [[row(1, 1)]], 19)} chapter={1} view="interlinear" />));
+      // Both texts are tagged, each named in full for screen readers.
+      const tags = screen.getAllByTestId("sigla");
+      expect(tags.map((e) => e.textContent)).toEqual(["LXX", "MT"]);
+      expect(tags.map((e) => e.getAttribute("title"))).toEqual(["Septuagint", "Masoretic text"]);
+    });
+  });
 });

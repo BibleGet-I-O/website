@@ -10,10 +10,13 @@ import { ReaderBar } from "@/components/ReaderBar";
 import { Interlinear } from "@/components/Interlinear";
 import { getAccess } from "@/lib/access";
 import { ApiUnavailable, bookBySlug, getChapter, getEditions, getIndex, getVerses, NotFound, slugFor } from "@/lib/api";
-import { estherTradition } from "@/lib/esther";
+import { ESTHER, estherTradition, hasBothEstherTexts, type Tradition } from "@/lib/esther";
 import { compareQuery, parseView, parseWith } from "@/lib/compare";
 import { loadSecond } from "@/lib/interlinear";
+import { buildRows } from "@/lib/parallel";
 import { placeAsPrinted } from "@/lib/placement";
+import { Spread } from "@/components/Spread";
+import { TraditionSwitch } from "@/components/TraditionSwitch";
 import type { Chapter, EditionIndex, VerseRow } from "@/lib/types";
 
 type Params = { locale: string; edition: string; book: string; chapter: string };
@@ -25,6 +28,38 @@ const one = (v: string | string[] | undefined) => (Array.isArray(v) ? v[0] : v);
  * A neighbouring verse an edition may print in this chapter. Its absence only costs that verse, so a failed
  * fetch shows the chapter without it (logged with the status only).
  */
+/**
+ * Whether, in Esther, a compared edition prints both texts ("both"), none does ("none"), or that cannot be told
+ * because an index could not be loaded ("unknown"). An edition the API does not know prints neither.
+ */
+async function comparedEstherTexts(bookNum: number, siglas: string[]): Promise<"both" | "none" | "unknown"> {
+  if (bookNum !== ESTHER || siglas.length === 0) return "none";
+  const each = await Promise.all(siglas.map(async (s) => {
+    try {
+      return (await getIndex(s)).books.some((b) => hasBothEstherTexts(b)) ? "both" : "none";
+    } catch (err) {
+      if (err instanceof NotFound) return "none";
+      if (err instanceof ApiUnavailable) return "unknown";
+      throw err;
+    }
+  }));
+  return each.includes("both") ? "both" : each.includes("unknown") ? "unknown" : "none";
+}
+
+async function masoreticText(
+  printed: (t: Tradition, chapterMissing: "404" | "throw") => Promise<{ rows: VerseRow[]; truncated: boolean }>,
+): Promise<{ rows: VerseRow[]; truncated: boolean } | "unavailable"> {
+  try {
+    return await printed("HEBREW", "throw");
+  } catch (err) {
+    // The Septuagint has loaded: a Masoretic chapter the API cannot give (unavailable, or not found) leaves it
+    // alone with a note, not a missing page.
+    if (err instanceof ApiUnavailable) console.error(`[chapter] Masoretic text unavailable (${err.message})`);
+    else if (!(err instanceof NotFound)) throw err;
+    return "unavailable";
+  }
+}
+
 async function neighbourVerse(p: Promise<VerseRow[]>): Promise<VerseRow[]> {
   try {
     return await p;
@@ -67,26 +102,51 @@ export default async function ChapterPage({ params, searchParams }: { params: Pr
 
   const withSiglas = parseWith(one(search.with), edition.sigla, editions.map((e) => e.sigla));
   const view = parseView(one(search.view));
-  const tradition = estherTradition(book, one(search.tradition));
+  // Esther in an edition with both texts: read alone, both are shown side by side; comparing, one is chosen.
+  const twoTexts = hasBothEstherTexts(book) && withSiglas.length === 0;
+  // The main edition's text when it prints both; the text every edition shows when any edition in the
+  // comparison does (the switch), even if the main one prints Esther once.
+  const tradition = estherTradition(book, twoTexts ? undefined : one(search.tradition));
+  const comparedTexts = tradition ? "none" : await comparedEstherTexts(book.bookNum, withSiglas);
+  const asked: Tradition = one(search.tradition) === "HEBREW" ? "HEBREW" : "GREEK";
+  // An edition whose index cannot be loaded is not known to print one text: the text asked for stays chosen.
+  const shown: Tradition | undefined =
+    tradition ?? (comparedTexts === "both" ? asked : comparedTexts === "unknown" && asked === "HEBREW" ? asked : undefined);
+  // The view applies while comparing or reading Esther's two texts; elsewhere it is not carried on.
+  const shownView = withSiglas.length > 0 || twoTexts ? view : "side-by-side";
 
   const info = await getAccess();
-  const request = { sigla: edition.sigla, bookAbbrev: book.abbrev, access: info.access, ...(tradition && { tradition }) };
-  // An edition may print the previous chapter's last verse at the start of this one (NABRE John 7:53 opens
-  // John 8) and the next chapter's first verse at the end of this one (NABRE Wis 12:1 closes Wis 11).
-  const counts = tradition === "GREEK" && book.greekVersesPerChapter ? book.greekVersesPerChapter : book.versesPerChapter;
-  const prevVerses = chapter > 1 ? counts[chapter - 2] : undefined;
-  const current: Chapter = await orNotFound(getChapter({ ...request, chapter }));
-  // A capped chapter stops at verse 30: the previous chapter's last verse would make it 31 and the next
-  // chapter's would not follow it, so neither is fetched.
-  const prevLast: VerseRow[] =
-    prevVerses && !current.truncated
-      ? await neighbourVerse(getVerses({ ...request, chapter: chapter - 1, verse: prevVerses }))
-      : [];
-  const nextFirst =
-    chapter < book.chapters && !current.truncated
-      ? await neighbourVerse(getVerses({ ...request, chapter: chapter + 1, verse: 1 }))
-      : [];
-  const rows = placeAsPrinted(prevLast, current.rows, nextFirst, chapter);
+  /**
+   * The chapter as the edition prints it, in one of Esther's texts or the book's only one. An edition may
+   * print the previous chapter's last verse at the start of this one (NABRE John 7:53 opens John 8) and the
+   * next chapter's first verse at the end of this one (NABRE Wis 12:1 closes Wis 11).
+   */
+  const printed = async (text?: Tradition, chapterMissing: "404" | "throw" = "404"): Promise<{ rows: VerseRow[]; truncated: boolean }> => {
+    const request = { sigla: edition.sigla, bookAbbrev: book.abbrev, access: info.access, ...(text && { tradition: text }) };
+    const counts = text === "GREEK" && book.greekVersesPerChapter ? book.greekVersesPerChapter : book.versesPerChapter;
+    const prevVerses = chapter > 1 ? counts[chapter - 2] : undefined;
+    // The page's own text missing is a missing page; the Masoretic text beside it throws NotFound to its caller.
+    const loading = getChapter({ ...request, chapter });
+    const current: Chapter = chapterMissing === "404" ? await orNotFound(loading) : await loading;
+    // A capped chapter stops at verse 30: the previous chapter's last verse would make it 31 and the next
+    // chapter's would not follow it, so neither is fetched.
+    const prevLast: VerseRow[] =
+      prevVerses && !current.truncated
+        ? await neighbourVerse(getVerses({ ...request, chapter: chapter - 1, verse: prevVerses }))
+        : [];
+    const nextFirst =
+      chapter < book.chapters && !current.truncated
+        ? await neighbourVerse(getVerses({ ...request, chapter: chapter + 1, verse: 1 }))
+        : [];
+    return { rows: placeAsPrinted(prevLast, current.rows, nextFirst, chapter), truncated: current.truncated };
+  };
+  // The Masoretic text beside the Septuagint, loaded at the same time; when it cannot be loaded, the
+  // Septuagint alone with a note.
+  const [main, masoretic] = await Promise.all([
+    printed(twoTexts ? "GREEK" : tradition),
+    twoTexts ? masoreticText(printed) : Promise.resolve(null),
+  ]);
+  const rows = main.rows;
   const compared = withSiglas.map((sigla) => editions.find((e) => e.sigla === sigla)!);
   // The compared editions read with the main one's access; one that cannot be reached degrades to a note
   // (it does not show the error page).
@@ -94,19 +154,21 @@ export default async function ChapterPage({ params, searchParams }: { params: Pr
     compared.map((e) =>
       loadSecond({
         mainSigla: edition.sigla, mainBookAbbrev: book.abbrev, mainIndex: index, bookNum: book.bookNum, chapter,
-        mainRows: rows, withSigla: e.sigla, access: info.access, tradition,
+        mainRows: rows, withSigla: e.sigla, access: info.access, tradition: shown,
       }),
     ),
   );
 
-  const qs = compareQuery({ with: withSiglas, view, tradition });
+  const qs = compareQuery({ with: withSiglas, view, tradition: shown, twoTexts });
   const base = `/read/${editionSlug(edition.sigla)}`;
-  const notice = noticeFor(current.truncated, info, edition.copyright);
+  // Each text stops at its own cap; one notice tells it.
+  const capped = main.truncated || (typeof masoretic === "object" && masoretic !== null && masoretic.truncated);
+  const notice = noticeFor(capped, info, edition.copyright);
   const redirectTo = `/${locale}${base}/${slugFor(book, index.books)}/${chapter}${qs}`;
   const t = await getTranslations("Reader");
   // Columns need room (one per edition in the spread; the others go below); interlinear reads at a single
   // edition's width.
-  const columns = 1 + seconds.filter((x) => x.mode === "aligned").length;
+  const columns = twoTexts && masoretic !== "unavailable" ? 2 : 1 + seconds.filter((x) => x.mode === "aligned").length;
   const width = columns === 1 || view === "interlinear" ? "max-w-3xl" : columns === 2 ? "max-w-6xl" : "max-w-7xl";
 
   return (
@@ -120,11 +182,37 @@ export default async function ChapterPage({ params, searchParams }: { params: Pr
         bookNum={book.bookNum}
         chapter={chapter}
         withSiglas={withSiglas}
-        view={view}
-        esther={tradition !== undefined}
-        tradition={tradition}
+        view={shownView}
+        esther={hasBothEstherTexts(book)}
+        tradition={shown}
       />
-      {compared.length > 0 ? (
+      {shown && compared.length > 0 && await TraditionSwitch({
+        tradition: shown,
+        hrefFor: (t) => `${base}/${slugFor(book, index.books)}/${chapter}${compareQuery({ with: withSiglas, view, tradition: t })}`,
+      })}
+      {masoretic && masoretic !== "unavailable" ? (
+        <article>
+          <h1 className="mb-6 text-center text-3xl font-semibold">{t("heading", { book: book.name, chapter })}</h1>
+          <Spread
+            sides={[
+              { sigla: edition.sigla, name: edition.fullname, lang: edition.language || undefined, rubric: { full: t("septuagint"), short: t("septuagintShort") } },
+              { sigla: `${edition.sigla}-MT`, name: edition.fullname, lang: edition.language || undefined, rubric: { full: t("masoretic"), short: t("masoreticShort") } },
+            ]}
+            rows={buildRows(rows, [masoretic.rows], book.bookNum)}
+            chapter={chapter}
+            truncated={[main.truncated, masoretic.truncated]}
+            view={view}
+            gapNotes={false}
+          />
+        </article>
+      ) : masoretic === "unavailable" ? (
+        <>
+          <BookPage heading={t("heading", { book: book.name, chapter })} chapter={chapter} rows={rows} lang={edition.language || undefined} />
+          <p role="note" className="my-4 rounded-lg border border-slate-300 bg-slate-50 p-3 text-sm dark:border-slate-700 dark:bg-slate-900">
+            {t("secondUnavailable", { second: t("masoretic") })}
+          </p>
+        </>
+      ) : compared.length > 0 ? (
         await Interlinear({
           heading: t("heading", { book: book.name, chapter }),
           main: { sigla: edition.sigla, name: edition.fullname, lang: edition.language || undefined },
@@ -141,7 +229,7 @@ export default async function ChapterPage({ params, searchParams }: { params: Pr
           bookNum: book.bookNum,
           bookName: book.name,
           chapter,
-          truncated: current.truncated,
+          truncated: main.truncated,
           view,
           redirectTo,
         })
@@ -149,7 +237,7 @@ export default async function ChapterPage({ params, searchParams }: { params: Pr
         <BookPage heading={t("heading", { book: book.name, chapter })} chapter={chapter} rows={rows} lang={edition.language || undefined} />
       )}
       {notice && await CappedNotice({ kind: notice, redirectTo, ...(compared.length > 0 && { edition: edition.fullname }) })}
-      {await ChapterNav({ index, bookNum: book.bookNum, chapter, base, query: qs })}
+      {await ChapterNav({ index, bookNum: book.bookNum, chapter, base, query: qs, leavingQuery: compareQuery({ with: withSiglas, view }) })}
     </main>
   );
 }

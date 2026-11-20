@@ -4,6 +4,7 @@ import { NextIntlClientProvider } from "next-intl";
 import en from "@/messages/en.json";
 
 vi.mock("server-only", () => ({}));
+const { routerPush } = vi.hoisted(() => ({ routerPush: vi.fn() }));
 const getEditions = vi.fn();
 const getIndex = vi.fn();
 const getChapter = vi.fn();
@@ -29,7 +30,7 @@ vi.mock("next/navigation", async () => ({
   redirect: (url: string) => {
     throw new Error(`NEXT_REDIRECT ${url}`);
   },
-  useRouter: () => ({ push: vi.fn() }),
+  useRouter: () => ({ push: routerPush }),
   unstable_rethrow: (e: unknown) => {
     throw e;
   },
@@ -456,35 +457,176 @@ describe("chapter", () => {
     error.mockRestore();
   });
 
-  it("estherWithBothTextsHasTenChaptersAndCrossesToFirstMaccabees", async () => {
-    // getIndex has already folded NABRE's 20 reported Esther chapters into 10 with both verse counts.
+  describe("Esther's two texts", () => {
     const est = { ...book(19, "Esther", "Est", 10), greekVersesPerChapter: Array(10).fill(12) };
-    getIndex.mockResolvedValue({ sigla: "NABRE", books: [est, book(20, "1 Maccabees", "1Mc", 16)] });
-    getChapter.mockResolvedValue({ rows: [verse(10, 1)], truncated: false, expectedVerses: 1 });
-    getVerses.mockResolvedValue([]);
-    await expect(ChapterPage(params("nabre", "esther", "11"))).rejects.toThrow("NEXT_NOT_FOUND");
-    render(wrap(await ChapterPage(params("nabre", "esther", "10"))));
-    const chapters = screen.getByLabelText("Chapter") as HTMLSelectElement;
-    expect(Array.from(chapters.options).map((o) => o.value)).toEqual(["1", "2", "3", "4", "5", "6", "7", "8", "9", "10"]);
-    expect(screen.getByRole("link", { name: /Next chapter/ })).toHaveAttribute("href", "/en/read/nabre/1-maccabees/1");
-    fireEvent.click(screen.getByRole("button", { name: "Reading settings" }));
-    expect(screen.getByLabelText("Esther text")).toHaveValue("GREEK");
-    // The previous chapter's last verse is counted in the Greek text.
-    expect(getVerses).toHaveBeenCalledWith(expect.objectContaining({ chapter: 9, verse: 12, tradition: "GREEK" }));
-  });
+    const nabre = { sigla: "NABRE", books: [est, book(20, "1 Maccabees", "1Mc", 16)] };
+    const byText = (greek: object[], hebrew: object[] | Error, truncated = false) =>
+      getChapter.mockImplementation(async (p: { sigla: string; tradition?: string }) => {
+        if (p.sigla !== "NABRE") return { rows: [verse(1, 1, { text: "Douay 1:1." })], truncated: false, expectedVerses: 1 };
+        if (p.tradition === "HEBREW") {
+          if (hebrew instanceof Error) throw hebrew;
+          return { rows: hebrew, truncated: false, expectedVerses: hebrew.length };
+        }
+        return { rows: greek, truncated, expectedVerses: greek.length };
+      });
+    beforeEach(() => {
+      getIndex.mockImplementation(async (s: string) => (s === "NABRE" ? nabre : drbIndex));
+      getVerses.mockResolvedValue([]);
+    });
 
-  it("passesTheEstherTraditionOnlyWhereTheEditionHasBoth", async () => {
-    getIndex.mockResolvedValue({ sigla: "NABRE", books: [{ ...book(19, "Esther", "Est", 10), greekVersesPerChapter: Array(10).fill(12) }] });
-    getChapter.mockResolvedValue({ rows: [verse(1, 1)], truncated: false, expectedVerses: 1 });
-    getVerses.mockResolvedValue([]);
-    render(wrap(await ChapterPage(params("nabre", "esther", "1", { tradition: "HEBREW" }))));
-    expect(getChapter).toHaveBeenCalledWith(expect.objectContaining({ tradition: "HEBREW" }));
-    fireEvent.click(screen.getByRole("button", { name: "Reading settings" }));
-    expect(screen.getByLabelText("Esther text")).toHaveValue("HEBREW");
+    it("estherWithBothTextsHasTenChaptersAndCrossesToFirstMaccabees", async () => {
+      byText([verse(10, 1)], [verse(10, 1)]);
+      await expect(ChapterPage(params("nabre", "esther", "11"))).rejects.toThrow("NEXT_NOT_FOUND");
+      render(wrap(await ChapterPage(params("nabre", "esther", "10"))));
+      const chapters = screen.getByLabelText("Chapter") as HTMLSelectElement;
+      expect(Array.from(chapters.options).map((o) => o.value)).toEqual(["1", "2", "3", "4", "5", "6", "7", "8", "9", "10"]);
+      expect(screen.getByRole("link", { name: /Next chapter/ })).toHaveAttribute("href", "/en/read/nabre/1-maccabees/1");
+      // The previous chapter's last verse is counted in each text.
+      expect(getVerses).toHaveBeenCalledWith(expect.objectContaining({ chapter: 9, verse: 12, tradition: "GREEK" }));
+      expect(getVerses).toHaveBeenCalledWith(expect.objectContaining({ chapter: 9, verse: 10, tradition: "HEBREW" }));
+    });
 
-    getChapter.mockClear();
-    getIndex.mockResolvedValue(drbIndex);
-    render(wrap(await ChapterPage(params("drb", "esther", "1", { tradition: "HEBREW" }))));
-    expect(getChapter).toHaveBeenCalledWith(expect.not.objectContaining({ tradition: "HEBREW" }));
+    it("readAloneEstherShowsBothTextsSideBySide", async () => {
+      byText(
+        [verse(1, 1, { segment: "a", text: "Greek one-a." }), verse(1, 1, { text: "Greek one." })],
+        [verse(1, 1, { text: "Hebrew one." })],
+      );
+      render(wrap(await ChapterPage(params("nabre", "esther", "1"))));
+      expect(getChapter).toHaveBeenCalledWith(expect.objectContaining({ tradition: "GREEK" }));
+      expect(getChapter).toHaveBeenCalledWith(expect.objectContaining({ tradition: "HEBREW" }));
+      expect(screen.getAllByTestId("spread")).toHaveLength(1);
+      expect(screen.getAllByTestId("column-name").map((e) => within(e).getByText(/Septuagint|Masoretic/).textContent)).toEqual(["Septuagint", "Masoretic text"]);
+      const [a1, a2] = screen.getAllByTestId("cell-a");
+      const [b1, b2] = screen.getAllByTestId("cell-b");
+      expect(a1).toHaveTextContent("Greek one-a.");
+      expect(b1).toBeEmptyDOMElement();
+      expect(a2).toHaveTextContent("Greek one.");
+      expect(b2).toHaveTextContent("Hebrew one.");
+      fireEvent.click(screen.getByRole("button", { name: "Reading settings" }));
+      expect(screen.queryByLabelText("Esther text")).toBeNull();
+      expect(screen.queryByRole("navigation", { name: "Esther text" })).toBeNull();
+    });
+
+    it("readAloneInterlinearKeepsTheViewInTheChapterLinks", async () => {
+      byText([verse(2, 1)], [verse(2, 1)]);
+      render(wrap(await ChapterPage(params("nabre", "esther", "2", { view: "interlinear" }))));
+      expect(screen.getAllByTestId("sigla").map((e) => e.textContent)).toEqual(["LXX", "MT"]);
+      expect(screen.getByRole("link", { name: /Next chapter/ })).toHaveAttribute("href", "/en/read/nabre/esther/3?view=interlinear");
+    });
+
+    it("leavingEstherDropsItsView", async () => {
+      byText([verse(10, 1)], [verse(10, 1)]);
+      render(wrap(await ChapterPage(params("nabre", "esther", "10", { view: "interlinear" }))));
+      expect(screen.getByRole("link", { name: /Next chapter/ })).toHaveAttribute("href", "/en/read/nabre/1-maccabees/1");
+    });
+
+    it("comparingEstherShowsTheSwitchAndOneText", async () => {
+      byText([verse(1, 1)], [verse(1, 1, { text: "Hebrew one." })]);
+      render(wrap(await ChapterPage(params("nabre", "esther", "1", { with: "DRB", tradition: "HEBREW" }))));
+      const nabreCalls = getChapter.mock.calls.filter(([p]) => (p as { sigla: string }).sigla === "NABRE");
+      expect(nabreCalls.map(([p]) => (p as { tradition?: string }).tradition)).toEqual(["HEBREW"]);
+      const nav = screen.getByRole("navigation", { name: "Esther text" });
+      expect(within(nav).getByRole("link", { name: "Masoretic text" })).toHaveAttribute("aria-current", "true");
+      expect(within(nav).getByRole("link", { name: "Septuagint" })).toHaveAttribute("href", "/en/read/nabre/esther/1?with=DRB");
+      expect(within(nav).getByRole("link", { name: "Masoretic text" })).toHaveAttribute("href", "/en/read/nabre/esther/1?with=DRB&tradition=HEBREW");
+    });
+
+    it("eachTextStopsAtItsOwnCap", async () => {
+      byText(Array.from({ length: 30 }, (_, i) => verse(1, i + 1)), [verse(1, 1), verse(1, 2)], true);
+      render(wrap(await ChapterPage(params("nabre", "esther", "1"))));
+      expect(screen.queryByText(/Not in/)).toBeNull();
+      expect(screen.getAllByText(/first 30 verses of each chapter/)).toHaveLength(1);
+    });
+
+    it("aFailedMasoreticTextLeavesTheSeptuagintWithANote", async () => {
+      const error = vi.spyOn(console, "error").mockImplementation(() => {});
+      byText([verse(1, 1, { text: "Greek one." })], new ApiUnavailable("endpoint answered 503"));
+      render(wrap(await ChapterPage(params("nabre", "esther", "1"))));
+      expect(screen.getByText("Greek one.")).toBeInTheDocument();
+      expect(screen.queryByTestId("spread")).toBeNull();
+      expect(screen.getByRole("note")).toHaveTextContent("Masoretic text could not be loaded. Try again later.");
+      error.mockRestore();
+    });
+
+    it("bothTextsLoadAtOnce", async () => {
+      // The Masoretic chapter is asked for while the Septuagint's is still on its way.
+      let hebrewAskedEarly = false;
+      let greekPending = false;
+      getChapter.mockImplementation(async (p: { tradition?: string }) => {
+        if (p.tradition === "HEBREW") {
+          hebrewAskedEarly = greekPending;
+          return { rows: [verse(1, 1)], truncated: false, expectedVerses: 1 };
+        }
+        greekPending = true;
+        await new Promise((r) => setTimeout(r, 20));
+        greekPending = false;
+        return { rows: [verse(1, 1)], truncated: false, expectedVerses: 1 };
+      });
+      render(wrap(await ChapterPage(params("nabre", "esther", "1"))));
+      expect(hebrewAskedEarly).toBe(true);
+    });
+
+    it("aMasoreticChapterNotFoundLeavesTheSeptuagintWithANote", async () => {
+      byText([verse(1, 1, { text: "Greek one." })], new NotFound("no rows"));
+      render(wrap(await ChapterPage(params("nabre", "esther", "1"))));
+      expect(screen.getByText("Greek one.")).toBeInTheDocument();
+      expect(screen.getByRole("note")).toHaveTextContent("Masoretic text could not be loaded. Try again later.");
+    });
+
+    it("aComparedEditionWithBothTextsBringsTheSwitch", async () => {
+      // DRB prints Esther once (the Vulgate's 16 chapters); NABRE beside it prints both texts.
+      getChapter.mockImplementation(async (p: { sigla: string; tradition?: string }) => ({
+        rows: [verse(1, 1, { text: `${p.sigla} ${p.tradition ?? "default"}.` })], truncated: false, expectedVerses: 1,
+      }));
+      render(wrap(await ChapterPage(params("drb", "esther", "1", { with: "NABRE", tradition: "HEBREW" }))));
+      const calls = getChapter.mock.calls.map(([p]) => p as { sigla: string; tradition?: string });
+      expect(calls.find((p) => p.sigla === "DRB")).not.toHaveProperty("tradition");
+      expect(calls.filter((p) => p.sigla === "NABRE").map((p) => p.tradition)).toEqual(["HEBREW"]);
+      const nav = screen.getByRole("navigation", { name: "Esther text" });
+      expect(within(nav).getByRole("link", { name: "Masoretic text" })).toHaveAttribute("aria-current", "true");
+      expect(within(nav).getByRole("link", { name: "Septuagint" })).toHaveAttribute("href", "/en/read/drb/esther/1?with=NABRE");
+      // Moving on keeps the chosen text while a compared edition has both.
+      expect(screen.getByRole("link", { name: /Next chapter/ })).toHaveAttribute("href", "/en/read/drb/esther/2?with=NABRE&tradition=HEBREW");
+    });
+
+    it("aComparedIndexThatCannotBeLoadedKeepsTheChosenText", async () => {
+      // NABRE's index fails for now: it is not known to print one text, so Masoretic stays chosen.
+      const error = vi.spyOn(console, "error").mockImplementation(() => {});
+      getIndex.mockImplementation(async (s: string) => {
+        if (s === "NABRE") throw new ApiUnavailable("endpoint answered 503");
+        return drbIndex;
+      });
+      getChapter.mockResolvedValue({ rows: [verse(1, 1)], truncated: false, expectedVerses: 1 });
+      render(wrap(await ChapterPage(params("drb", "esther", "1", { with: "NABRE", tradition: "HEBREW" }))));
+      expect(screen.getByRole("link", { name: /Next chapter/ })).toHaveAttribute("href", "/en/read/drb/esther/2?with=NABRE&tradition=HEBREW");
+      error.mockRestore();
+    });
+
+    it("noSwitchWhenNoEditionInTheComparisonHasBothTexts", async () => {
+      getChapter.mockResolvedValue({ rows: [verse(1, 1)], truncated: false, expectedVerses: 1 });
+      getIndex.mockResolvedValue(drbIndex);
+      render(wrap(await ChapterPage(params("drb", "esther", "1", { with: "VGCL", tradition: "HEBREW" }))));
+      expect(screen.queryByRole("navigation", { name: "Esther text" })).toBeNull();
+    });
+
+    it("aViewThatDoesNotApplyIsNotCarriedIntoTheNextComparison", async () => {
+      // Arriving at a one-text Esther from Esther read interlinear: the view does not apply here.
+      routerPush.mockClear();
+      getChapter.mockResolvedValue({ rows: [verse(1, 1)], truncated: false, expectedVerses: 1 });
+      render(wrap(await ChapterPage(params("drb", "esther", "1", { view: "interlinear" }))));
+      fireEvent.change(screen.getByLabelText("Chapter"), { target: { value: "2" } });
+      expect(routerPush).toHaveBeenLastCalledWith("/en/read/drb/esther/2");
+      fireEvent.click(screen.getByRole("button", { name: "Reading settings" }));
+      fireEvent.click(screen.getByRole("button", { name: /Compare with another edition/ }));
+      fireEvent.change(screen.getByRole("combobox", { name: "Second edition" }), { target: { value: "NABRE" } });
+      expect(routerPush).toHaveBeenLastCalledWith("/en/read/drb/esther/1?with=NABRE");
+    });
+
+    it("onlyEditionsWithBothTextsGetATradition", async () => {
+      getChapter.mockResolvedValue({ rows: [verse(1, 1)], truncated: false, expectedVerses: 1 });
+      render(wrap(await ChapterPage(params("drb", "esther", "1", { tradition: "HEBREW" }))));
+      expect(getChapter).toHaveBeenCalledWith(expect.not.objectContaining({ tradition: expect.anything() }));
+      expect(screen.queryByTestId("spread")).toBeNull();
+    });
   });
 });

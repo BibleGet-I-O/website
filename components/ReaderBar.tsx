@@ -1,12 +1,12 @@
 "use client";
 
 import { useTranslations } from "next-intl";
-import { useRef } from "react";
+import { useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { ReaderSettings, type SettingsChange } from "@/components/ReaderSettings";
 import { compareQuery, type View } from "@/lib/compare";
 import { editionSlug } from "@/lib/slug";
-import type { Tradition } from "@/lib/esther";
+import { ESTHER, type Tradition } from "@/lib/esther";
 
 export type ReaderBarProps = {
   locale: string;
@@ -27,7 +27,7 @@ export type ReaderBarProps = {
 
 const selectClass = "rounded border border-slate-300 bg-white px-2 py-1 dark:border-slate-700 dark:bg-slate-900";
 
-/** The reader's top bar: edition, book and chapter, and the ⚙ menu (comparison, its layout, Esther's text). */
+/** The reader's top bar: edition, book and chapter, and the ⚙ menu (comparison, its layout). */
 export function ReaderBar(p: ReaderBarProps) {
   const t = useTranslations("Reader");
   const router = useRouter();
@@ -37,26 +37,38 @@ export function ReaderBar(p: ReaderBarProps) {
   // builds on it (the Interlinear toggle, then a third edition, keeps the interlinear view). It applies only
   // while the props are those it was asked from.
   const pending = useRef<{ from: string; with?: string[]; view?: View; tradition?: Tradition }>({ from: "" });
+  // New props mean the navigation arrived (or Back left it): a change asked from an earlier visit is dropped.
+  useEffect(() => {
+    pending.current = { from: routeKey };
+  }, [routeKey]);
 
   const go = (o: SettingsChange & { book?: string; chapter?: number }) => {
     const was = pending.current.from === routeKey ? pending.current : { from: routeKey };
     const book = o.book ?? p.book;
     const chapter = o.chapter ?? p.chapter;
     // The tradition belongs to Esther: kept only while the book stays the same; Greek is the default.
-    const tradition = o.tradition ?? (book === p.book ? (was.tradition ?? p.tradition) : undefined);
+    const tradition = book === p.book ? (was.tradition ?? p.tradition) : undefined;
     const w = o.with ?? was.with ?? p.withSiglas;
     const view = o.view ?? was.view ?? p.view;
     pending.current = { from: routeKey, with: w, view, tradition };
-    const qs = compareQuery({ with: w, view, tradition: p.esther ? tradition : undefined });
+    // Esther's two texts read alone keep the view (side by side or interlinear) too.
+    // Esther's text is kept while its edition, or a compared one, prints both (`p.tradition` is then set).
+    const keepsText = p.esther || p.tradition !== undefined;
+    const qs = compareQuery({ with: w, view, tradition: keepsText ? tradition : undefined, twoTexts: p.esther && book === p.book && w.length === 0 });
     router.push(`/${p.locale}/read/${editionSlug(p.edition)}/${book}/${chapter}${qs}`);
   };
 
   // The edition's books page opens this chapter when the edition has it, and lists the books when it does not.
   const switchEdition = (sigla: string) => {
+    // Like go(): a change still on its way (the Interlinear toggle) is built on.
+    const was = pending.current.from === routeKey ? pending.current : { from: routeKey };
+    const remaining = (was.with ?? p.withSiglas).filter((s) => s !== sigla);
     const rest = compareQuery({
-      with: p.withSiglas.filter((s) => s !== sigla),
-      view: p.view,
-      tradition: p.esther ? p.tradition : undefined,
+      with: remaining,
+      view: was.view ?? p.view,
+      tradition: p.tradition,
+      // Esther read alone keeps the view: the chapter page drops it unless the new edition has both texts.
+      twoTexts: p.bookNum === ESTHER && remaining.length === 0,
     });
     router.push(`/${p.locale}/read/${editionSlug(sigla)}?book=${p.bookNum}&chapter=${p.chapter}${rest.replace("?", "&")}`);
   };
@@ -104,7 +116,6 @@ export function ReaderBar(p: ReaderBarProps) {
           withSiglas={p.withSiglas}
           view={p.view}
           esther={p.esther}
-          tradition={p.tradition}
           routeKey={routeKey}
           onChange={go}
         />
