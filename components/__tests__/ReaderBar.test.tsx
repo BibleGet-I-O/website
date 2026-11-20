@@ -168,19 +168,16 @@ describe("ReaderBar", () => {
     expect(screen.queryByRole("dialog")).toBeNull();
   });
 
-  it("estherTextLivesInTheMenuOnlyForEditionsWithBoth", () => {
+  it("theMenuHasNoEstherTextAndOffersInterlinearForTheTwoTexts", () => {
     const { unmount } = render(wrap(<ReaderBar {...props} book="esther" bookNum={19} chapter={1} esther />));
-    expect(screen.queryByLabelText("Esther text")).toBeNull();
     openMenu();
-    const select = screen.getByLabelText("Esther text") as HTMLSelectElement;
-    expect(Array.from(select.options).map((o) => o.value)).toEqual(["GREEK", "HEBREW"]);
-    expect(select).toHaveValue("GREEK");
-    fireEvent.change(select, { target: { value: "HEBREW" } });
-    expect(push).toHaveBeenLastCalledWith("/en/read/nabre/esther/1?tradition=HEBREW");
+    expect(screen.queryByLabelText("Esther text")).toBeNull();
+    fireEvent.click(screen.getByLabelText("Interlinear"));
+    expect(push).toHaveBeenLastCalledWith("/en/read/nabre/esther/1?view=interlinear");
     unmount();
     render(wrap(<ReaderBar {...props} book="esther" bookNum={19} chapter={1} />));
     openMenu();
-    expect(screen.queryByLabelText("Esther text")).toBeNull();
+    expect(screen.queryByLabelText("Interlinear")).toBeNull();
   });
 
   it("aSingleEditionSiteHasNothingToCompare", () => {

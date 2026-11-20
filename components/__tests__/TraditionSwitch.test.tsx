@@ -35,6 +35,9 @@ describe("TraditionSwitch", () => {
     for (const [locale, [lxx, mt, lxxShort, mtShort]] of Object.entries(want)) {
       const r = JSON.parse(readFileSync(`messages/${locale}.json`, "utf8")).Reader;
       expect([r.septuagint, r.masoretic, r.septuagintShort, r.masoreticShort], locale).toEqual([lxx, mt, lxxShort, mtShort]);
+      // The ⚙ menu's Greek / Hebrew select is gone, and its labels with it.
+      expect(r.greek, locale).toBeUndefined();
+      expect(r.hebrew, locale).toBeUndefined();
     }
   });
 });

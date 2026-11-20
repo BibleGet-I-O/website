@@ -27,7 +27,7 @@ export type ReaderBarProps = {
 
 const selectClass = "rounded border border-slate-300 bg-white px-2 py-1 dark:border-slate-700 dark:bg-slate-900";
 
-/** The reader's top bar: edition, book and chapter, and the ⚙ menu (comparison, its layout, Esther's text). */
+/** The reader's top bar: edition, book and chapter, and the ⚙ menu (comparison, its layout). */
 export function ReaderBar(p: ReaderBarProps) {
   const t = useTranslations("Reader");
   const router = useRouter();
@@ -43,11 +43,12 @@ export function ReaderBar(p: ReaderBarProps) {
     const book = o.book ?? p.book;
     const chapter = o.chapter ?? p.chapter;
     // The tradition belongs to Esther: kept only while the book stays the same; Greek is the default.
-    const tradition = o.tradition ?? (book === p.book ? (was.tradition ?? p.tradition) : undefined);
+    const tradition = book === p.book ? (was.tradition ?? p.tradition) : undefined;
     const w = o.with ?? was.with ?? p.withSiglas;
     const view = o.view ?? was.view ?? p.view;
     pending.current = { from: routeKey, with: w, view, tradition };
-    const qs = compareQuery({ with: w, view, tradition: p.esther ? tradition : undefined });
+    // Esther's two texts read alone keep the view (side by side or interlinear) too.
+    const qs = compareQuery({ with: w, view, tradition: p.esther ? tradition : undefined, twoTexts: p.esther && book === p.book && w.length === 0 });
     router.push(`/${p.locale}/read/${editionSlug(p.edition)}/${book}/${chapter}${qs}`);
   };
 
@@ -104,7 +105,6 @@ export function ReaderBar(p: ReaderBarProps) {
           withSiglas={p.withSiglas}
           view={p.view}
           esther={p.esther}
-          tradition={p.tradition}
           routeKey={routeKey}
           onChange={go}
         />

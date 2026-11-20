@@ -22,15 +22,14 @@ export function parseView(raw: string | undefined): View {
 }
 
 /**
- * The reader's query string ("" or "?…"): the compared editions with literal commas, the view only while
- * comparing (side by side is the default), and Esther's text only when Hebrew (Greek is the default).
+ * The reader's query string ("" or "?…"): the compared editions with literal commas; the view while comparing
+ * or reading Esther's two texts (`twoTexts`), side by side being the default; and, while comparing, Esther's
+ * text when Hebrew (Greek is the default; read alone, both texts are shown).
  */
-export function compareQuery(o: { with: string[]; view: View; tradition?: string }): string {
+export function compareQuery(o: { with: string[]; view: View; tradition?: string; twoTexts?: boolean }): string {
   const parts: string[] = [];
-  if (o.with.length > 0) {
-    parts.push(`with=${o.with.map(encodeURIComponent).join(",")}`);
-    if (o.view === "interlinear") parts.push("view=interlinear");
-  }
-  if (o.tradition === "HEBREW") parts.push("tradition=HEBREW");
+  if (o.with.length > 0) parts.push(`with=${o.with.map(encodeURIComponent).join(",")}`);
+  if ((o.with.length > 0 || o.twoTexts) && o.view === "interlinear") parts.push("view=interlinear");
+  if (o.with.length > 0 && o.tradition === "HEBREW") parts.push("tradition=HEBREW");
   return parts.length > 0 ? `?${parts.join("&")}` : "";
 }
