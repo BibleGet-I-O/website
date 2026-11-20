@@ -1,0 +1,40 @@
+/* The chapter as a page that turns (components/PageTurn.tsx). The script sets the custom properties per frame. */
+.area {
+  touch-action: pan-y;
+  clip-path: var(--clip, none);
+}
+.area[data-state="fading"] {
+  opacity: 0;
+  transition: opacity 0.15s ease;
+}
+
+/* The blank sheet under the lifted part: the page's own background shows; this adds the shadow along the fold. */
+.shade {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  clip-path: var(--shade-clip, inset(100% 0 0 0));
+  background: var(--shade, none);
+}
+
+/* The back of the sheet: the page's colour (bg-white / dark:bg-slate-950 on the element), with its shine. */
+.flap {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  clip-path: var(--flap-clip, inset(100% 0 0 0));
+  background-image: var(--flap-shine, none);
+}
+
+.loading {
+  position: fixed;
+  left: 50%;
+  top: 40%;
+  transform: translateX(-50%);
+  font-size: 0.875rem;
+  opacity: 0.6;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .area[data-state="fading"] { transition: none; }
+}

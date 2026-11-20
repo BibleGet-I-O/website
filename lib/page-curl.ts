@@ -13,9 +13,11 @@ export type Side = "next" | "prev";
 export type Curl = {
   /** The part of the page that stays, [] when fully turned. */
   stay: Point[];
+  /** The part that has lifted, where it was (the blank sheet shows there), [] at rest. */
+  lifted: Point[];
   /** The lifted part reflected across the fold, [] at rest. */
   flap: Point[];
-  /** Direction of the fold line, in degrees, for the gradients. */
+  /** The CSS gradient angle across the fold, from C's side towards P's (the direction C→P), in degrees. */
   foldAngle: number;
   /** 0 at rest … 1 fully turned. */
   progress: number;
@@ -87,7 +89,7 @@ export function curl(side: Side, finger: Point, w: number, h: number): Curl {
   const page: Point[] = [{ x: 0, y: 0 }, { x: w, y: 0 }, { x: w, y: h }, { x: 0, y: h }];
   const d = { x: p.x - c.x, y: p.y - c.y };
   const len = Math.hypot(d.x, d.y);
-  if (len < EPS) return { stay: page, flap: [], foldAngle: 90, progress: 0 };
+  if (len < EPS) return { stay: page, lifted: [], flap: [], foldAngle: 90, progress: 0 };
   const m = { x: (p.x + c.x) / 2, y: (p.y + c.y) / 2 };
   // > 0 on P's side of the fold (the page that stays), < 0 on C's (the lifted part).
   const f = (q: Point) => (q.x - m.x) * d.x + (q.y - m.y) * d.y;
@@ -97,9 +99,11 @@ export function curl(side: Side, finger: Point, w: number, h: number): Curl {
     return { x: q.x - k * n.x, y: q.y - k * n.y };
   };
   const stay = solid(clip(page, f));
-  const flap = solid(clip(page, (q) => -f(q)).map(reflect));
+  const lifted = solid(clip(page, (q) => -f(q)));
+  const flap = lifted.map(reflect);
   return {
     stay,
+    lifted,
     flap,
     foldAngle: (Math.atan2(d.x, -d.y) * 180) / Math.PI,
     progress: Math.min(1, Math.abs(c.x - p.x) / (2 * w)),

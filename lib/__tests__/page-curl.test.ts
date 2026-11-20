@@ -15,6 +15,7 @@ describe("curl", () => {
   it("aCornerPullFoldsATriangle", () => {
     const c = curl("next", { x: 300, y: 100 }, 400, 800);
     expect(norm(c.flap)).toEqual(norm([{ x: 300, y: 0 }, { x: 300, y: 100 }, { x: 400, y: 100 }]));
+    expect(norm(c.lifted)).toEqual(norm([{ x: 300, y: 0 }, { x: 400, y: 0 }, { x: 400, y: 100 }]));
     expect(norm(c.stay)).toEqual(norm([{ x: 0, y: 0 }, { x: 300, y: 0 }, { x: 400, y: 100 }, { x: 400, y: 800 }, { x: 0, y: 800 }]));
   });
 
