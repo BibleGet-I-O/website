@@ -11,7 +11,10 @@ export type ShownUnit = { id: string; ref: string; text: string };
 
 export type ReviewLinkProps = {
   link: ReviewLinkData;
-  /** The edition's text of the verse. */
+  /**
+   * The edition's text of the verse; "" when no row has this exact verse, letter included (a link to 1:1a never
+   * shows 1:1), which the row then says.
+   */
   text: string;
   /** The units the verse is linked to. */
   units: ShownUnit[];
@@ -73,7 +76,7 @@ export function ReviewLink(p: ReviewLinkProps) {
     >
       <div>
         <p id={refId} className="font-sans text-xs text-slate-500 dark:text-slate-400">{link.ref}</p>
-        <p className="font-serif">{p.text}</p>
+        {p.text ? <p className="font-serif">{p.text}</p> : <p className="font-sans text-sm italic text-slate-500">{t("textMissing")}</p>}
       </div>
       <div>
         <p className="flex flex-wrap items-center gap-2 font-sans text-xs text-slate-500 dark:text-slate-400">
@@ -90,7 +93,7 @@ export function ReviewLink(p: ReviewLinkProps) {
           shown.map((u) => (
             <p key={u.id} className="font-serif">
               <span className="mr-1 font-sans text-xs text-slate-500">{u.ref}</span>
-              {u.text}
+              {u.text || <span className="font-sans text-sm italic text-slate-500">{t("textMissing")}</span>}
             </p>
           ))
         )}

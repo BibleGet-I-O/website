@@ -54,6 +54,12 @@ export function unitChapterVerse(id: string): [number, number] | null {
   return m ? [Number(m[1]), Number(m[2])] : null;
 }
 
+/** "btu:est.1.1a" -> "1:1a", "btu:nm.26.1.2" -> "26:1": the Nova Vulgata verse, with its letter, a unit began as. */
+export function unitVerse(id: string): string | null {
+  const m = /^btu:[a-z0-9]+\.(\d+)\.(\d+[a-z]*)/.exec(id);
+  return m ? `${m[1]}:${m[2]}` : null;
+}
+
 /** A verse's text without the edition's formatting tags. */
 export function plainText(text: string): string {
   return text.replace(/<[^>]+>/g, "").replace(/\s+/g, " ").trim();

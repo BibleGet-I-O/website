@@ -136,6 +136,7 @@
     "signInAgain": "Reconnectez-vous pour continuer.",
     "nova": "Nova Vulgata",
     "noUnits": "Aucune correspondance dans la Nova Vulgata",
+    "textMissing": "Texte introuvable pour cette référence.",
     "confidence": "Confiance {percent} %",
     "statusRule": "Par règle",
     "statusDraft": "Brouillon",

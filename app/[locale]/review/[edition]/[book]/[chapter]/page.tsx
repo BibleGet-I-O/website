@@ -9,7 +9,7 @@ import { Link } from "@/i18n/navigation";
 import { routing } from "@/i18n/routing";
 import { getAccess } from "@/lib/access";
 import { getChapter, getEditions, getIndex } from "@/lib/api";
-import { plainText, reviewGet, unitChapterVerse, type ReviewChapter } from "@/lib/review";
+import { plainText, reviewGet, unitChapterVerse, unitVerse, type ReviewChapter } from "@/lib/review";
 import { editionSlug } from "@/lib/slug";
 import type { VerseRow } from "@/lib/types";
 
@@ -18,21 +18,22 @@ const NOVA_VULGATA = "NVBSE";
 
 type Params = { locale: string; edition: string; book: string; chapter: string };
 
-/** Verse texts by "chapter:verse[@TRADITION]"; the parts of a verse printed in several rows are joined. */
+/**
+ * Verse texts by "chapter:verse[letter][@TRADITION]": a lettered verse is a verse of its own (Esther 1:1a is not
+ * 1:1); the unlettered parts of a verse printed in several rows are joined.
+ */
 function texts(rows: VerseRow[], tradition = ""): Map<string, string> {
   const out = new Map<string, string>();
   for (const r of rows) {
-    const k = `${r.chapter}:${r.verse}${tradition ? `@${tradition}` : ""}`;
+    const k = `${r.chapter}:${r.verse}${r.segment ?? ""}${tradition ? `@${tradition}` : ""}`;
     out.set(k, [out.get(k), plainText(r.text)].filter(Boolean).join(" "));
   }
   return out;
 }
 
-/** The key a link's ref finds its text under: its letters dropped ("1:1a@GREEK" -> "1:1@GREEK"). */
+/** The key a link's ref finds its text under: its part number dropped ("10:1#2" -> "10:1"), its letter kept. */
 function textKey(ref: string): string {
-  const [cv, tradition] = ref.split("@");
-  const [c, v] = cv.split(":");
-  return `${c}:${parseInt(v, 10)}${tradition ? `@${tradition}` : ""}`;
+  return ref.replace(/#\d+/, "");
 }
 
 async function chapterTexts(
@@ -90,8 +91,7 @@ export default async function ChapterReviewPage({ params }: { params: Promise<Pa
   const nvChapters = [...new Set([...unitIds].map((id) => unitChapterVerse(id)?.[0]).filter((c): c is number => c !== undefined))].sort((a, b) => a - b);
   const nvTexts = await chapterTexts(NOVA_VULGATA, bookNum, nvChapters, access);
   const shown = (id: string): ShownUnit => {
-    const cv = unitChapterVerse(id);
-    const ref = cv ? `${cv[0]}:${cv[1]}` : id;
+    const ref = unitVerse(id) ?? id;
     return { id, ref, text: nvTexts.get(ref) ?? "" };
   };
   let bookName = String(bookNum);
