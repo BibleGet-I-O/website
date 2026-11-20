@@ -177,6 +177,25 @@ describe("ReaderBar", () => {
     expect(push).toHaveBeenLastCalledWith("/en/read/drb?book=19&chapter=3&view=interlinear");
   });
 
+  it("aViewAskedFromAPageLeftBehindIsNotRevivedByComingBack", () => {
+    const esther = { ...props, book: "esther", bookNum: 19, chapter: 3, esther: true };
+    const { rerender } = render(wrap(<ReaderBar {...esther} />));
+    fireEvent.click(screen.getByRole("button", { name: "Reading settings" }));
+    fireEvent.click(screen.getByLabelText("Interlinear"));
+    // The interlinear page arrives, then Back returns to the side-by-side one.
+    rerender(wrap(<ReaderBar {...esther} view="interlinear" />));
+    rerender(wrap(<ReaderBar {...esther} />));
+    fireEvent.change(screen.getByLabelText("Edition"), { target: { value: "DRB" } });
+    expect(push).toHaveBeenLastCalledWith("/en/read/drb?book=19&chapter=3");
+  });
+
+  it("switchingToTheComparedEditionKeepsTheViewForEsthersTwoTexts", () => {
+    // DRB prints Esther once; NABRE, compared with it, prints both texts: the chapter page decides.
+    render(wrap(<ReaderBar {...props} edition="DRB" book="esther" bookNum={19} chapter={1} withSiglas={["NABRE"]} view="interlinear" />));
+    fireEvent.change(screen.getByLabelText("Edition"), { target: { value: "NABRE" } });
+    expect(push).toHaveBeenLastCalledWith("/en/read/nabre?book=19&chapter=1&view=interlinear");
+  });
+
   it("switchingEditionFromEstherReadAloneKeepsTheView", () => {
     render(wrap(<ReaderBar {...props} book="esther" bookNum={19} chapter={3} esther view="interlinear" />));
     fireEvent.change(screen.getByLabelText("Edition"), { target: { value: "DRB" } });

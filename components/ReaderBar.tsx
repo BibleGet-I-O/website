@@ -1,12 +1,12 @@
 "use client";
 
 import { useTranslations } from "next-intl";
-import { useRef } from "react";
+import { useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { ReaderSettings, type SettingsChange } from "@/components/ReaderSettings";
 import { compareQuery, type View } from "@/lib/compare";
 import { editionSlug } from "@/lib/slug";
-import type { Tradition } from "@/lib/esther";
+import { ESTHER, type Tradition } from "@/lib/esther";
 
 export type ReaderBarProps = {
   locale: string;
@@ -37,6 +37,10 @@ export function ReaderBar(p: ReaderBarProps) {
   // builds on it (the Interlinear toggle, then a third edition, keeps the interlinear view). It applies only
   // while the props are those it was asked from.
   const pending = useRef<{ from: string; with?: string[]; view?: View; tradition?: Tradition }>({ from: "" });
+  // New props mean the navigation arrived (or Back left it): a change asked from an earlier visit is dropped.
+  useEffect(() => {
+    pending.current = { from: routeKey };
+  }, [routeKey]);
 
   const go = (o: SettingsChange & { book?: string; chapter?: number }) => {
     const was = pending.current.from === routeKey ? pending.current : { from: routeKey };
@@ -63,8 +67,8 @@ export function ReaderBar(p: ReaderBarProps) {
       with: remaining,
       view: was.view ?? p.view,
       tradition: p.tradition,
-      // Esther's two texts read alone keep their view; the chapter page checks the new edition has both.
-      twoTexts: p.esther && remaining.length === 0,
+      // Esther read alone keeps the view: the chapter page drops it unless the new edition has both texts.
+      twoTexts: p.bookNum === ESTHER && remaining.length === 0,
     });
     router.push(`/${p.locale}/read/${editionSlug(sigla)}?book=${p.bookNum}&chapter=${p.chapter}${rest.replace("?", "&")}`);
   };
