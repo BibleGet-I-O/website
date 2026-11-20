@@ -4,7 +4,12 @@ import { Headings, VerseLine, headingsBefore } from "@/components/VerseLines";
 import type { View } from "@/lib/compare";
 import type { ParallelRow } from "@/lib/parallel";
 
-export type SpreadSide = { sigla: string; name: string; lang?: string };
+/**
+ * A column: an edition, or one of its texts (Esther's Septuagint and Masoretic text), which is headed by a red
+ * rubric, its full name from `sm` up and its short one (LXX, MT) on phones, and tagged with the short one when
+ * interlinear.
+ */
+export type SpreadSide = { sigla: string; name: string; lang?: string; rubric?: { full: string; short: string } };
 
 /** Cell test ids by side: the main edition is `a`, the compared ones `b` and `c`. */
 const LETTERS = "abc";
@@ -24,10 +29,11 @@ const COLUMNS: Record<number, string> = { 1: "grid-cols-1", 2: "grid-cols-2", 3:
  * A row an edition has no verse in gets the "absent" note on that side, except where the emptiness is not
  * the edition's: the rest of an edition after its own cap (`truncated`, by side), and, for a compared
  * edition, a verse of another chapter the main edition prints on this page (the compared edition prints it
- * in its own chapter).
+ * in its own chapter). Without `gapNotes` (Esther's two texts, where the Septuagint's additions simply have no
+ * Masoretic counterpart) the empty side stays empty.
  */
-export function Spread({ sides, rows, chapter, truncated = [], view = "side-by-side" }: {
-  sides: SpreadSide[]; rows: ParallelRow[]; chapter: number; truncated?: boolean[]; view?: View;
+export function Spread({ sides, rows, chapter, truncated = [], view = "side-by-side", gapNotes = true }: {
+  sides: SpreadSide[]; rows: ParallelRow[]; chapter: number; truncated?: boolean[]; view?: View; gapNotes?: boolean;
 }) {
   const interlinear = view === "interlinear";
   const cols = interlinear ? 1 : sides.length;
@@ -40,7 +46,7 @@ export function Spread({ sides, rows, chapter, truncated = [], view = "side-by-s
     if (v) return <VerseLine row={v} chapter={chapter} headings={false} compact={compact} />;
     if (truncated[s] && i > last[s]) return null;
     if (s > 0 && r.a && r.a.chapter !== chapter) return null;
-    return <GapNote edition={sides[s].name} />;
+    return gapNotes ? <GapNote edition={sides[s].name} /> : null;
   };
   // Three columns on a phone: a smaller text so the words fit.
   const size = cols === 3 ? "text-base sm:text-lg" : "text-lg";
@@ -49,7 +55,12 @@ export function Spread({ sides, rows, chapter, truncated = [], view = "side-by-s
 
   return (
     <div data-testid="spread" className={`grid ${COLUMNS[cols]} ${gap} font-serif ${size} leading-relaxed`}>
-      {!interlinear && sides.map((side) => (
+      {!interlinear && sides.map((side) => side.rubric ? (
+        <p key={side.sigla} data-testid="column-name" className="mb-2 text-center font-sans text-xs font-semibold uppercase tracking-wide text-red-700 dark:text-red-400">
+          <span className="hidden sm:inline">{side.rubric.full}</span>
+          <span className="sm:hidden">{side.rubric.short}</span>
+        </p>
+      ) : (
         <p key={side.sigla} data-testid="column-name" className="mb-2 text-center font-sans text-sm font-semibold text-slate-600 dark:text-slate-400">
           {side.name}
         </p>
@@ -75,7 +86,7 @@ export function Spread({ sides, rows, chapter, truncated = [], view = "side-by-s
                   className={`py-0.5 ${muted(s)} ${interlinear && last ? "mb-3" : ""}`}
                 >
                   {interlinear && s > 0 && (content || titles[s].length > 0) && (
-                    <span data-testid="sigla" className="ml-10 font-sans text-xs text-slate-500 dark:text-slate-400">{side.sigla}</span>
+                    <span data-testid="sigla" className="ml-10 font-sans text-xs text-slate-500 dark:text-slate-400">{side.rubric?.short ?? side.sigla}</span>
                   )}
                   {interlinear && <Headings titles={titles[s]} compact={compact} />}
                   {content}
