@@ -209,6 +209,7 @@ type RawRow = {
   chapter: number;
   verse: number;
   verse_label?: string | null;
+  verse_segment?: string | null;
   verseequiv?: string | null;
   printed_chapter?: number | null;
   text: string;
@@ -223,6 +224,7 @@ function toRow(r: RawRow): VerseRow {
   const row: VerseRow = {
     chapter: r.chapter,
     verse: r.verse,
+    segment: r.verse_segment ?? null,
     label: r.verse_label ?? r.verseequiv ?? null,
     printedChapter: r.printed_chapter ?? null,
     text: r.text,

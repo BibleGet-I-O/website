@@ -19,6 +19,6 @@ export function placeAsPrinted(prevLast: VerseRow[], current: VerseRow[], nextFi
  */
 export function printedLabel(r: VerseRow, chapter: number): string {
   if (r.label === "") return "";
-  const label = r.label ?? String(r.verse);
+  const label = r.label ?? `${r.verse}${r.segment ?? ""}`;
   return r.chapter !== chapter && !label.includes(":") ? `${r.chapter}:${label}` : label;
 }

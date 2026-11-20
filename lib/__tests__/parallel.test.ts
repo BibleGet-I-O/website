@@ -58,7 +58,16 @@ describe("alignment", () => {
     expect(rows.map((r) => [r.a?.verse, r.others[0]?.verse, r.others[1]?.verse])).toEqual([[1, 1, 1], [2, 2, 2], [undefined, undefined, 3]]);
   });
 
-  it("psalmChaptersAreTheDistinctHebrewPsalmsInOrder", () => {
+  it("lettersKeepVersesApart", () => {
+    // Esther 1:1a-1k and 1:1 are different verses: each pairs with its own counterpart.
+    const lettered = (seg: string | null) => ({ ...row(1, 1), segment: seg });
+    expect(alignKey(lettered("a"), 19)).toBe("1:1a");
+    expect(alignKey(lettered(null), 19)).toBe("1:1");
+    const rows = buildRows([lettered("a"), lettered("b"), lettered(null)], [[lettered("a"), lettered("b"), lettered(null)]], 19);
+    expect(rows.map((r) => [r.key, r.a?.segment ?? null, r.others[0]?.segment ?? null])).toEqual([["1:1a", "a", "a"], ["1:1b", "b", "b"], ["1:1", null, null]]);
+  });
+
+    it("psalmChaptersAreTheDistinctHebrewPsalmsInOrder", () => {
     expect(psalmChapters(vgcl9)).toEqual([9, 10]);
     expect(psalmChapters([row(10, 1, "10:1")])).toEqual([10]);
   });
