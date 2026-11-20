@@ -121,6 +121,33 @@ describe("review pages", () => {
     expect(screen.getByTestId("review-row")).toHaveTextContent("Hebrew text");
   });
 
+  it("eachUnitAndVerseShowsOnlyItsOwnTextLettersIncluded", async () => {
+    // Esther 1: the units 1:1a, 1:1b and 1:1 are three verses, not one.
+    fetchMock.mockResolvedValue(json({
+      links: [
+        { ...chapterData.links[1], ref: "1:1a@GREEK", units: ["btu:est.1.1a"] },
+        { ...chapterData.links[1], id: 3, ref: "1:1@HEBREW", units: ["btu:est.1.1"] },
+      ],
+      units: [{ id: "btu:est.1.1a", ref: "1:1a", stretch: "1" }, { id: "btu:est.1.1b", ref: "1:1b", stretch: "1" }],
+    }));
+    const lettered = (verse: number, segment: string | null, text: string) => ({ ...row(1, verse, text), segment });
+    getChapter.mockImplementation(async (p: { sigla: string; tradition?: string }) => ({
+      rows: p.sigla === "VGCL"
+        ? (p.tradition === "HEBREW" ? [lettered(1, null, "Hebrew one")] : [lettered(1, "a", "Greek one-a"), lettered(1, null, "Greek one")])
+        : [lettered(1, "a", "NV one-a"), lettered(1, "b", "NV one-b"), lettered(1, null, "NV one")],
+      truncated: false, expectedVerses: 3,
+    }));
+    render(wrap(await ChapterReviewPage({ params: chapterParams })));
+    const [a, hebrew] = screen.getAllByTestId("review-row");
+    expect(a).toHaveTextContent("Greek one-a");
+    expect(a).toHaveTextContent("NV one-a");
+    expect(a).not.toHaveTextContent("NV one-b");
+    expect(a).not.toHaveTextContent("NV one ");
+    expect(hebrew).toHaveTextContent("Hebrew one");
+    expect(hebrew).toHaveTextContent("1:1NV one");
+    expect(hebrew).not.toHaveTextContent("one-a");
+  });
+
   it("reviewLinkActionRequiresTheReviewerRole", async () => {
     auth.mockResolvedValue({ ...reviewer, reviewer: false });
     expect(await actions.reviewLink(2, { action: "accept" })).toEqual({ ok: false, status: 403 });
