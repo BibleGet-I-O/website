@@ -188,6 +188,11 @@ describe("Spread", () => {
       expect(screen.getAllByText(/Not in/)).toHaveLength(1);
     });
 
+    it("twoTextsOfOneEditionAreEqualNeitherGreyed", () => {
+      render(wrap(<Spread sides={[LXX, MT]} rows={buildRows([row(1, 1)], [[row(1, 1)]], 19)} chapter={1} />));
+      expect(screen.getByTestId("cell-b").className).not.toMatch(/text-slate-700/);
+    });
+
     it("interlinearTagsARubricSideWithItsShortName", () => {
       render(wrap(<Spread sides={[LXX, MT]} rows={buildRows([row(1, 1)], [[row(1, 1)]], 19)} chapter={1} view="interlinear" />));
       expect(screen.getByTestId("sigla")).toHaveTextContent(/^MT$/);

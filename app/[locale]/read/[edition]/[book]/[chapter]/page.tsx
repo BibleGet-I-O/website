@@ -29,14 +29,15 @@ const one = (v: string | string[] | undefined) => (Array.isArray(v) ? v[0] : v);
  * fetch shows the chapter without it (logged with the status only).
  */
 async function masoreticText(
-  printed: (t: Tradition) => Promise<{ rows: VerseRow[]; truncated: boolean }>,
+  printed: (t: Tradition, chapterMissing: "404" | "throw") => Promise<{ rows: VerseRow[]; truncated: boolean }>,
 ): Promise<{ rows: VerseRow[]; truncated: boolean } | "unavailable"> {
   try {
-    return await printed("HEBREW");
+    return await printed("HEBREW", "throw");
   } catch (err) {
-    if (!(err instanceof ApiUnavailable)) throw err;
-    // ApiUnavailable messages carry the status, never the URL or key.
-    console.error(`[chapter] Masoretic text unavailable (${err.message})`);
+    // The Septuagint has loaded: a Masoretic chapter the API cannot give (unavailable, or not found) leaves it
+    // alone with a note, not a missing page.
+    if (err instanceof ApiUnavailable) console.error(`[chapter] Masoretic text unavailable (${err.message})`);
+    else if (!(err instanceof NotFound)) throw err;
     return "unavailable";
   }
 }
@@ -93,11 +94,13 @@ export default async function ChapterPage({ params, searchParams }: { params: Pr
    * print the previous chapter's last verse at the start of this one (NABRE John 7:53 opens John 8) and the
    * next chapter's first verse at the end of this one (NABRE Wis 12:1 closes Wis 11).
    */
-  const printed = async (text?: Tradition): Promise<{ rows: VerseRow[]; truncated: boolean }> => {
+  const printed = async (text?: Tradition, chapterMissing: "404" | "throw" = "404"): Promise<{ rows: VerseRow[]; truncated: boolean }> => {
     const request = { sigla: edition.sigla, bookAbbrev: book.abbrev, access: info.access, ...(text && { tradition: text }) };
     const counts = text === "GREEK" && book.greekVersesPerChapter ? book.greekVersesPerChapter : book.versesPerChapter;
     const prevVerses = chapter > 1 ? counts[chapter - 2] : undefined;
-    const current: Chapter = await orNotFound(getChapter({ ...request, chapter }));
+    // The page's own text missing is a missing page; the Masoretic text beside it throws NotFound to its caller.
+    const loading = getChapter({ ...request, chapter });
+    const current: Chapter = chapterMissing === "404" ? await orNotFound(loading) : await loading;
     // A capped chapter stops at verse 30: the previous chapter's last verse would make it 31 and the next
     // chapter's would not follow it, so neither is fetched.
     const prevLast: VerseRow[] =

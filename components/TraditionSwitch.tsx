@@ -2,7 +2,8 @@ import { getTranslations } from "next-intl/server";
 import { Link } from "@/i18n/navigation";
 import type { Tradition } from "@/lib/esther";
 
-const rubric = "font-sans text-xs font-semibold uppercase tracking-wide";
+// Full red at both weights: small text needs 4.5:1, so the current text is marked by weight and underline.
+const rubric = "font-sans text-xs uppercase tracking-wide";
 
 /**
  * Esther's two texts, when comparing editions: every edition shows the same one, and this switch, in red
@@ -16,7 +17,7 @@ export async function TraditionSwitch({ tradition, hrefFor }: { tradition: Tradi
       <Link
         href={hrefFor(value)}
         aria-current={current ? "true" : undefined}
-        className={`${rubric} rounded px-2 py-1 ${current ? "text-red-700 underline underline-offset-4 dark:text-red-400" : "text-red-700/70 hover:text-red-700 dark:text-red-400/70 dark:hover:text-red-400"}`}
+        className={`${rubric} inline-flex min-h-8 items-center rounded px-2 text-red-700 dark:text-red-400 ${current ? "font-bold underline underline-offset-4" : "font-normal hover:underline"}`}
       >
         {label}
       </Link>

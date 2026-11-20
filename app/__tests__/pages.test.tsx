@@ -541,6 +541,13 @@ describe("chapter", () => {
       error.mockRestore();
     });
 
+    it("aMasoreticChapterNotFoundLeavesTheSeptuagintWithANote", async () => {
+      byText([verse(1, 1, { text: "Greek one." })], new NotFound("no rows"));
+      render(wrap(await ChapterPage(params("nabre", "esther", "1"))));
+      expect(screen.getByText("Greek one.")).toBeInTheDocument();
+      expect(screen.getByRole("note")).toHaveTextContent("Masoretic text could not be loaded. Try again later.");
+    });
+
     it("onlyEditionsWithBothTextsGetATradition", async () => {
       getChapter.mockResolvedValue({ rows: [verse(1, 1)], truncated: false, expectedVerses: 1 });
       render(wrap(await ChapterPage(params("drb", "esther", "1", { tradition: "HEBREW" }))));

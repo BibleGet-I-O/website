@@ -51,7 +51,8 @@ export function Spread({ sides, rows, chapter, truncated = [], view = "side-by-s
   // Three columns on a phone: a smaller text so the words fit.
   const size = cols === 3 ? "text-base sm:text-lg" : "text-lg";
   const gap = cols === 3 ? "gap-x-3 sm:gap-x-6" : "gap-x-4 sm:gap-x-8";
-  const muted = (s: number) => (s > 0 ? "text-slate-700 dark:text-slate-300" : "");
+  // A compared edition reads a shade quieter than the main one; two texts of one edition are equals.
+  const muted = (s: number) => (s > 0 && !sides[s].rubric ? "text-slate-700 dark:text-slate-300" : "");
 
   return (
     <div data-testid="spread" className={`grid ${COLUMNS[cols]} ${gap} font-serif ${size} leading-relaxed`}>

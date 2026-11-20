@@ -21,6 +21,10 @@ describe("TraditionSwitch", () => {
     expect(lxx).not.toHaveAttribute("aria-current");
     expect(mt).toHaveAttribute("href", "/en/x?tradition=HEBREW");
     expect(mt).toHaveAttribute("aria-current", "true");
+    // Both read at full contrast (small text needs 4.5:1): the current one is marked by weight and underline.
+    for (const link of [lxx, mt]) expect(link.className).not.toMatch(/text-red-\d+\/\d+/);
+    expect(mt).toHaveClass("font-bold", "underline");
+    expect(lxx).not.toHaveClass("font-bold");
   });
 
   it("everyLocaleHasTheFourLabels", () => {
