@@ -35,6 +35,12 @@ describe("curl", () => {
     expect(curl("next", { x: -400, y: 0 }, 400, 800).progress).toBe(1);
   });
 
+  it("theFlapStaysOnThePage", () => {
+    // Pulled past the middle: the reflected flap would reach beyond the spine; it is cut at the page's edge.
+    const c = curl("next", { x: -200, y: 0 }, 400, 800);
+    expect(norm(c.flap)).toEqual(norm([{ x: 0, y: 0 }, { x: 100, y: 0 }, { x: 100, y: 800 }, { x: 0, y: 800 }]));
+  });
+
   it("previousMirrorsNext", () => {
     const c = curl("prev", { x: 100, y: 100 }, 400, 800);
     expect(norm(c.flap)).toEqual(norm([{ x: 100, y: 0 }, { x: 100, y: 100 }, { x: 0, y: 100 }]));

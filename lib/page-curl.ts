@@ -81,6 +81,12 @@ function area(poly: Point[]): number {
   return Math.abs(a) / 2;
 }
 
+/** The polygon cut to the page rectangle 0..w × 0..h. */
+function onPage(poly: Point[], w: number, h: number): Point[] {
+  const sides: ((q: Point) => number)[] = [(q) => q.x, (q) => w - q.x, (q) => q.y, (q) => h - q.y];
+  return sides.reduce((acc, f) => (acc.length ? clip(acc, f) : acc), poly);
+}
+
 const solid = (poly: Point[]) => (poly.length >= 3 && area(poly) > EPS ? poly : []);
 
 export function curl(side: Side, finger: Point, w: number, h: number): Curl {
@@ -100,7 +106,8 @@ export function curl(side: Side, finger: Point, w: number, h: number): Curl {
   };
   const stay = solid(clip(page, f));
   const lifted = solid(clip(page, (q) => -f(q)));
-  const flap = lifted.map(reflect);
+  // Pulled past the middle, the reflected flap would reach beyond the spine: it is cut at the page's edge.
+  const flap = solid(onPage(lifted.map(reflect), w, h));
   return {
     stay,
     lifted,

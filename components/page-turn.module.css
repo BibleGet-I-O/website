@@ -1,6 +1,7 @@
 /* The chapter as a page that turns (components/PageTurn.tsx). The script sets the custom properties per frame. */
 .area {
-  touch-action: pan-y;
+  /* Vertical scroll and pinch-zoom stay the browser's; sideways is the turn's. */
+  touch-action: pan-y pinch-zoom;
   clip-path: var(--clip, none);
 }
 .area[data-state="fading"] {

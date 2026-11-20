@@ -25,7 +25,22 @@ const reducedMotion = () =>
 
 const TurnContext = createContext<{ play: (side: Side) => void } | null>(null);
 
-const polygon = (ps: Point[], dx = 0, dy = 0) => `polygon(${ps.map((p) => `${p.x - dx}px ${p.y - dy}px`).join(", ")})`;
+const polygon = (ps: Point[], dx = 0, dy = 0) => `polygon(${ps.map((p) => `${p.x + dx}px ${p.y + dy}px`).join(", ")})`;
+
+type Rect = { left: number; top: number; w: number; h: number };
+
+/** The page that turns: the chapter's part of the screen (never the header, the footer or the margins). */
+function pageRect(el: HTMLElement): Rect {
+  const box = el.getBoundingClientRect();
+  const left = Math.max(0, box.left);
+  const top = Math.max(0, box.top);
+  const right = Math.min(window.innerWidth, box.right);
+  const bottom = Math.min(window.innerHeight, box.bottom);
+  return { left, top, w: Math.max(0, right - left), h: Math.max(0, bottom - top) };
+}
+
+/** Pinched in, a sideways drag pans the enlarged page: it is not a turn. */
+const zoomedIn = () => typeof window !== "undefined" && (window.visualViewport?.scale ?? 1) > 1.01;
 
 /** Where the turned corner ends: at the far side, as far as the spine lets it go. */
 const farCorner = (side: Side, w: number): Point => (side === "next" ? { x: -w, y: 0 } : { x: 2 * w, y: 0 });
@@ -67,28 +82,38 @@ export function PageTurn({ prev, next, children }: { prev?: string; next?: strin
     for (const href of [prev, next]) if (href) router.prefetch(href, { kind: "full" } as never);
   }, [router, prev, next]);
 
-  /** Draws the page with its corner at p: the page clipped to what stays, the flap and the shade on the blank sheet. */
+  /** The width of the page that turns, for the corner's travel. */
+  const pageWidth = useCallback(() => (area.current ? pageRect(area.current).w : window.innerWidth), []);
+
+  /**
+   * Draws the page with its corner at p (in the page's own coordinates): the page clipped to what stays, the flap
+   * and the shade on the blank sheet. The page is the chapter's part of the screen; the overlays are drawn in
+   * screen coordinates.
+   */
   const paint = useCallback((side: Side, p: Point) => {
     const el = area.current;
     if (!el) return;
-    const w = window.innerWidth;
-    const h = window.innerHeight;
-    const c = curl(side, p, w, h);
     const box = el.getBoundingClientRect();
-    el.style.setProperty("--clip", c.stay.length ? polygon(c.stay, box.left, box.top) : "inset(100% 0 0 0)");
-    // Positions along the gradient line (CSS: it crosses the box's centre, its length covers the box).
-    const rest = restCorner(side, w);
-    const q = clampCorner(side, p, w);
+    const r = pageRect(el);
+    if (r.w <= 0 || r.h <= 0) return;
+    const c = curl(side, p, r.w, r.h);
+    // Page coordinates → the wrapper's own box (for its clip-path), and → the screen (for the fixed overlays).
+    el.style.setProperty("--clip", c.stay.length ? polygon(c.stay, r.left - box.left, r.top - box.top) : "inset(100% 0 0 0)");
+    // Positions along the gradient line (CSS: it crosses the overlay's centre, its length covers the overlay).
+    const W = window.innerWidth;
+    const H = window.innerHeight;
+    const rest = restCorner(side, r.w);
+    const q = clampCorner(side, p, r.w);
     const a = (c.foldAngle * Math.PI) / 180;
     const u = { x: Math.sin(a), y: -Math.cos(a) };
-    const len = Math.abs(w * Math.sin(a)) + Math.abs(h * Math.cos(a));
-    const at = (x: number, y: number) => (x - w / 2) * u.x + (y - h / 2) * u.y + len / 2;
+    const len = Math.abs(W * Math.sin(a)) + Math.abs(H * Math.cos(a));
+    const at = (x: number, y: number) => (x + r.left - W / 2) * u.x + (y + r.top - H / 2) * u.y + len / 2;
     const fold = at((rest.x + q.x) / 2, (rest.y + q.y) / 2);
     const tip = at(q.x, q.y);
     const spread = Math.min(60, Math.max(8, (tip - fold) / 2));
     const f = flap.current;
     if (f) {
-      f.style.setProperty("--flap-clip", c.flap.length ? polygon(c.flap) : "");
+      f.style.setProperty("--flap-clip", c.flap.length ? polygon(c.flap, r.left, r.top) : "");
       f.style.setProperty(
         "--flap-shine",
         `linear-gradient(${c.foldAngle}deg, rgba(0,0,0,0.10) ${fold}px, rgba(255,255,255,0.28) ${(fold + tip) / 2}px, rgba(0,0,0,0.08) ${tip}px)`,
@@ -96,7 +121,7 @@ export function PageTurn({ prev, next, children }: { prev?: string; next?: strin
     }
     const s = shade.current;
     if (s) {
-      s.style.setProperty("--shade-clip", c.lifted.length ? polygon(c.lifted) : "");
+      s.style.setProperty("--shade-clip", c.lifted.length ? polygon(c.lifted, r.left, r.top) : "");
       s.style.setProperty(
         "--shade",
         `linear-gradient(${c.foldAngle}deg, rgba(0,0,0,0) ${fold - spread}px, rgba(0,0,0,${(0.3 * (1 - c.progress) + 0.08).toFixed(3)}) ${fold}px)`,
@@ -164,6 +189,7 @@ export function PageTurn({ prev, next, children }: { prev?: string; next?: strin
   const fadeTo = useCallback(
     (href: string) => {
       go("fading");
+      timers.current.push(setTimeout(() => setSlow(true), SLOW_MS));
       timers.current.push(setTimeout(() => router.push(href), FADE_MS));
     },
     [go, router],
@@ -174,19 +200,19 @@ export function PageTurn({ prev, next, children }: { prev?: string; next?: strin
       const href = target(side);
       if (!href) return;
       go("turning");
-      const to = farCorner(side, window.innerWidth);
+      const to = farCorner(side, pageWidth());
       animate(side, (k) => ({ x: from.x + (to.x - from.x) * easeOut(k), y: from.y + (to.y - from.y) * easeOut(k) }), COMPLETE_MS, () => handOver(href));
     },
-    [animate, go, handOver, target],
+    [animate, go, handOver, pageWidth, target],
   );
 
   const springBack = useCallback(
     (side: Side, from: Point) => {
       go("turning");
-      const to = restCorner(side, window.innerWidth);
+      const to = restCorner(side, pageWidth());
       animate(side, (k) => ({ x: from.x + (to.x - from.x) * easeOut(k), y: from.y + (to.y - from.y) * easeOut(k) }), BACK_MS, reset);
     },
-    [animate, go, reset],
+    [animate, go, pageWidth, reset],
   );
 
   const play = useCallback(
@@ -195,12 +221,14 @@ export function PageTurn({ prev, next, children }: { prev?: string; next?: strin
       if (!href || stateRef.current !== "idle") return;
       if (reducedMotion()) {
         go("blank");
+        timers.current.push(setTimeout(() => setSlow(true), SLOW_MS));
         router.push(href);
         return;
       }
       go("turning");
-      const w = window.innerWidth;
-      const h = window.innerHeight;
+      const r = area.current ? pageRect(area.current) : { w: window.innerWidth, h: window.innerHeight };
+      const w = r.w;
+      const h = r.h;
       const from = restCorner(side, w);
       const to = farCorner(side, w);
       animate(
@@ -228,7 +256,7 @@ export function PageTurn({ prev, next, children }: { prev?: string; next?: strin
         return;
       }
       const touch = e.touches[0];
-      if (!canStartAt(e.target as Element, touch.clientX, window.innerWidth)) return;
+      if (zoomedIn() || !canStartAt(e.target as Element, touch.clientX, window.innerWidth)) return;
       drag.current = { x0: touch.clientX, y0: touch.clientY, axis: "pending", dx: 0, dy: 0, samples: [{ x: touch.clientX, t: now() }] };
     };
     const onMove = (e: TouchEvent) => {
@@ -236,7 +264,7 @@ export function PageTurn({ prev, next, children }: { prev?: string; next?: strin
       if (!d) return;
       if (!singleTouch(e.touches)) {
         drag.current = null;
-        if (d.axis === "turn" && d.side) springBack(d.side, cornerFor(d.side, d.dx, d.dy, window.innerWidth));
+        if (d.axis === "turn" && d.side) springBack(d.side, cornerFor(d.side, d.dx, d.dy, pageWidth()));
         return;
       }
       const touch = e.touches[0];
@@ -261,7 +289,7 @@ export function PageTurn({ prev, next, children }: { prev?: string; next?: strin
       frame.current = requestAnimationFrame(() => {
         frame.current = null;
         const cur = drag.current;
-        if (cur?.side) paint(cur.side, cornerFor(cur.side, cur.dx, cur.dy, window.innerWidth));
+        if (cur?.side) paint(cur.side, cornerFor(cur.side, cur.dx, cur.dy, pageWidth()));
       });
     };
     const onEnd = () => {
@@ -272,7 +300,7 @@ export function PageTurn({ prev, next, children }: { prev?: string; next?: strin
       const first = d.samples[0];
       const last = d.samples[d.samples.length - 1];
       const vx = last.t > first.t ? (last.x - first.x) / (last.t - first.t) : 0;
-      const w = window.innerWidth;
+      const w = pageWidth();
       const motionless = reducedMotion();
       const outcome = releaseOutcome({ dx: d.dx, dy: d.dy, w, vx, reducedMotion: motionless });
       const href = target(d.side);
@@ -288,7 +316,7 @@ export function PageTurn({ prev, next, children }: { prev?: string; next?: strin
     const onCancel = () => {
       const d = drag.current;
       drag.current = null;
-      if (d?.axis === "turn" && d.side) springBack(d.side, cornerFor(d.side, d.dx, d.dy, window.innerWidth));
+      if (d?.axis === "turn" && d.side) springBack(d.side, cornerFor(d.side, d.dx, d.dy, pageWidth()));
     };
     el.addEventListener("touchstart", onStart, { passive: true });
     el.addEventListener("touchmove", onMove, { passive: false });
@@ -300,7 +328,7 @@ export function PageTurn({ prev, next, children }: { prev?: string; next?: strin
       el.removeEventListener("touchend", onEnd);
       el.removeEventListener("touchcancel", onCancel);
     };
-  }, [complete, fadeTo, go, paint, springBack, stopFrame, target]);
+  }, [complete, fadeTo, go, paint, pageWidth, springBack, stopFrame, target]);
 
   // Back to a page kept in the browser's cache (or any history move): never leave it clipped.
   useEffect(() => {

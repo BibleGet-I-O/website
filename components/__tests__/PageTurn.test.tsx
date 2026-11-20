@@ -24,9 +24,13 @@ beforeEach(() => {
   Object.defineProperty(window, "innerWidth", { configurable: true, value: 400 });
   Object.defineProperty(window, "innerHeight", { configurable: true, value: 800 });
 });
-afterEach(() => vi.useRealTimers());
+afterEach(() => {
+  vi.useRealTimers();
+  Object.defineProperty(window, "visualViewport", { configurable: true, value: undefined });
+});
 
-function mount(props: { prev?: string; next?: string } = { prev: PREV, next: NEXT }, extra?: React.ReactNode) {
+type Box = { left: number; top: number; width: number; height: number };
+function mount(props: { prev?: string; next?: string } = { prev: PREV, next: NEXT }, extra?: React.ReactNode, box: Box = { left: 0, top: -1200, width: 400, height: 3000 }) {
   const r = render(
     <NextIntlClientProvider locale="en" messages={en}>
       <PageTurn {...props}>
@@ -38,7 +42,7 @@ function mount(props: { prev?: string; next?: string } = { prev: PREV, next: NEX
     </NextIntlClientProvider>,
   );
   const area = r.container.querySelector("[data-page-turn]") as HTMLElement;
-  area.getBoundingClientRect = () => ({ left: 0, top: -1200, width: 400, height: 3000, right: 400, bottom: 1800, x: 0, y: -1200, toJSON() {} });
+  area.getBoundingClientRect = () => ({ ...box, right: box.left + box.width, bottom: box.top + box.height, x: box.left, y: box.top, toJSON() {} });
   return { ...r, area };
 }
 
@@ -125,6 +129,43 @@ describe("PageTurn", () => {
     // The fold is at x = 350 (half of the 100px pull); the screen's top edge is 1200px into the wrapper.
     expect(clip(area)).toContain("0px 1200px");
     expect(clip(area)).toContain("350px 1200px");
+  });
+
+  it("theCurlStaysOnTheChaptersVisiblePart", () => {
+    // At the top of the page the chapter starts 100px down, below the site header and the reader bar.
+    const { area } = mount(undefined, undefined, { left: 0, top: 100, width: 400, height: 3000 });
+    drag(area, [350, 300], [250, 300], 300, false);
+    // The page is the chapter's part of the screen (y 100–800): the fold at x = 350, in the wrapper's own box.
+    expect(clip(area)).toContain("350px 0px");
+    expect(clip(area)).toContain("350px 700px");
+    // The flap is drawn in screen coordinates, from the chapter's top (y = 100), never over the header.
+    const f = flap()!.style.getPropertyValue("--flap-clip");
+    expect(f).toContain("300px 100px");
+    expect(f).not.toMatch(/ (?:[0-9]|[1-9][0-9])(?:\.\d+)?px[,)]/);
+  });
+
+  it("aZoomedInReaderPansInsteadOfTurning", () => {
+    Object.defineProperty(window, "visualViewport", { configurable: true, value: { scale: 2 } });
+    const { area } = mount();
+    drag(area, [300, 300], [100, 300], 300);
+    tick(600);
+    expect(push).not.toHaveBeenCalled();
+    expect(clip(area)).toBe("");
+  });
+
+  it("theTextCanStillBePinchedToZoom", async () => {
+    const { readFileSync } = await import("node:fs");
+    const css = readFileSync("components/page-turn.module.css", "utf8");
+    expect(css).toMatch(/touch-action:\s*pan-y pinch-zoom/);
+  });
+
+  it("withReducedMotionASlowNeighbourShowsTheLoadingMark", () => {
+    reduced = true;
+    const { area } = mount();
+    drag(area, [300, 300], [100, 300], 300);
+    tick(600);
+    expect(push).toHaveBeenCalledWith("/en/read/drb/mark/1");
+    expect(screen.getByRole("status")).toHaveTextContent("Turning the page…");
   });
 
   it("aRestoredPageIsNotLeftClipped", () => {
