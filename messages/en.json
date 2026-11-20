@@ -136,6 +136,7 @@
     "signInAgain": "Sign in again to continue.",
     "nova": "Nova Vulgata",
     "noUnits": "No counterpart in the Nova Vulgata",
+    "textMissing": "Text not found for this reference.",
     "confidence": "Confidence {percent}%",
     "statusRule": "By rule",
     "statusDraft": "Draft",

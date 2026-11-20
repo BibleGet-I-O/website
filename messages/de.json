@@ -136,6 +136,7 @@
     "signInAgain": "Melden Sie sich erneut an, um fortzufahren.",
     "nova": "Nova Vulgata",
     "noUnits": "Keine Entsprechung in der Nova Vulgata",
+    "textMissing": "Kein Text für diese Stelle gefunden.",
     "confidence": "Zuversicht {percent} %",
     "statusRule": "Nach Regel",
     "statusDraft": "Entwurf",

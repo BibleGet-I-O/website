@@ -148,6 +148,23 @@ describe("review pages", () => {
     expect(hebrew).not.toHaveTextContent("one-a");
   });
 
+  it("aLetteredVerseWithoutItsOwnRowSaysItsTextIsMissing", async () => {
+    // The link names 1:1a, but the edition's rows carry no letter: never the whole of 1:1 instead.
+    fetchMock.mockResolvedValue(json({
+      links: [{ ...chapterData.links[1], ref: "1:1a@GREEK", units: ["btu:est.1.1c"] }],
+      units: [],
+    }));
+    getChapter.mockImplementation(async (p: { sigla: string }) => ({
+      rows: p.sigla === "VGCL" ? [{ ...row(1, 1, "Greek one"), segment: null }] : [{ ...row(1, 1, "NV one"), segment: null }],
+      truncated: false, expectedVerses: 1,
+    }));
+    render(wrap(await ChapterReviewPage({ params: chapterParams })));
+    const [r] = screen.getAllByTestId("review-row");
+    expect(r).not.toHaveTextContent("Greek one");
+    expect(r).not.toHaveTextContent("NV one");
+    expect(within(r).getAllByText("Text not found for this reference.")).toHaveLength(2);
+  });
+
   it("reviewLinkActionRequiresTheReviewerRole", async () => {
     auth.mockResolvedValue({ ...reviewer, reviewer: false });
     expect(await actions.reviewLink(2, { action: "accept" })).toEqual({ ok: false, status: 403 });

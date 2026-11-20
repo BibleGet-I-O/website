@@ -136,6 +136,7 @@
     "signInAgain": "Vuelve a iniciar sesión para continuar.",
     "nova": "Nova Vulgata",
     "noUnits": "Sin correspondencia en la Nova Vulgata",
+    "textMissing": "Texto no encontrado para esta referencia.",
     "confidence": "Confianza {percent}%",
     "statusRule": "Por regla",
     "statusDraft": "Borrador",

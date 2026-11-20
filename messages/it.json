@@ -136,6 +136,7 @@
     "signInAgain": "Accedi di nuovo per continuare.",
     "nova": "Nova Vulgata",
     "noUnits": "Nessun corrispondente nella Nova Vulgata",
+    "textMissing": "Testo non trovato per questo riferimento.",
     "confidence": "Fiducia {percent}%",
     "statusRule": "Per regola",
     "statusDraft": "Bozza",
