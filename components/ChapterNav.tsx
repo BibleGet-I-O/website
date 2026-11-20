@@ -1,5 +1,5 @@
 import { getTranslations } from "next-intl/server";
-import { Link } from "@/i18n/navigation";
+import { TurnLink } from "@/components/PageTurn";
 import { slugFor } from "@/lib/api";
 import type { EditionIndex } from "@/lib/types";
 
@@ -20,32 +20,38 @@ export function neighbours(index: EditionIndex, bookNum: number, chapter: number
 
 const linkClass = "rounded border border-slate-200 px-3 py-1 hover:border-slate-400 dark:border-slate-800 dark:hover:border-slate-600";
 
+type NavProps = { index: EditionIndex; bookNum: number; chapter: number; base: string; query?: string; leavingQuery?: string };
+
 /**
- * Previous / next chapter links; `base` is the edition's locale-less path, `query` the kept query string, and
- * `leavingQuery` (when given) the one for a link into another book: what belongs to this book (Esther's
- * texts) stays behind.
+ * The previous and next chapters' hrefs (locale-less): `base` is the edition's path, `query` the kept query string,
+ * and `leavingQuery` (when given) the one for a link into another book: what belongs to this book (Esther's texts)
+ * stays behind. The chapter links and the page turn both go there.
  */
-export async function ChapterNav({ index, bookNum, chapter, base, query = "", leavingQuery }: {
-  index: EditionIndex; bookNum: number; chapter: number; base: string; query?: string; leavingQuery?: string;
-}) {
-  const t = await getTranslations("Reader");
+export function chapterTargets({ index, bookNum, chapter, base, query = "", leavingQuery }: NavProps): { prev?: string; next?: string } {
   const { prev, next } = neighbours(index, bookNum, chapter);
   const here = index.books.find((b) => b.bookNum === bookNum);
   const sameBook = (r: ChapterRef) => here !== undefined && r.slug === slugFor(here, index.books);
   const href = (r: ChapterRef) => `${base}/${r.slug}/${r.chapter}${sameBook(r) ? query : (leavingQuery ?? query)}`;
+  return { ...(prev && { prev: href(prev) }), ...(next && { next: href(next) }) };
+}
+
+/** Previous / next chapter links; inside a PageTurn a plain click plays the turn. */
+export async function ChapterNav(props: NavProps) {
+  const t = await getTranslations("Reader");
+  const { prev, next } = chapterTargets(props);
   return (
     <nav aria-label={t("chapterNav")} className="mt-8 flex justify-between text-sm">
       {prev ? (
-        <Link href={href(prev)} rel="prev" className={linkClass}>
+        <TurnLink side="prev" href={prev} rel="prev" className={linkClass}>
           ← {t("previous")}
-        </Link>
+        </TurnLink>
       ) : (
         <span />
       )}
       {next ? (
-        <Link href={href(next)} rel="next" className={linkClass}>
+        <TurnLink side="next" href={next} rel="next" className={linkClass}>
           {t("next")} →
-        </Link>
+        </TurnLink>
       ) : (
         <span />
       )}
