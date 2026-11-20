@@ -56,10 +56,12 @@ export function ReaderBar(p: ReaderBarProps) {
 
   // The edition's books page opens this chapter when the edition has it, and lists the books when it does not.
   const switchEdition = (sigla: string) => {
-    const remaining = p.withSiglas.filter((s) => s !== sigla);
+    // Like go(): a change still on its way (the Interlinear toggle) is built on.
+    const was = pending.current.from === routeKey ? pending.current : { from: routeKey };
+    const remaining = (was.with ?? p.withSiglas).filter((s) => s !== sigla);
     const rest = compareQuery({
       with: remaining,
-      view: p.view,
+      view: was.view ?? p.view,
       tradition: p.tradition,
       // Esther's two texts read alone keep their view; the chapter page checks the new edition has both.
       twoTexts: p.esther && remaining.length === 0,

@@ -589,6 +589,19 @@ describe("chapter", () => {
       expect(screen.getByRole("link", { name: /Next chapter/ })).toHaveAttribute("href", "/en/read/drb/esther/2?with=NABRE&tradition=HEBREW");
     });
 
+    it("aComparedIndexThatCannotBeLoadedKeepsTheChosenText", async () => {
+      // NABRE's index fails for now: it is not known to print one text, so Masoretic stays chosen.
+      const error = vi.spyOn(console, "error").mockImplementation(() => {});
+      getIndex.mockImplementation(async (s: string) => {
+        if (s === "NABRE") throw new ApiUnavailable("endpoint answered 503");
+        return drbIndex;
+      });
+      getChapter.mockResolvedValue({ rows: [verse(1, 1)], truncated: false, expectedVerses: 1 });
+      render(wrap(await ChapterPage(params("drb", "esther", "1", { with: "NABRE", tradition: "HEBREW" }))));
+      expect(screen.getByRole("link", { name: /Next chapter/ })).toHaveAttribute("href", "/en/read/drb/esther/2?with=NABRE&tradition=HEBREW");
+      error.mockRestore();
+    });
+
     it("noSwitchWhenNoEditionInTheComparisonHasBothTexts", async () => {
       getChapter.mockResolvedValue({ rows: [verse(1, 1)], truncated: false, expectedVerses: 1 });
       getIndex.mockResolvedValue(drbIndex);

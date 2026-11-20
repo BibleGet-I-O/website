@@ -28,18 +28,22 @@ const one = (v: string | string[] | undefined) => (Array.isArray(v) ? v[0] : v);
  * A neighbouring verse an edition may print in this chapter. Its absence only costs that verse, so a failed
  * fetch shows the chapter without it (logged with the status only).
  */
-/** Whether, in Esther, any compared edition prints both texts (an edition that cannot be read counts as not). */
-async function comparedHaveBothTexts(bookNum: number, siglas: string[]): Promise<boolean> {
-  if (bookNum !== ESTHER || siglas.length === 0) return false;
-  const both = await Promise.all(siglas.map(async (s) => {
+/**
+ * Whether, in Esther, a compared edition prints both texts ("both"), none does ("none"), or that cannot be told
+ * because an index could not be loaded ("unknown"). An edition the API does not know prints neither.
+ */
+async function comparedEstherTexts(bookNum: number, siglas: string[]): Promise<"both" | "none" | "unknown"> {
+  if (bookNum !== ESTHER || siglas.length === 0) return "none";
+  const each = await Promise.all(siglas.map(async (s) => {
     try {
-      return (await getIndex(s)).books.some((b) => hasBothEstherTexts(b));
+      return (await getIndex(s)).books.some((b) => hasBothEstherTexts(b)) ? "both" : "none";
     } catch (err) {
-      if (err instanceof ApiUnavailable || err instanceof NotFound) return false;
+      if (err instanceof NotFound) return "none";
+      if (err instanceof ApiUnavailable) return "unknown";
       throw err;
     }
   }));
-  return both.some(Boolean);
+  return each.includes("both") ? "both" : each.includes("unknown") ? "unknown" : "none";
 }
 
 async function masoreticText(
@@ -103,8 +107,11 @@ export default async function ChapterPage({ params, searchParams }: { params: Pr
   // The main edition's text when it prints both; the text every edition shows when any edition in the
   // comparison does (the switch), even if the main one prints Esther once.
   const tradition = estherTradition(book, twoTexts ? undefined : one(search.tradition));
+  const comparedTexts = tradition ? "none" : await comparedEstherTexts(book.bookNum, withSiglas);
+  const asked: Tradition = one(search.tradition) === "HEBREW" ? "HEBREW" : "GREEK";
+  // An edition whose index cannot be loaded is not known to print one text: the text asked for stays chosen.
   const shown: Tradition | undefined =
-    tradition ?? (await comparedHaveBothTexts(book.bookNum, withSiglas) ? (one(search.tradition) === "HEBREW" ? "HEBREW" : "GREEK") : undefined);
+    tradition ?? (comparedTexts === "both" ? asked : comparedTexts === "unknown" && asked === "HEBREW" ? asked : undefined);
   // The view applies while comparing or reading Esther's two texts; elsewhere it is not carried on.
   const shownView = withSiglas.length > 0 || twoTexts ? view : "side-by-side";
 
