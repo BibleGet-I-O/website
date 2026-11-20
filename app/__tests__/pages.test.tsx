@@ -30,7 +30,7 @@ vi.mock("next/navigation", async () => ({
   redirect: (url: string) => {
     throw new Error(`NEXT_REDIRECT ${url}`);
   },
-  useRouter: () => ({ push: routerPush }),
+  useRouter: () => ({ push: routerPush, prefetch: vi.fn() }),
   unstable_rethrow: (e: unknown) => {
     throw e;
   },
@@ -341,6 +341,19 @@ describe("chapter", () => {
     expect(screen.getByRole("link", { name: /Next chapter/ })).toHaveAttribute("href", "/en/read/drb/wisdom/12?with=NABRE");
   });
 
+  it("theChapterTurnsAsOnePage", async () => {
+    getIndex.mockResolvedValue(drbIndex);
+    getChapter.mockResolvedValue({ rows: [verse(11, 1), verse(11, 2)], truncated: false, expectedVerses: 2 });
+    getVerses.mockResolvedValue([]);
+    const { container } = render(wrap(await ChapterPage(params("drb", "wisdom", "11"))));
+    const pages = container.querySelectorAll("[data-page-turn]");
+    expect(pages).toHaveLength(1);
+    expect(pages[0].querySelector("article")).not.toBeNull();
+    expect(within(pages[0] as HTMLElement).getByRole("navigation", { name: "Chapters" })).toBeInTheDocument();
+    expect(within(pages[0] as HTMLElement).queryByRole("toolbar")).toBeNull();
+    expect(screen.getByRole("toolbar")).toBeInTheDocument();
+  });
+
   it("aCappedChapterGetsTheNoticeForTheUser", async () => {
     getIndex.mockResolvedValue(drbIndex);
     getChapter.mockResolvedValue({ rows: [verse(11, 1)], truncated: true, expectedVerses: 48 });
@@ -484,6 +497,14 @@ describe("chapter", () => {
       // The previous chapter's last verse is counted in each text.
       expect(getVerses).toHaveBeenCalledWith(expect.objectContaining({ chapter: 9, verse: 12, tradition: "GREEK" }));
       expect(getVerses).toHaveBeenCalledWith(expect.objectContaining({ chapter: 9, verse: 10, tradition: "HEBREW" }));
+    });
+
+    it("esthersTwoTextsTurnAsOnePage", async () => {
+      byText([verse(1, 1, { text: "Greek one." })], [verse(1, 1, { text: "Hebrew one." })]);
+      const { container } = render(wrap(await ChapterPage(params("nabre", "esther", "1"))));
+      const pages = container.querySelectorAll("[data-page-turn]");
+      expect(pages).toHaveLength(1);
+      expect(within(pages[0] as HTMLElement).getAllByTestId("spread")).toHaveLength(1);
     });
 
     it("readAloneEstherShowsBothTextsSideBySide", async () => {

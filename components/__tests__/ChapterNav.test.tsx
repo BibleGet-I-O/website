@@ -4,7 +4,7 @@ import { NextIntlClientProvider } from "next-intl";
 import en from "@/messages/en.json";
 
 vi.mock("server-only", () => ({}));
-const { neighbours, ChapterNav } = await import("@/components/ChapterNav");
+const { neighbours, ChapterNav, chapterTargets } = await import("@/components/ChapterNav");
 
 const book = (bookNum: number, name: string, chapters: number) => ({
   bookNum, name, abbrev: name.slice(0, 3), chapters, versesPerChapter: Array(chapters).fill(10),
@@ -17,6 +17,13 @@ describe("neighbours", () => {
     expect(neighbours(index, 48, 1)).toEqual({ prev: { slug: "matthew", chapter: 28 }, next: { slug: "mark", chapter: 2 } });
     expect(neighbours(index, 1, 1)).toEqual({ next: { slug: "genesis", chapter: 2 } });
     expect(neighbours(index, 73, 22)).toEqual({ prev: { slug: "apocalypse", chapter: 21 } });
+  });
+
+  it("targetsAreTheLinksHrefs", () => {
+    expect(chapterTargets({ index, bookNum: 47, chapter: 28, base: "/read/drb", query: "?view=interlinear", leavingQuery: "" })).toEqual({
+      prev: "/read/drb/matthew/27?view=interlinear", next: "/read/drb/mark/1",
+    });
+    expect(chapterTargets({ index, bookNum: 1, chapter: 1, base: "/read/drb" }).prev).toBeUndefined();
   });
 
   it("linksLeavingTheBookUseTheirOwnQuery", async () => {
