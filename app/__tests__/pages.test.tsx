@@ -4,6 +4,7 @@ import { NextIntlClientProvider } from "next-intl";
 import en from "@/messages/en.json";
 
 vi.mock("server-only", () => ({}));
+const { routerPush } = vi.hoisted(() => ({ routerPush: vi.fn() }));
 const getEditions = vi.fn();
 const getIndex = vi.fn();
 const getChapter = vi.fn();
@@ -29,7 +30,7 @@ vi.mock("next/navigation", async () => ({
   redirect: (url: string) => {
     throw new Error(`NEXT_REDIRECT ${url}`);
   },
-  useRouter: () => ({ push: vi.fn() }),
+  useRouter: () => ({ push: routerPush }),
   unstable_rethrow: (e: unknown) => {
     throw e;
   },
@@ -570,6 +571,42 @@ describe("chapter", () => {
       render(wrap(await ChapterPage(params("nabre", "esther", "1"))));
       expect(screen.getByText("Greek one.")).toBeInTheDocument();
       expect(screen.getByRole("note")).toHaveTextContent("Masoretic text could not be loaded. Try again later.");
+    });
+
+    it("aComparedEditionWithBothTextsBringsTheSwitch", async () => {
+      // DRB prints Esther once (the Vulgate's 16 chapters); NABRE beside it prints both texts.
+      getChapter.mockImplementation(async (p: { sigla: string; tradition?: string }) => ({
+        rows: [verse(1, 1, { text: `${p.sigla} ${p.tradition ?? "default"}.` })], truncated: false, expectedVerses: 1,
+      }));
+      render(wrap(await ChapterPage(params("drb", "esther", "1", { with: "NABRE", tradition: "HEBREW" }))));
+      const calls = getChapter.mock.calls.map(([p]) => p as { sigla: string; tradition?: string });
+      expect(calls.find((p) => p.sigla === "DRB")).not.toHaveProperty("tradition");
+      expect(calls.filter((p) => p.sigla === "NABRE").map((p) => p.tradition)).toEqual(["HEBREW"]);
+      const nav = screen.getByRole("navigation", { name: "Esther text" });
+      expect(within(nav).getByRole("link", { name: "Masoretic text" })).toHaveAttribute("aria-current", "true");
+      expect(within(nav).getByRole("link", { name: "Septuagint" })).toHaveAttribute("href", "/en/read/drb/esther/1?with=NABRE");
+      // Moving on keeps the chosen text while a compared edition has both.
+      expect(screen.getByRole("link", { name: /Next chapter/ })).toHaveAttribute("href", "/en/read/drb/esther/2?with=NABRE&tradition=HEBREW");
+    });
+
+    it("noSwitchWhenNoEditionInTheComparisonHasBothTexts", async () => {
+      getChapter.mockResolvedValue({ rows: [verse(1, 1)], truncated: false, expectedVerses: 1 });
+      getIndex.mockResolvedValue(drbIndex);
+      render(wrap(await ChapterPage(params("drb", "esther", "1", { with: "VGCL", tradition: "HEBREW" }))));
+      expect(screen.queryByRole("navigation", { name: "Esther text" })).toBeNull();
+    });
+
+    it("aViewThatDoesNotApplyIsNotCarriedIntoTheNextComparison", async () => {
+      // Arriving at a one-text Esther from Esther read interlinear: the view does not apply here.
+      routerPush.mockClear();
+      getChapter.mockResolvedValue({ rows: [verse(1, 1)], truncated: false, expectedVerses: 1 });
+      render(wrap(await ChapterPage(params("drb", "esther", "1", { view: "interlinear" }))));
+      fireEvent.change(screen.getByLabelText("Chapter"), { target: { value: "2" } });
+      expect(routerPush).toHaveBeenLastCalledWith("/en/read/drb/esther/2");
+      fireEvent.click(screen.getByRole("button", { name: "Reading settings" }));
+      fireEvent.click(screen.getByRole("button", { name: /Compare with another edition/ }));
+      fireEvent.change(screen.getByRole("combobox", { name: "Second edition" }), { target: { value: "NABRE" } });
+      expect(routerPush).toHaveBeenLastCalledWith("/en/read/drb/esther/1?with=NABRE");
     });
 
     it("onlyEditionsWithBothTextsGetATradition", async () => {

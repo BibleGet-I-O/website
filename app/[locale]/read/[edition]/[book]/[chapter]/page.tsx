@@ -10,7 +10,7 @@ import { ReaderBar } from "@/components/ReaderBar";
 import { Interlinear } from "@/components/Interlinear";
 import { getAccess } from "@/lib/access";
 import { ApiUnavailable, bookBySlug, getChapter, getEditions, getIndex, getVerses, NotFound, slugFor } from "@/lib/api";
-import { estherTradition, hasBothEstherTexts, type Tradition } from "@/lib/esther";
+import { ESTHER, estherTradition, hasBothEstherTexts, type Tradition } from "@/lib/esther";
 import { compareQuery, parseView, parseWith } from "@/lib/compare";
 import { loadSecond } from "@/lib/interlinear";
 import { buildRows } from "@/lib/parallel";
@@ -28,6 +28,20 @@ const one = (v: string | string[] | undefined) => (Array.isArray(v) ? v[0] : v);
  * A neighbouring verse an edition may print in this chapter. Its absence only costs that verse, so a failed
  * fetch shows the chapter without it (logged with the status only).
  */
+/** Whether, in Esther, any compared edition prints both texts (an edition that cannot be read counts as not). */
+async function comparedHaveBothTexts(bookNum: number, siglas: string[]): Promise<boolean> {
+  if (bookNum !== ESTHER || siglas.length === 0) return false;
+  const both = await Promise.all(siglas.map(async (s) => {
+    try {
+      return (await getIndex(s)).books.some((b) => hasBothEstherTexts(b));
+    } catch (err) {
+      if (err instanceof ApiUnavailable || err instanceof NotFound) return false;
+      throw err;
+    }
+  }));
+  return both.some(Boolean);
+}
+
 async function masoreticText(
   printed: (t: Tradition, chapterMissing: "404" | "throw") => Promise<{ rows: VerseRow[]; truncated: boolean }>,
 ): Promise<{ rows: VerseRow[]; truncated: boolean } | "unavailable"> {
@@ -86,7 +100,13 @@ export default async function ChapterPage({ params, searchParams }: { params: Pr
   const view = parseView(one(search.view));
   // Esther in an edition with both texts: read alone, both are shown side by side; comparing, one is chosen.
   const twoTexts = hasBothEstherTexts(book) && withSiglas.length === 0;
+  // The main edition's text when it prints both; the text every edition shows when any edition in the
+  // comparison does (the switch), even if the main one prints Esther once.
   const tradition = estherTradition(book, twoTexts ? undefined : one(search.tradition));
+  const shown: Tradition | undefined =
+    tradition ?? (await comparedHaveBothTexts(book.bookNum, withSiglas) ? (one(search.tradition) === "HEBREW" ? "HEBREW" : "GREEK") : undefined);
+  // The view applies while comparing or reading Esther's two texts; elsewhere it is not carried on.
+  const shownView = withSiglas.length > 0 || twoTexts ? view : "side-by-side";
 
   const info = await getAccess();
   /**
@@ -127,12 +147,12 @@ export default async function ChapterPage({ params, searchParams }: { params: Pr
     compared.map((e) =>
       loadSecond({
         mainSigla: edition.sigla, mainBookAbbrev: book.abbrev, mainIndex: index, bookNum: book.bookNum, chapter,
-        mainRows: rows, withSigla: e.sigla, access: info.access, tradition,
+        mainRows: rows, withSigla: e.sigla, access: info.access, tradition: shown,
       }),
     ),
   );
 
-  const qs = compareQuery({ with: withSiglas, view, tradition, twoTexts });
+  const qs = compareQuery({ with: withSiglas, view, tradition: shown, twoTexts });
   const base = `/read/${editionSlug(edition.sigla)}`;
   // Each text stops at its own cap; one notice tells it.
   const capped = main.truncated || (typeof masoretic === "object" && masoretic !== null && masoretic.truncated);
@@ -155,12 +175,12 @@ export default async function ChapterPage({ params, searchParams }: { params: Pr
         bookNum={book.bookNum}
         chapter={chapter}
         withSiglas={withSiglas}
-        view={view}
+        view={shownView}
         esther={hasBothEstherTexts(book)}
-        tradition={tradition}
+        tradition={shown}
       />
-      {tradition && compared.length > 0 && await TraditionSwitch({
-        tradition,
+      {shown && compared.length > 0 && await TraditionSwitch({
+        tradition: shown,
         hrefFor: (t) => `${base}/${slugFor(book, index.books)}/${chapter}${compareQuery({ with: withSiglas, view, tradition: t })}`,
       })}
       {masoretic && masoretic !== "unavailable" ? (

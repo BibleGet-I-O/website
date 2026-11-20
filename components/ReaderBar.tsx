@@ -48,7 +48,9 @@ export function ReaderBar(p: ReaderBarProps) {
     const view = o.view ?? was.view ?? p.view;
     pending.current = { from: routeKey, with: w, view, tradition };
     // Esther's two texts read alone keep the view (side by side or interlinear) too.
-    const qs = compareQuery({ with: w, view, tradition: p.esther ? tradition : undefined, twoTexts: p.esther && book === p.book && w.length === 0 });
+    // Esther's text is kept while its edition, or a compared one, prints both (`p.tradition` is then set).
+    const keepsText = p.esther || p.tradition !== undefined;
+    const qs = compareQuery({ with: w, view, tradition: keepsText ? tradition : undefined, twoTexts: p.esther && book === p.book && w.length === 0 });
     router.push(`/${p.locale}/read/${editionSlug(p.edition)}/${book}/${chapter}${qs}`);
   };
 
@@ -58,7 +60,7 @@ export function ReaderBar(p: ReaderBarProps) {
     const rest = compareQuery({
       with: remaining,
       view: p.view,
-      tradition: p.esther ? p.tradition : undefined,
+      tradition: p.tradition,
       // Esther's two texts read alone keep their view; the chapter page checks the new edition has both.
       twoTexts: p.esther && remaining.length === 0,
     });
