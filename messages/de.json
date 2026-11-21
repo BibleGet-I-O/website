@@ -169,7 +169,6 @@
     "capped": "Urheberrechtlich geschützte Ausgaben zeigen hier nur ihre ersten 30 Verse: Bestätigen Sie Ihre E-Mail-Adresse und melden Sie sich erneut an, um sie vollständig zu prüfen."
   },
   "Search": {
-    "title": "Suchen",
     "heading": "In {edition} suchen",
     "metaTitle": "Suche · {edition}",
     "modes": {
@@ -190,7 +189,6 @@
     "noResults": "Keine Treffer für „{q}“.",
     "empty": "Geben Sie ein Wort oder eine Frage ein, um in dieser Ausgabe zu suchen.",
     "back": "Zurück zum Lesen",
-    "query": "Ihre Suche",
     "open": "Suchen",
     "searching": "Suche in {edition}",
     "kind": "Art der Suche",
@@ -198,6 +196,9 @@
     "questionLabel": "Ihre Frage",
     "exact": "Genaue Wörter",
     "submit": "Suchen",
-    "suggestions": "Vorschläge"
+    "suggestions": "Vorschläge",
+    "noMore": "Keine weiteren Treffer.",
+    "firstPage": "Erste Seite",
+    "refusedQuestion": "Versuchen Sie, Ihre Frage anders zu formulieren."
   }
 }

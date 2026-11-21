@@ -108,4 +108,9 @@ describe("suggestWords", () => {
     expect(url(fn).pathname).toBe("/dev/search/suggest");
     expect(key(fn)).toBe("read-key");
   });
+
+  it("anUnreadableAnswerIsTheApiUnavailable", async () => {
+    stub(() => new Response("not json", { status: 200, headers: { "content-type": "application/json" } }));
+    await expect(suggestWords("NABRE", "lig")).rejects.toBeInstanceOf(ApiUnavailable);
+  });
 });

@@ -116,7 +116,12 @@ export function ReaderBar(p: ReaderBarProps) {
           locale={p.locale}
           edition={p.edition}
           editionName={p.editions.find((e) => e.sigla === p.edition)?.fullname ?? p.edition}
-          from={`/${p.locale}/read/${editionSlug(p.edition)}/${p.book}/${p.chapter}`}
+          from={`/${p.locale}/read/${editionSlug(p.edition)}/${p.book}/${p.chapter}${compareQuery({
+            with: p.withSiglas,
+            view: p.view,
+            tradition: p.esther || p.tradition !== undefined ? p.tradition : undefined,
+            twoTexts: p.esther && p.withSiglas.length === 0,
+          })}`}
         />
         <ReaderSettings
           editions={p.editions}

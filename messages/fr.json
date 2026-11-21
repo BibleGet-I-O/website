@@ -169,7 +169,6 @@
     "capped": "Les éditions protégées par le droit d'auteur n'affichent ici que leurs 30 premiers versets : vérifiez votre adresse e-mail, puis reconnectez-vous, pour les relire en entier."
   },
   "Search": {
-    "title": "Rechercher",
     "heading": "Rechercher dans {edition}",
     "metaTitle": "Recherche · {edition}",
     "modes": {
@@ -190,7 +189,6 @@
     "noResults": "Aucun résultat pour « {q} ».",
     "empty": "Saisissez un mot ou une question pour chercher dans cette édition.",
     "back": "Retour à la lecture",
-    "query": "Vous avez cherché",
     "open": "Rechercher",
     "searching": "Recherche dans {edition}",
     "kind": "Type de recherche",
@@ -198,6 +196,9 @@
     "questionLabel": "Votre question",
     "exact": "Mots exacts",
     "submit": "Rechercher",
-    "suggestions": "Suggestions"
+    "suggestions": "Suggestions",
+    "noMore": "Il n’y a pas d’autres résultats.",
+    "firstPage": "Première page",
+    "refusedQuestion": "Essayez de reformuler votre question."
   }
 }

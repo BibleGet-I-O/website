@@ -76,7 +76,8 @@ export function SearchForm({ locale, edition, editionName, from, initial }: Form
   };
 
   const onKeywordKey = (e: KeyboardEvent<HTMLInputElement>) => {
-    if (!open) return;
+    // An input method (Chinese, Japanese) uses arrows and Enter to choose its candidates: leave them to it.
+    if (!open || e.nativeEvent.isComposing) return;
     if (e.key === "ArrowDown" || e.key === "ArrowUp") {
       e.preventDefault();
       // -1 is the input itself: down from the last suggestion, or up from the first, goes back to it.

@@ -92,6 +92,17 @@ describe("SearchForm", () => {
     expect(input).toHaveAttribute("aria-activedescendant", first.id);
   });
 
+  it("anInputMethodsKeysAreLeftToIt", async () => {
+    render(wrap(<SearchForm {...props} />));
+    const input = screen.getByRole("combobox", { name: "Words to find" });
+    await typeAndWait(input, "lig");
+    fireEvent.keyDown(input, { key: "ArrowDown", isComposing: true });
+    expect(input).not.toHaveAttribute("aria-activedescendant");
+    fireEvent.keyDown(input, { key: "ArrowDown" });
+    fireEvent.keyDown(input, { key: "Enter", isComposing: true });
+    expect(input).toHaveValue("lig");
+  });
+
   it("aClickPicksASuggestion", async () => {
     render(wrap(<SearchForm {...props} />));
     const input = screen.getByRole("combobox", { name: "Words to find" });

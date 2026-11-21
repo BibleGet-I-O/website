@@ -169,7 +169,6 @@
     "capped": "Copyrighted editions show only their first 30 verses here: verify your email address, then sign in again, to review them in full."
   },
   "Search": {
-    "title": "Search",
     "heading": "Search {edition}",
     "metaTitle": "Search · {edition}",
     "modes": {
@@ -190,7 +189,6 @@
     "noResults": "No results for “{q}”.",
     "empty": "Type a word or a question to search this edition.",
     "back": "Back to the reading",
-    "query": "You searched for",
     "open": "Search",
     "searching": "Searching {edition}",
     "kind": "Kind of search",
@@ -198,6 +196,9 @@
     "questionLabel": "Your question",
     "exact": "Exact words",
     "submit": "Search",
-    "suggestions": "Suggestions"
+    "suggestions": "Suggestions",
+    "noMore": "No more results.",
+    "firstPage": "First page",
+    "refusedQuestion": "Try rephrasing your question."
   }
 }

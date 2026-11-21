@@ -170,6 +170,38 @@ describe("search page", () => {
     expect(container.querySelector("[role=note]")!.innerHTML).toContain(encodeURIComponent(from));
   });
 
+  it("theFormShowsTheSearchTheURLNamesAfterANavigation", async () => {
+    searchEdition.mockResolvedValue({ kind: "semanticUnavailable" });
+    const first = await SearchPage({ params: Promise.resolve({ locale: "en", edition: "nabre" }), searchParams: Promise.resolve({ mode: "semantic", q: "light" }) });
+    const { rerender } = render(<NextIntlClientProvider locale="en" messages={en}>{first}</NextIntlClientProvider>);
+    searchEdition.mockResolvedValue({ kind: "ok", hits: [hit()], total: 1, capped: null });
+    const second = await SearchPage({ params: Promise.resolve({ locale: "en", edition: "nabre" }), searchParams: Promise.resolve({ mode: "keyword", q: "light" }) });
+    rerender(<NextIntlClientProvider locale="en" messages={en}>{second}</NextIntlClientProvider>);
+    expect(screen.getByRole("radio", { name: "Keyword" })).toBeChecked();
+    expect(screen.getByRole("combobox", { name: "Words to find" })).toHaveValue("light");
+  });
+
+  it("theReferenceUsesTheEditionsOwnLabel", async () => {
+    searchEdition.mockResolvedValue({ kind: "ok", hits: [hit({ bookNum: 27, book: "Wisdom", chapter: 12, verse: 1, printedChapter: 11, label: "12:1" }), hit({ verse: 17, label: "17a" })], total: 2, capped: null });
+    await page({ mode: "keyword", q: "light" });
+    expect(screen.getByRole("link", { name: "Wisdom 12:1" })).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "John 3:17a" })).toBeInTheDocument();
+  });
+
+  it("aPagePastTheEndSaysThereAreNoMoreAndLinksToTheFirst", async () => {
+    searchEdition.mockResolvedValue({ kind: "ok", hits: [], total: 30, capped: 252 });
+    await page({ mode: "keyword", q: "light", page: "2" });
+    expect(screen.queryByText("No results for “light”.")).toBeNull();
+    expect(screen.getByText("No more results.")).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "First page" })).toHaveAttribute("href", "/en/read/nabre/search?mode=keyword&q=light&page=1");
+  });
+
+  it("aRefusedQuestionAsksToRephrase", async () => {
+    searchEdition.mockResolvedValue({ kind: "refused" });
+    await page({ mode: "semantic", q: "?" });
+    expect(screen.getByText("Try rephrasing your question.")).toBeInTheDocument();
+  });
+
   it("goesBackOnlyToAReaderPage", async () => {
     await page({ mode: "keyword", q: "light", from: "/en/read/nabre/john/3" });
     expect(screen.getByRole("link", { name: "Back to the reading" })).toHaveAttribute("href", "/en/read/nabre/john/3");

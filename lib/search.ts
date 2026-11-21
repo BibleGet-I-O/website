@@ -89,6 +89,11 @@ export async function suggestWords(sigla: string, prefix: string): Promise<strin
     { next: { revalidate: 3600 } },
   );
   if (!res.ok) throw new ApiUnavailable(`endpoint answered ${res.status}`);
-  const body = (await res.json()) as { suggestions?: { word?: unknown }[] };
+  let body: { suggestions?: { word?: unknown }[] };
+  try {
+    body = (await res.json()) as typeof body;
+  } catch {
+    throw new ApiUnavailable("endpoint returned an unreadable body");
+  }
   return (body.suggestions ?? []).map((s) => s.word).filter((w): w is string => typeof w === "string");
 }

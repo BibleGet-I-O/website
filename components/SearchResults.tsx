@@ -13,6 +13,12 @@ export function markWords(text: string, words: string[]): ReactNode {
   );
 }
 
+/** chapter:verse as the edition prints it: its own label when it has one ("12:1", "17a"), else verse and letter. */
+export function reference(h: SearchHit): string {
+  if (h.label) return h.label.includes(":") ? h.label : `${h.chapter}:${h.label}`;
+  return `${h.chapter}:${h.verse}${h.segment ?? ""}`;
+}
+
 /** The words of a keyword search, for marking them in the results. */
 export const queryWords = (q: string) => q.match(/[\p{L}\p{N}]+/gu) ?? [];
 
@@ -33,7 +39,7 @@ export function SearchResults({ hits, start, hrefFor, bookName, mark }: {
         <li key={`${h.bookNum}-${h.chapter}-${h.verse}-${h.segment ?? ""}-${i}`}>
           {/* A plain link, not a client-side one: the browser then scrolls to the verse and marks it (:target). */}
           <a href={hrefFor(h)} className="font-semibold text-red-700 hover:underline dark:text-red-400">
-            {`${bookName(h)} ${h.chapter}:${h.verse}${h.segment ?? ""}`}
+            {`${bookName(h)} ${reference(h)}`}
           </a>
           <p className="font-serif text-lg leading-relaxed">{markWords(h.text, mark)}</p>
         </li>

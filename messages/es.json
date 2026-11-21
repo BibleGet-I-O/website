@@ -169,7 +169,6 @@
     "capped": "Aquí las ediciones con derechos de autor muestran solo sus primeros 30 versículos: verifica tu correo electrónico y vuelve a iniciar sesión para revisarlas completas."
   },
   "Search": {
-    "title": "Buscar",
     "heading": "Buscar en {edition}",
     "metaTitle": "Búsqueda · {edition}",
     "modes": {
@@ -190,7 +189,6 @@
     "noResults": "No hay resultados para «{q}».",
     "empty": "Escribe una palabra o una pregunta para buscar en esta edición.",
     "back": "Volver a la lectura",
-    "query": "Has buscado",
     "open": "Buscar",
     "searching": "Buscando en {edition}",
     "kind": "Tipo de búsqueda",
@@ -198,6 +196,9 @@
     "questionLabel": "Tu pregunta",
     "exact": "Palabras exactas",
     "submit": "Buscar",
-    "suggestions": "Sugerencias"
+    "suggestions": "Sugerencias",
+    "noMore": "No hay más resultados.",
+    "firstPage": "Primera página",
+    "refusedQuestion": "Prueba a formular la pregunta de otra manera."
   }
 }

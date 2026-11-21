@@ -286,6 +286,12 @@ describe("ReaderBar", () => {
     fireEvent.click(screen.getByRole("button", { name: "Search" }));
     const form = container.querySelector("form[role=search]")!;
     expect(form).toHaveAttribute("action", "/en/read/nabre/search");
-    expect(form.querySelector("input[name=from]")).toHaveAttribute("value", "/en/read/nabre/tobit/3");
+    expect(form.querySelector("input[name=from]")).toHaveAttribute("value", "/en/read/nabre/tobit/3?with=DRB");
+  });
+
+  it("theWayBackKeepsTheComparison", () => {
+    const { container } = render(wrap(<ReaderBar {...props} withSiglas={["DRB"]} view="interlinear" />));
+    fireEvent.click(screen.getByRole("button", { name: "Search" }));
+    expect(container.querySelector("form[role=search] input[name=from]")).toHaveAttribute("value", "/en/read/nabre/tobit/3?with=DRB&view=interlinear");
   });
 });

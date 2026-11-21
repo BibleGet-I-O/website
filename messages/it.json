@@ -169,7 +169,6 @@
     "capped": "Qui le edizioni protette da copyright mostrano solo i primi 30 versetti: verifica il tuo indirizzo email, poi accedi di nuovo, per rivederle per intero."
   },
   "Search": {
-    "title": "Cerca",
     "heading": "Cerca in {edition}",
     "metaTitle": "Ricerca · {edition}",
     "modes": {
@@ -190,7 +189,6 @@
     "noResults": "Nessun risultato per «{q}».",
     "empty": "Scrivi una parola o una domanda per cercare in questa edizione.",
     "back": "Torna alla lettura",
-    "query": "Hai cercato",
     "open": "Cerca",
     "searching": "Ricerca in {edition}",
     "kind": "Tipo di ricerca",
@@ -198,6 +196,9 @@
     "questionLabel": "La tua domanda",
     "exact": "Parole esatte",
     "submit": "Cerca",
-    "suggestions": "Suggerimenti"
+    "suggestions": "Suggerimenti",
+    "noMore": "Non ci sono altri risultati.",
+    "firstPage": "Prima pagina",
+    "refusedQuestion": "Prova a riformulare la domanda."
   }
 }

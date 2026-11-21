@@ -169,7 +169,6 @@
     "capped": "Aqui as edições protegidas por direitos autorais mostram só os primeiros 30 versículos: confirme o seu endereço de e-mail e entre novamente para revisá-las por completo."
   },
   "Search": {
-    "title": "Pesquisar",
     "heading": "Pesquisar em {edition}",
     "metaTitle": "Pesquisa · {edition}",
     "modes": {
@@ -182,22 +181,24 @@
     "capped": "{shown, number} de {total, number} resultados",
     "pages": "Páginas de resultados",
     "previous": "Anterior",
-    "next": "Seguinte",
+    "next": "Próxima",
     "refused": "Tente uma palavra mais longa ou menos comum.",
     "semanticUnavailable": "A pesquisa semântica não está disponível neste momento.",
-    "tryKeyword": "Pesquisar estas palavras em vez disso",
-    "tooMany": "Demasiadas pesquisas; tente novamente dentro de um minuto.",
+    "tryKeyword": "Pesquisar essas palavras em vez disso",
+    "tooMany": "Pesquisas demais; tente novamente em um minuto.",
     "noResults": "Nenhum resultado para «{q}».",
-    "empty": "Escreva uma palavra ou uma pergunta para pesquisar nesta edição.",
+    "empty": "Digite uma palavra ou uma pergunta para pesquisar nesta edição.",
     "back": "Voltar à leitura",
-    "query": "Pesquisou",
     "open": "Pesquisar",
     "searching": "Pesquisando em {edition}",
     "kind": "Tipo de pesquisa",
     "keywordLabel": "Palavras a encontrar",
-    "questionLabel": "A sua pergunta",
+    "questionLabel": "Sua pergunta",
     "exact": "Palavras exatas",
     "submit": "Pesquisar",
-    "suggestions": "Sugestões"
+    "suggestions": "Sugestões",
+    "noMore": "Não há mais resultados.",
+    "firstPage": "Primeira página",
+    "refusedQuestion": "Tente reformular sua pergunta."
   }
 }

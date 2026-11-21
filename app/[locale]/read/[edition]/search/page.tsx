@@ -84,7 +84,8 @@ export default async function SearchPage({ params, searchParams }: { params: Pro
       </p>
       <h1 className="mb-2 text-2xl font-semibold">{t("heading", { edition: edition.fullname })}</h1>
       <div className="mb-6 rounded border border-slate-200 p-3 dark:border-slate-800">
-        <SearchForm locale={locale} edition={edition.sigla} editionName={edition.fullname} from={back} initial={{ mode, q, exact }} />
+        {/* Keyed by the search shown: a client navigation to another search starts the form afresh. */}
+        <SearchForm key={`${mode}|${exact}|${q}`} locale={locale} edition={edition.sigla} editionName={edition.fullname} from={back} initial={{ mode, q, exact }} />
       </div>
       {q === "" ? (
         <p>{t("empty")}</p>
@@ -102,7 +103,7 @@ export default async function SearchPage({ params, searchParams }: { params: Pro
   async function body() {
     if (outcome === "tooMany") return <p role="status">{t("tooMany")}</p>;
     if (!outcome) return null;
-    if (outcome.kind === "refused") return <p role="status">{t("refused")}</p>;
+    if (outcome.kind === "refused") return <p role="status">{t(mode === "keyword" ? "refused" : "refusedQuestion")}</p>;
     if (outcome.kind === "semanticUnavailable") {
       return (
         <p role="status">
@@ -112,6 +113,14 @@ export default async function SearchPage({ params, searchParams }: { params: Pro
       );
     }
     const { hits, total, capped } = outcome;
+    if (hits.length === 0 && mode === "keyword" && page > 1) {
+      return (
+        <p role="status">
+          {t("noMore")}{" "}
+          <Link href={searchHref(locale, slug, { mode, q, exact, page: 1, from: cameFrom })} className="underline">{t("firstPage")}</Link>
+        </p>
+      );
+    }
     if (hits.length === 0) return <p role="status">{t("noResults", { q })}</p>;
     const start = mode === "keyword" ? (page - 1) * PAGE_SIZE + 1 : 1;
     const end = start + hits.length - 1;
