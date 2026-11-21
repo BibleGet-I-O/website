@@ -4,10 +4,11 @@ import { notFound } from "next/navigation";
 import { routing } from "@/i18n/routing";
 import { BookPage } from "@/components/BookPage";
 import { CappedNotice, noticeFor } from "@/components/CappedNotice";
-import { ChapterNav } from "@/components/ChapterNav";
+import { ChapterNav, chapterTargets } from "@/components/ChapterNav";
 import { editionSlug } from "@/lib/slug";
 import { ReaderBar } from "@/components/ReaderBar";
 import { Interlinear } from "@/components/Interlinear";
+import { PageTurn } from "@/components/PageTurn";
 import { getAccess } from "@/lib/access";
 import { ApiUnavailable, bookBySlug, getChapter, getEditions, getIndex, getVerses, NotFound, slugFor } from "@/lib/api";
 import { ESTHER, estherTradition, hasBothEstherTexts, type Tradition } from "@/lib/esther";
@@ -171,6 +172,9 @@ export default async function ChapterPage({ params, searchParams }: { params: Pr
   const columns = twoTexts && masoretic !== "unavailable" ? 2 : 1 + seconds.filter((x) => x.mode === "aligned").length;
   const width = columns === 1 || view === "interlinear" ? "max-w-3xl" : columns === 2 ? "max-w-6xl" : "max-w-7xl";
 
+  const nav = { index, bookNum: book.bookNum, chapter, base, query: qs, leavingQuery: compareQuery({ with: withSiglas, view }) };
+  const turnTargets = chapterTargets(nav);
+
   return (
     <main className={`mx-auto w-full ${width} p-4 sm:p-6`}>
       <ReaderBar
@@ -186,58 +190,61 @@ export default async function ChapterPage({ params, searchParams }: { params: Pr
         esther={hasBothEstherTexts(book)}
         tradition={shown}
       />
-      {shown && compared.length > 0 && await TraditionSwitch({
-        tradition: shown,
-        hrefFor: (t) => `${base}/${slugFor(book, index.books)}/${chapter}${compareQuery({ with: withSiglas, view, tradition: t })}`,
-      })}
-      {masoretic && masoretic !== "unavailable" ? (
-        <article>
-          <h1 className="mb-6 text-center text-3xl font-semibold">{t("heading", { book: book.name, chapter })}</h1>
-          <Spread
-            sides={[
-              { sigla: edition.sigla, name: edition.fullname, lang: edition.language || undefined, rubric: { full: t("septuagint"), short: t("septuagintShort") } },
-              { sigla: `${edition.sigla}-MT`, name: edition.fullname, lang: edition.language || undefined, rubric: { full: t("masoretic"), short: t("masoreticShort") } },
-            ]}
-            rows={buildRows(rows, [masoretic.rows], book.bookNum)}
-            chapter={chapter}
-            truncated={[main.truncated, masoretic.truncated]}
-            view={view}
-            gapNotes={false}
-          />
-        </article>
-      ) : masoretic === "unavailable" ? (
-        <>
+      {/* Keyed by the chapter (and its query), so each chapter mounts a fresh, unturned page. */}
+      <PageTurn key={`${base}/${slugFor(book, index.books)}/${chapter}${qs}`} {...turnTargets}>
+        {shown && compared.length > 0 && await TraditionSwitch({
+          tradition: shown,
+          hrefFor: (t) => `${base}/${slugFor(book, index.books)}/${chapter}${compareQuery({ with: withSiglas, view, tradition: t })}`,
+        })}
+        {masoretic && masoretic !== "unavailable" ? (
+          <article>
+            <h1 className="mb-6 text-center text-3xl font-semibold">{t("heading", { book: book.name, chapter })}</h1>
+            <Spread
+              sides={[
+                { sigla: edition.sigla, name: edition.fullname, lang: edition.language || undefined, rubric: { full: t("septuagint"), short: t("septuagintShort") } },
+                { sigla: `${edition.sigla}-MT`, name: edition.fullname, lang: edition.language || undefined, rubric: { full: t("masoretic"), short: t("masoreticShort") } },
+              ]}
+              rows={buildRows(rows, [masoretic.rows], book.bookNum)}
+              chapter={chapter}
+              truncated={[main.truncated, masoretic.truncated]}
+              view={view}
+              gapNotes={false}
+            />
+          </article>
+        ) : masoretic === "unavailable" ? (
+          <>
+            <BookPage heading={t("heading", { book: book.name, chapter })} chapter={chapter} rows={rows} lang={edition.language || undefined} />
+            <p role="note" className="my-4 rounded-lg border border-slate-300 bg-slate-50 p-3 text-sm dark:border-slate-700 dark:bg-slate-900">
+              {t("secondUnavailable", { second: t("masoretic") })}
+            </p>
+          </>
+        ) : compared.length > 0 ? (
+          await Interlinear({
+            heading: t("heading", { book: book.name, chapter }),
+            main: { sigla: edition.sigla, name: edition.fullname, lang: edition.language || undefined },
+            others: compared.map((e, i) => {
+              const second = seconds[i];
+              return {
+                side: { sigla: e.sigla, name: e.fullname, lang: e.language || undefined },
+                second,
+                // A compared edition's cap, told the same way as the main one's.
+                notice: second.mode === "aligned" || second.mode === "whole-chapter" ? noticeFor(second.truncated, info, e.copyright) : null,
+              };
+            }),
+            rows,
+            bookNum: book.bookNum,
+            bookName: book.name,
+            chapter,
+            truncated: main.truncated,
+            view,
+            redirectTo,
+          })
+        ) : (
           <BookPage heading={t("heading", { book: book.name, chapter })} chapter={chapter} rows={rows} lang={edition.language || undefined} />
-          <p role="note" className="my-4 rounded-lg border border-slate-300 bg-slate-50 p-3 text-sm dark:border-slate-700 dark:bg-slate-900">
-            {t("secondUnavailable", { second: t("masoretic") })}
-          </p>
-        </>
-      ) : compared.length > 0 ? (
-        await Interlinear({
-          heading: t("heading", { book: book.name, chapter }),
-          main: { sigla: edition.sigla, name: edition.fullname, lang: edition.language || undefined },
-          others: compared.map((e, i) => {
-            const second = seconds[i];
-            return {
-              side: { sigla: e.sigla, name: e.fullname, lang: e.language || undefined },
-              second,
-              // A compared edition's cap, told the same way as the main one's.
-              notice: second.mode === "aligned" || second.mode === "whole-chapter" ? noticeFor(second.truncated, info, e.copyright) : null,
-            };
-          }),
-          rows,
-          bookNum: book.bookNum,
-          bookName: book.name,
-          chapter,
-          truncated: main.truncated,
-          view,
-          redirectTo,
-        })
-      ) : (
-        <BookPage heading={t("heading", { book: book.name, chapter })} chapter={chapter} rows={rows} lang={edition.language || undefined} />
-      )}
-      {notice && await CappedNotice({ kind: notice, redirectTo, ...(compared.length > 0 && { edition: edition.fullname }) })}
-      {await ChapterNav({ index, bookNum: book.bookNum, chapter, base, query: qs, leavingQuery: compareQuery({ with: withSiglas, view }) })}
+        )}
+        {notice && await CappedNotice({ kind: notice, redirectTo, ...(compared.length > 0 && { edition: edition.fullname }) })}
+        {await ChapterNav(nav)}
+      </PageTurn>
     </main>
   );
 }
