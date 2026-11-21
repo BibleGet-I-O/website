@@ -185,6 +185,14 @@
     "noResults": "No results for “{q}”.",
     "empty": "Type a word or a question to search this edition.",
     "back": "Back to the reading",
-    "query": "You searched for"
+    "query": "You searched for",
+    "open": "Search",
+    "searching": "Searching {edition}",
+    "kind": "Kind of search",
+    "keywordLabel": "Words to find",
+    "questionLabel": "Your question",
+    "exact": "Exact words",
+    "submit": "Search",
+    "suggestions": "Suggestions"
   }
 }

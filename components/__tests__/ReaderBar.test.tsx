@@ -281,4 +281,11 @@ describe("ReaderBar", () => {
     pick("VGCL");
     expect(push).toHaveBeenLastCalledWith("/en/read/nabre/tobit/3?with=CEI2008,VGCL&view=interlinear");
   });
+  it("comparingSearchesTheFirstEdition", () => {
+    const { container } = render(wrap(<ReaderBar {...props} withSiglas={["DRB"]} />));
+    fireEvent.click(screen.getByRole("button", { name: "Search" }));
+    const form = container.querySelector("form[role=search]")!;
+    expect(form).toHaveAttribute("action", "/en/read/nabre/search");
+    expect(form.querySelector("input[name=from]")).toHaveAttribute("value", "/en/read/nabre/tobit/3");
+  });
 });

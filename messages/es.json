@@ -185,6 +185,14 @@
     "noResults": "No hay resultados para «{q}».",
     "empty": "Escribe una palabra o una pregunta para buscar en esta edición.",
     "back": "Volver a la lectura",
-    "query": "Has buscado"
+    "query": "Has buscado",
+    "open": "Buscar",
+    "searching": "Buscando en {edition}",
+    "kind": "Tipo de búsqueda",
+    "keywordLabel": "Palabras que buscar",
+    "questionLabel": "Tu pregunta",
+    "exact": "Palabras exactas",
+    "submit": "Buscar",
+    "suggestions": "Sugerencias"
   }
 }

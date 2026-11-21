@@ -6,6 +6,7 @@ import { headers } from "next/headers";
 import { notFound } from "next/navigation";
 import { routing } from "@/i18n/routing";
 import { CappedNotice, noticeFor } from "@/components/CappedNotice";
+import { SearchForm } from "@/components/SearchForm";
 import { SearchResults, queryWords } from "@/components/SearchResults";
 import { getAccess } from "@/lib/access";
 import { getEditions, getIndex, slugFor } from "@/lib/api";
@@ -81,6 +82,9 @@ export default async function SearchPage({ params, searchParams }: { params: Pro
         <Link href={back} className="hover:underline">{t("back")}</Link>
       </p>
       <h1 className="mb-2 text-2xl font-semibold">{t("heading", { edition: edition.fullname })}</h1>
+      <div className="mb-6 rounded border border-slate-200 p-3 dark:border-slate-800">
+        <SearchForm locale={locale} edition={edition.sigla} editionName={edition.fullname} from={back} initial={{ mode, q, exact }} />
+      </div>
       {q === "" ? (
         <p>{t("empty")}</p>
       ) : (
