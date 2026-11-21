@@ -162,5 +162,29 @@
     "changed": "Ce lien a changé entre-temps.",
     "reload": "Recharger le chapitre",
     "capped": "Les éditions protégées par le droit d'auteur n'affichent ici que leurs 30 premiers versets : vérifiez votre adresse e-mail, puis reconnectez-vous, pour les relire en entier."
+  },
+  "Search": {
+    "title": "Rechercher",
+    "heading": "Rechercher dans {edition}",
+    "metaTitle": "Recherche · {edition}",
+    "modes": {
+      "keyword": "Mots",
+      "semantic": "Sémantique",
+      "hybrid": "Hybride"
+    },
+    "results": "{count, plural, one {# résultat} other {# résultats}}",
+    "range": "{from, number}–{to, number} sur {total, number}",
+    "capped": "{shown, number} résultats sur {total, number}",
+    "pages": "Pages de résultats",
+    "previous": "Précédente",
+    "next": "Suivante",
+    "refused": "Essayez un mot plus long ou moins courant.",
+    "semanticUnavailable": "La recherche sémantique n’est pas disponible pour le moment.",
+    "tryKeyword": "Chercher plutôt ces mots",
+    "tooMany": "Trop de recherches ; réessayez dans une minute.",
+    "noResults": "Aucun résultat pour « {q} ».",
+    "empty": "Saisissez un mot ou une question pour chercher dans cette édition.",
+    "back": "Retour à la lecture",
+    "query": "Vous avez cherché"
   }
 }

@@ -162,5 +162,29 @@
     "changed": "This link changed meanwhile.",
     "reload": "Reload the chapter",
     "capped": "Copyrighted editions show only their first 30 verses here: verify your email address, then sign in again, to review them in full."
+  },
+  "Search": {
+    "title": "Search",
+    "heading": "Search {edition}",
+    "metaTitle": "Search · {edition}",
+    "modes": {
+      "keyword": "Keyword",
+      "semantic": "Semantic",
+      "hybrid": "Hybrid"
+    },
+    "results": "{count, plural, one {# result} other {# results}}",
+    "range": "{from, number}–{to, number} of {total, number}",
+    "capped": "{shown, number} of {total, number} results",
+    "pages": "Result pages",
+    "previous": "Previous",
+    "next": "Next",
+    "refused": "Try a longer or less common word.",
+    "semanticUnavailable": "Semantic search is not available right now.",
+    "tryKeyword": "Search these words instead",
+    "tooMany": "Too many searches; try again in a minute.",
+    "noResults": "No results for “{q}”.",
+    "empty": "Type a word or a question to search this edition.",
+    "back": "Back to the reading",
+    "query": "You searched for"
   }
 }

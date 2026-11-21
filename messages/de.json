@@ -162,5 +162,29 @@
     "changed": "Diese Verknüpfung hat sich inzwischen geändert.",
     "reload": "Kapitel neu laden",
     "capped": "Urheberrechtlich geschützte Ausgaben zeigen hier nur ihre ersten 30 Verse: Bestätigen Sie Ihre E-Mail-Adresse und melden Sie sich erneut an, um sie vollständig zu prüfen."
+  },
+  "Search": {
+    "title": "Suchen",
+    "heading": "In {edition} suchen",
+    "metaTitle": "Suche · {edition}",
+    "modes": {
+      "keyword": "Stichwort",
+      "semantic": "Semantisch",
+      "hybrid": "Hybrid"
+    },
+    "results": "{count, plural, one {# Treffer} other {# Treffer}}",
+    "range": "{from, number}–{to, number} von {total, number}",
+    "capped": "{shown, number} von {total, number} Treffern",
+    "pages": "Ergebnisseiten",
+    "previous": "Zurück",
+    "next": "Weiter",
+    "refused": "Versuchen Sie ein längeres oder selteneres Wort.",
+    "semanticUnavailable": "Die semantische Suche ist gerade nicht verfügbar.",
+    "tryKeyword": "Stattdessen nach diesen Wörtern suchen",
+    "tooMany": "Zu viele Suchanfragen; bitte in einer Minute erneut versuchen.",
+    "noResults": "Keine Treffer für „{q}“.",
+    "empty": "Geben Sie ein Wort oder eine Frage ein, um in dieser Ausgabe zu suchen.",
+    "back": "Zurück zum Lesen",
+    "query": "Ihre Suche"
   }
 }

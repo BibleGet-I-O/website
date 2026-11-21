@@ -162,5 +162,29 @@
     "changed": "Este enlace cambió mientras tanto.",
     "reload": "Recargar el capítulo",
     "capped": "Aquí las ediciones con derechos de autor muestran solo sus primeros 30 versículos: verifica tu correo electrónico y vuelve a iniciar sesión para revisarlas completas."
+  },
+  "Search": {
+    "title": "Buscar",
+    "heading": "Buscar en {edition}",
+    "metaTitle": "Búsqueda · {edition}",
+    "modes": {
+      "keyword": "Palabras",
+      "semantic": "Semántica",
+      "hybrid": "Híbrida"
+    },
+    "results": "{count, plural, one {# resultado} other {# resultados}}",
+    "range": "{from, number}–{to, number} de {total, number}",
+    "capped": "{shown, number} de {total, number} resultados",
+    "pages": "Páginas de resultados",
+    "previous": "Anterior",
+    "next": "Siguiente",
+    "refused": "Prueba una palabra más larga o menos común.",
+    "semanticUnavailable": "La búsqueda semántica no está disponible en este momento.",
+    "tryKeyword": "Buscar estas palabras en su lugar",
+    "tooMany": "Demasiadas búsquedas; vuelve a intentarlo en un minuto.",
+    "noResults": "No hay resultados para «{q}».",
+    "empty": "Escribe una palabra o una pregunta para buscar en esta edición.",
+    "back": "Volver a la lectura",
+    "query": "Has buscado"
   }
 }

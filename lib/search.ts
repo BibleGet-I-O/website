@@ -32,7 +32,7 @@ export type SearchOutcome =
 
 type RawHit = {
   book?: string; univbooknum?: number | string; chapter: number; verse: number; verse_segment?: string | null;
-  printed_chapter?: number | null; verse_label?: string | null; text?: string;
+  printed_chapter?: number | null; verse_label?: string | null; text?: string; text_plain?: string;
 };
 type RawSearch = { results?: RawHit[]; info?: { TOTAL?: number; CAPPED?: Record<string, number> } };
 
@@ -44,7 +44,8 @@ const toHit = (r: RawHit): SearchHit => ({
   segment: r.verse_segment ?? null,
   printedChapter: r.printed_chapter ?? null,
   label: r.verse_label ?? null,
-  text: r.text ?? "",
+  // The plain text: a result line has no room for the edition's headings and formatting.
+  text: r.text_plain ?? r.text ?? "",
 });
 
 function searchPath(p: { sigla: string; mode: SearchMode; q: string; exact: boolean; page: number }): string {

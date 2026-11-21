@@ -22,7 +22,7 @@ const SHARED: Record<string, string[]> = {
   it: [],
   es: [],
   fr: ["Home.notes", "Footer.siteVersion"],
-  de: ["Reader.interlinear", "Footer.repos.website", "Theme.system", "Reader.masoreticShort"],
+  de: ["Reader.interlinear", "Footer.repos.website", "Theme.system", "Reader.masoreticShort", "Search.modes.hybrid"],
   pt: ["Reader.interlinear", "Footer.siteVersion"],
 };
 

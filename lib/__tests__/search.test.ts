@@ -87,6 +87,12 @@ describe("searchEdition", () => {
     await expect(searchEdition({ ...base, mode: "keyword" })).rejects.toBeInstanceOf(ApiUnavailable);
   });
 
+  it("showsThePlainTextNotTheEditionsMarkup", async () => {
+    stub(() => json({ results: [raw(1, { text: "<i>Fiat</i> lux", text_plain: "Fiat lux" })], info: { TOTAL: 1 } }));
+    const out = await searchEdition({ ...base, mode: "keyword" });
+    expect(out.kind === "ok" && out.hits[0].text).toBe("Fiat lux");
+  });
+
   it("keepsThePrintedChapterAndLabel", async () => {
     stub(() => json({ results: [raw(1, { chapter: 12, printed_chapter: 11, verse_label: "12:1", verse_segment: "a" })], info: { TOTAL: 1 } }));
     const out = await searchEdition({ ...base, mode: "keyword" });
