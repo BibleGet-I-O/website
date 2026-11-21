@@ -4,7 +4,7 @@ import { createContext, useCallback, useContext, useEffect, useRef, useState, ty
 import { useTranslations } from "next-intl";
 import { Link, useRouter } from "@/i18n/navigation";
 import { clampCorner, curl, restCorner, type Point, type Side } from "@/lib/page-curl";
-import { canStartAt, decideAxis, releaseOutcome, sideOf, singleTouch } from "@/lib/swipe";
+import { canStartAt, cornerFor, decideAxis, releaseOutcome, sideOf, singleTouch } from "@/lib/swipe";
 import styles from "./page-turn.module.css";
 
 type State = "idle" | "dragging" | "turning" | "blank" | "fading";
@@ -44,12 +44,6 @@ const zoomedIn = () => typeof window !== "undefined" && (window.visualViewport?.
 
 /** Where the turned corner ends: at the far side, as far as the spine lets it go. */
 const farCorner = (side: Side, w: number): Point => (side === "next" ? { x: -w, y: 0 } : { x: 2 * w, y: 0 });
-
-/** The corner a finger displaced by (dx, dy) has lifted to: it moves only away from its edge and never above the top. */
-function cornerFor(side: Side, dx: number, dy: number, w: number): Point {
-  const c = restCorner(side, w);
-  return { x: side === "next" ? c.x + Math.min(0, dx) : c.x + Math.max(0, dx), y: Math.max(0, dy) };
-}
 
 /**
  * The chapter as a page that turns: a horizontal swipe curls it from the top corner of the screen (right for the

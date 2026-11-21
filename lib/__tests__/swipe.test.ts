@@ -58,6 +58,13 @@ describe("swipe", () => {
     expect(releaseOutcome({ dx: 60, dy: 50, w: 400, vx: 0, reducedMotion: true, side: "prev" })).toBe("back");
   });
 
+  it("theCornerTheReaderSeesDecidesNotTheFingersSidewaysPull", () => {
+    // Pulled down as well, the corner (clamped to the spine) has crossed a third of the page though the finger moved 60px.
+    expect(releaseOutcome({ dx: -60, dy: 400, w: 400, vx: 0, reducedMotion: false, side: "next" })).toBe("complete");
+    expect(releaseOutcome({ dx: 60, dy: 400, w: 400, vx: 0, reducedMotion: false, side: "prev" })).toBe("complete");
+    expect(releaseOutcome({ dx: -60, dy: 100, w: 400, vx: 0, reducedMotion: false, side: "next" })).toBe("back");
+  });
+
   it("aDisplacementAgainstTheTurnsSideGoesBack", () => {
     expect(releaseOutcome({ dx: 160, dy: 0, w: 400, vx: 0.6, reducedMotion: false, side: "next" })).toBe("back");
     expect(releaseOutcome({ dx: -160, dy: 0, w: 400, vx: 0, reducedMotion: true, side: "prev" })).toBe("back");

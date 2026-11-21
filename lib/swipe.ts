@@ -1,4 +1,4 @@
-import type { Side } from "@/lib/page-curl";
+import { clampCorner, restCorner, type Point, type Side } from "@/lib/page-curl";
 
 /** A swipe moves at least this far sideways (as in the Martyrology reader). */
 export const SWIPE_PX = 50;
@@ -43,6 +43,12 @@ export function sideOf(dx: number): Side {
   return dx < 0 ? "next" : "prev";
 }
 
+/** The corner a finger displaced by (dx, dy) has lifted to: it moves only away from its edge and never above the top. */
+export function cornerFor(side: Side, dx: number, dy: number, w: number): Point {
+  const c = restCorner(side, w);
+  return { x: side === "next" ? c.x + Math.min(0, dx) : c.x + Math.max(0, dx), y: Math.max(0, dy) };
+}
+
 /**
  * `vx` is the sideways speed (px/ms) over the last movement; `side` is the turn the drag started. A drag that has
  * come back past where it started, to the other side, never turns.
@@ -52,7 +58,9 @@ export function releaseOutcome(o: { dx: number; dy: number; w: number; vx: numbe
   const far = Math.abs(o.dx) >= SWIPE_PX;
   if (o.reducedMotion) return far && Math.abs(o.dx) > RATIO * Math.abs(o.dy) ? "complete" : "back";
   const flick = Math.sign(o.vx) === Math.sign(o.dx) && Math.abs(o.vx) >= FLICK_PX_PER_MS;
-  return far && (Math.abs(o.dx) >= o.w / 3 || flick) ? "complete" : "back";
+  // How far the corner the reader sees has travelled: pulled down too, the spine draws it further across.
+  const travelled = Math.abs(clampCorner(o.side, cornerFor(o.side, o.dx, o.dy, o.w), o.w).x - restCorner(o.side, o.w).x);
+  return far && (travelled >= o.w / 3 || flick) ? "complete" : "back";
 }
 
 export function singleTouch(touches: { length: number }): boolean {
