@@ -1,7 +1,9 @@
 {
   "Metadata": {
     "siteName": "BibleGet",
-    "siteDescription": "Die Bibel in vielen Ausgaben und Sprachen lesen."
+    "siteDescription": "Die Bibel in vielen Ausgaben und Sprachen lesen.",
+    "apiReferenceTitle": "API-Referenz",
+    "apiReferenceDescription": "Die Dokumentation der BibleGet-I/O-API: Bibelzitate, Metadaten und Suche."
   },
   "Home": {
     "title": "BibleGet",
@@ -119,7 +121,8 @@
     "openMenu": "Menü öffnen",
     "closeMenu": "Menü schließen",
     "mainNav": "Hauptnavigation",
-    "language": "Sprache"
+    "language": "Sprache",
+    "api": "API"
   },
   "Review": {
     "title": "Prüfung",

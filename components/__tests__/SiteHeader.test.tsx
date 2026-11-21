@@ -34,4 +34,14 @@ describe("SiteHeader", () => {
     expect(nav.getByRole("combobox", { name: "Theme", hidden: true })).toHaveValue("dark");
     expect(nav.getByText("auth")).toBeInTheDocument();
   });
+
+  it("linksTheApiReference", () => {
+    render(
+      <NextIntlClientProvider locale="en" messages={en}>
+        <SiteHeader auth={<span>auth</span>} theme="system" />
+      </NextIntlClientProvider>,
+    );
+    const nav = within(screen.getByRole("navigation", { hidden: true }));
+    expect(nav.getByRole("link", { name: "API", hidden: true })).toHaveAttribute("href", "/en/scalar");
+  });
 });
