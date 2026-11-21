@@ -71,7 +71,12 @@
   "Notice": {
     "signIn": "This edition shows visitors the first 30 verses of each chapter. Sign in to read the whole chapter.",
     "verify": "Verify your email address to read the whole chapter: we sent you a link when you signed up. Then sign out and sign in again.",
-    "unavailable": "The full text is not available for this edition at the moment: only the first 30 verses of each chapter are shown."
+    "unavailable": "The full text is not available for this edition at the moment: only the first 30 verses of each chapter are shown.",
+    "search": {
+      "signIn": "Visitors see the first 30 results in this edition. Sign in to see them all.",
+      "verify": "Verify your email address to see all the results in this edition: we sent you a link when you signed up. Then sign out and sign in again.",
+      "unavailable": "The full text is not available for this edition at the moment: only the first 30 results are shown."
+    }
   },
   "Error": {
     "title": "Something went wrong",

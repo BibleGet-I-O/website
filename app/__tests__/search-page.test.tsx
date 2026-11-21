@@ -72,6 +72,12 @@ describe("search page", () => {
     expect(Array.from(container.querySelectorAll("mark")).map((m) => m.textContent)).toEqual(["Israël"]);
   });
 
+  it("marksWordsWithDigitsWhole", async () => {
+    searchEdition.mockResolvedValue({ kind: "ok", hits: [hit({ text: "TEST2 Gen 3:1" })], total: 1, capped: null });
+    const { container } = await page({ mode: "keyword", q: "test2" });
+    expect(Array.from(container.querySelectorAll("mark")).map((m) => m.textContent)).toEqual(["TEST2"]);
+  });
+
   it("marksNothingForSemanticSearch", async () => {
     const { container } = await page({ mode: "semantic", q: "light of the world" });
     expect(container.querySelectorAll("mark")).toHaveLength(0);
@@ -98,6 +104,7 @@ describe("search page", () => {
     await page({ mode: "keyword", q: "light" });
     expect(screen.getByText("30 of 252 results")).toBeInTheDocument();
     const note = screen.getByRole("note");
+    expect(note).toHaveTextContent("Visitors see the first 30 results in this edition. Sign in to see them all.");
     expect(within(note).getByRole("button")).toBeInTheDocument();
     expect(note.querySelector("input[name=redirectTo]")?.getAttribute("value") ?? note.innerHTML).toContain("/en/read/nabre/search?mode=keyword&q=light");
   });

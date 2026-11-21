@@ -133,7 +133,7 @@ export default async function SearchPage({ params, searchParams }: { params: Pro
             {page < pages ? <Link href={searchHref(locale, slug, { mode, q, exact, page: page + 1 })} className="hover:underline">{t("next")}</Link> : <span />}
           </nav>
         )}
-        {notice && await CappedNotice({ kind: notice, redirectTo: searchHref(locale, slug, { mode, q, exact, page: page > 1 ? page : undefined }) })}
+        {notice && await CappedNotice({ kind: notice, about: "search", redirectTo: searchHref(locale, slug, { mode, q, exact, page: page > 1 ? page : undefined }) })}
       </>
     );
   }

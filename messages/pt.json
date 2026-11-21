@@ -71,7 +71,12 @@
   "Notice": {
     "signIn": "Esta edição mostra aos visitantes os primeiros 30 versículos de cada capítulo. Entre para ler o capítulo inteiro.",
     "verify": "Confirme seu endereço de e-mail para ler o capítulo inteiro: enviamos um link quando você se cadastrou. Depois saia e entre novamente.",
-    "unavailable": "O texto completo desta edição não está disponível no momento: só são mostrados os primeiros 30 versículos de cada capítulo."
+    "unavailable": "O texto completo desta edição não está disponível no momento: só são mostrados os primeiros 30 versículos de cada capítulo.",
+    "search": {
+      "signIn": "Nesta edição os visitantes veem os primeiros 30 resultados. Entre para ver todos.",
+      "verify": "Confirme seu endereço de e-mail para ver todos os resultados desta edição: enviamos um link quando você se cadastrou. Depois saia e entre novamente.",
+      "unavailable": "O texto completo desta edição não está disponível no momento: só são mostrados os primeiros 30 resultados."
+    }
   },
   "Error": {
     "title": "Algo deu errado",

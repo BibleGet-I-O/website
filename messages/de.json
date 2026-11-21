@@ -71,7 +71,12 @@
   "Notice": {
     "signIn": "Diese Ausgabe zeigt Besuchern die ersten 30 Verse jedes Kapitels. Melden Sie sich an, um das ganze Kapitel zu lesen.",
     "verify": "Bestätigen Sie Ihre E-Mail-Adresse, um das ganze Kapitel zu lesen: Wir haben Ihnen bei der Registrierung einen Link gesendet. Melden Sie sich danach ab und wieder an.",
-    "unavailable": "Der vollständige Text dieser Ausgabe ist derzeit nicht verfügbar: Es werden nur die ersten 30 Verse jedes Kapitels angezeigt."
+    "unavailable": "Der vollständige Text dieser Ausgabe ist derzeit nicht verfügbar: Es werden nur die ersten 30 Verse jedes Kapitels angezeigt.",
+    "search": {
+      "signIn": "In dieser Ausgabe sehen Besucher die ersten 30 Treffer. Melden Sie sich an, um alle zu sehen.",
+      "verify": "Bestätigen Sie Ihre E-Mail-Adresse, um alle Treffer in dieser Ausgabe zu sehen: Wir haben Ihnen bei der Registrierung einen Link gesendet. Melden Sie sich danach ab und wieder an.",
+      "unavailable": "Der vollständige Text dieser Ausgabe ist derzeit nicht verfügbar: Es werden nur die ersten 30 Treffer angezeigt."
+    }
   },
   "Error": {
     "title": "Etwas ist schiefgelaufen",

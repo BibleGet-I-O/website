@@ -61,7 +61,8 @@ export function SearchForm({ locale, edition, editionName, from, initial }: Form
   const [mode, setMode] = useState<SearchMode>(initial?.mode ?? "keyword");
   const [q, setQ] = useState(initial?.q ?? "");
   const [active, setActive] = useState(-1);
-  const [picked, setPicked] = useState(false);
+  // A search already shown (the results page) suggests nothing until the reader types.
+  const [picked, setPicked] = useState(initial !== undefined);
   const [words, clear] = useSuggestions(edition, q, mode === "keyword" && !picked);
   const listId = useId();
   const optionId = (i: number) => `${listId}-o${i}`;
@@ -112,40 +113,42 @@ export function SearchForm({ locale, edition, editionName, from, initial }: Form
         ))}
       </fieldset>
       {mode === "keyword" ? (
-        <div className="relative">
-          <input
-            type="search"
-            name="q"
-            role="combobox"
-            aria-label={t("keywordLabel")}
-            aria-autocomplete="list"
-            aria-expanded={open}
-            aria-controls={listId}
-            aria-activedescendant={open && active >= 0 ? optionId(active) : undefined}
-            autoComplete="off"
-            maxLength={200}
-            className={fieldClass}
-            value={q}
-            onChange={(e) => {
-              setQ(e.target.value);
-              setPicked(false);
-              setActive(-1);
-            }}
-            onKeyDown={onKeywordKey}
-          />
-          <ul id={listId} role="listbox" aria-label={t("suggestions")} hidden={!open}
-            className="absolute left-0 right-0 top-full z-50 mt-1 rounded border border-slate-200 bg-white shadow-lg dark:border-slate-800 dark:bg-slate-950">
-            {open && words.map((w, i) => (
-              <li key={w} id={optionId(i)} role="option" aria-selected={i === active}
-                className={`cursor-pointer px-2 py-1 ${i === active ? "bg-slate-100 dark:bg-slate-800" : ""}`}
-                onMouseDown={(e) => {
-                  e.preventDefault();
-                  pick(w);
-                }}>
-                {w}
-              </li>
-            ))}
-          </ul>
+        <div>
+          <div className="relative">
+            <input
+              type="search"
+              name="q"
+              role="combobox"
+              aria-label={t("keywordLabel")}
+              aria-autocomplete="list"
+              aria-expanded={open}
+              aria-controls={listId}
+              aria-activedescendant={open && active >= 0 ? optionId(active) : undefined}
+              autoComplete="off"
+              maxLength={200}
+              className={fieldClass}
+              value={q}
+              onChange={(e) => {
+                setQ(e.target.value);
+                setPicked(false);
+                setActive(-1);
+              }}
+              onKeyDown={onKeywordKey}
+            />
+            <ul id={listId} role="listbox" aria-label={t("suggestions")} hidden={!open}
+              className="absolute left-0 right-0 top-full z-50 mt-1 rounded border border-slate-200 bg-white shadow-lg dark:border-slate-800 dark:bg-slate-950">
+              {open && words.map((w, i) => (
+                <li key={w} id={optionId(i)} role="option" aria-selected={i === active}
+                  className={`cursor-pointer px-2 py-1 ${i === active ? "bg-slate-100 dark:bg-slate-800" : ""}`}
+                  onMouseDown={(e) => {
+                    e.preventDefault();
+                    pick(w);
+                  }}>
+                  {w}
+                </li>
+              ))}
+            </ul>
+          </div>
           <label className="mt-2 flex items-center gap-1">
             <input type="checkbox" name="match" value="exact" defaultChecked={initial?.exact ?? false} />
             {t("exact")}

@@ -71,7 +71,12 @@
   "Notice": {
     "signIn": "Questa edizione mostra ai visitatori i primi 30 versetti di ogni capitolo. Accedi per leggere il capitolo intero.",
     "verify": "Verifica il tuo indirizzo email per leggere il capitolo intero: ti abbiamo inviato un link al momento della registrazione. Poi esci e accedi di nuovo.",
-    "unavailable": "Il testo completo di questa edizione non è disponibile al momento: sono mostrati solo i primi 30 versetti di ogni capitolo."
+    "unavailable": "Il testo completo di questa edizione non è disponibile al momento: sono mostrati solo i primi 30 versetti di ogni capitolo.",
+    "search": {
+      "signIn": "In questa edizione i visitatori vedono i primi 30 risultati. Accedi per vederli tutti.",
+      "verify": "Verifica il tuo indirizzo email per vedere tutti i risultati in questa edizione: ti abbiamo inviato un link al momento della registrazione. Poi esci e accedi di nuovo.",
+      "unavailable": "Il testo completo di questa edizione non è disponibile al momento: sono mostrati solo i primi 30 risultati."
+    }
   },
   "Error": {
     "title": "Qualcosa è andato storto",

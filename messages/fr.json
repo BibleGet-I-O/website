@@ -71,7 +71,12 @@
   "Notice": {
     "signIn": "Cette édition montre aux visiteurs les 30 premiers versets de chaque chapitre. Connectez-vous pour lire le chapitre entier.",
     "verify": "Vérifiez votre adresse e-mail pour lire le chapitre entier : nous vous avons envoyé un lien lors de votre inscription. Puis déconnectez-vous et reconnectez-vous.",
-    "unavailable": "Le texte intégral de cette édition n'est pas disponible pour le moment : seuls les 30 premiers versets de chaque chapitre sont affichés."
+    "unavailable": "Le texte intégral de cette édition n'est pas disponible pour le moment : seuls les 30 premiers versets de chaque chapitre sont affichés.",
+    "search": {
+      "signIn": "Dans cette édition, les visiteurs voient les 30 premiers résultats. Connectez-vous pour les voir tous.",
+      "verify": "Vérifiez votre adresse e-mail pour voir tous les résultats de cette édition : nous vous avons envoyé un lien lors de votre inscription. Puis déconnectez-vous et reconnectez-vous.",
+      "unavailable": "Le texte intégral de cette édition n'est pas disponible pour le moment : seuls les 30 premiers résultats sont affichés."
+    }
   },
   "Error": {
     "title": "Une erreur s'est produite",

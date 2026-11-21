@@ -130,6 +130,17 @@ describe("SearchForm", () => {
     expect(submit).toHaveBeenCalledTimes(1);
   });
 
+  it("aSearchShownSuggestsNothingUntilTheReaderTypes", async () => {
+    render(wrap(<SearchForm {...props} initial={{ mode: "keyword", q: "light", exact: true }} />));
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(400);
+    });
+    expect(fetchMock).not.toHaveBeenCalled();
+    expect(screen.getByRole("checkbox", { name: "Exact words" })).toBeChecked();
+    await typeAndWait(screen.getByRole("combobox", { name: "Words to find" }), "light lig");
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+  });
+
   it("startsFromTheSearchShown", () => {
     render(wrap(<SearchForm {...props} initial={{ mode: "hybrid", q: "light of the world", exact: false }} />));
     expect(screen.getByRole("radio", { name: "Hybrid" })).toBeChecked();
