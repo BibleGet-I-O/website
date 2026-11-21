@@ -61,7 +61,8 @@ export default async function SearchPage({ params, searchParams }: { params: Pro
   const page = Number.isInteger(pageParam) && pageParam > 0 ? pageParam : 1;
   // Back only to a page of this site's reader: the parameter is the reader's, never a way elsewhere.
   const from = one(search.from) ?? "";
-  const back = from.startsWith(`/${locale}/read/`) && !from.includes("//") ? from : `/${locale}/read/${slug}`;
+  const cameFrom = from.startsWith(`/${locale}/read/`) && !from.includes("//") ? from : undefined;
+  const back = cameFrom ?? `/${locale}/read/${slug}`;
 
   let outcome: SearchOutcome | "tooMany" | null = null;
   if (q !== "") {
@@ -106,7 +107,7 @@ export default async function SearchPage({ params, searchParams }: { params: Pro
       return (
         <p role="status">
           {t("semanticUnavailable")}{" "}
-          <Link href={searchHref(locale, slug, { mode: "keyword", q, exact: false })} className="underline">{t("tryKeyword")}</Link>
+          <Link href={searchHref(locale, slug, { mode: "keyword", q, exact: false, from: cameFrom })} className="underline">{t("tryKeyword")}</Link>
         </p>
       );
     }
@@ -129,11 +130,11 @@ export default async function SearchPage({ params, searchParams }: { params: Pro
         <SearchResults hits={hits} start={start} hrefFor={hrefFor} bookName={(h) => bookOf(h)?.name ?? h.book} mark={mode === "keyword" ? queryWords(q) : []} />
         {pages > 1 && (
           <nav aria-label={t("pages")} className="mt-6 flex justify-between text-sm">
-            {page > 1 ? <Link href={searchHref(locale, slug, { mode, q, exact, page: page - 1 })} className="hover:underline">{t("previous")}</Link> : <span />}
-            {page < pages ? <Link href={searchHref(locale, slug, { mode, q, exact, page: page + 1 })} className="hover:underline">{t("next")}</Link> : <span />}
+            {page > 1 ? <Link href={searchHref(locale, slug, { mode, q, exact, page: page - 1, from: cameFrom })} className="hover:underline">{t("previous")}</Link> : <span />}
+            {page < pages ? <Link href={searchHref(locale, slug, { mode, q, exact, page: page + 1, from: cameFrom })} className="hover:underline">{t("next")}</Link> : <span />}
           </nav>
         )}
-        {notice && await CappedNotice({ kind: notice, about: "search", redirectTo: searchHref(locale, slug, { mode, q, exact, page: page > 1 ? page : undefined }) })}
+        {notice && await CappedNotice({ kind: notice, about: "search", redirectTo: searchHref(locale, slug, { mode, q, exact, page: page > 1 ? page : undefined, from: cameFrom }) })}
       </>
     );
   }

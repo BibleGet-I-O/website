@@ -155,6 +155,21 @@ describe("search page", () => {
     await expect(SearchPage({ params: Promise.resolve({ locale: "en", edition: "nope" }), searchParams: Promise.resolve({ q: "light" }) })).rejects.toThrow("NEXT_NOT_FOUND");
   });
 
+  it("everyLinkThePageBuildsKeepsTheWayBack", async () => {
+    const from = "/en/read/nabre/john/3";
+    searchEdition.mockResolvedValue({ kind: "ok", hits: Array.from({ length: 50 }, () => hit()), total: 1234, capped: null });
+    await page({ mode: "keyword", q: "light", from });
+    expect(screen.getByRole("link", { name: "Next" }).getAttribute("href")).toContain(`from=${encodeURIComponent(from)}`);
+
+    searchEdition.mockResolvedValue({ kind: "semanticUnavailable" });
+    await page({ mode: "semantic", q: "light", from });
+    expect(screen.getByRole("link", { name: "Search these words instead" }).getAttribute("href")).toContain(`from=${encodeURIComponent(from)}`);
+
+    searchEdition.mockResolvedValue({ kind: "ok", hits: [hit()], total: 30, capped: 252 });
+    const { container } = await page({ mode: "keyword", q: "light", from });
+    expect(container.querySelector("[role=note]")!.innerHTML).toContain(encodeURIComponent(from));
+  });
+
   it("goesBackOnlyToAReaderPage", async () => {
     await page({ mode: "keyword", q: "light", from: "/en/read/nabre/john/3" });
     expect(screen.getByRole("link", { name: "Back to the reading" })).toHaveAttribute("href", "/en/read/nabre/john/3");

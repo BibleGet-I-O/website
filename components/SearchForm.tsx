@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useId, useRef, useState, type KeyboardEvent } from "react";
+import { useEffect, useId, useRef, useState, useSyncExternalStore, type KeyboardEvent } from "react";
 import { useTranslations } from "next-intl";
 import { editionSlug } from "@/lib/slug";
 
@@ -94,7 +94,8 @@ export function SearchForm({ locale, edition, editionName, from, initial }: Form
   };
 
   const onQuestionKey = (e: KeyboardEvent<HTMLTextAreaElement>) => {
-    if (e.key === "Enter" && !e.shiftKey) {
+    // Enter confirming an input method's candidate (Chinese, Japanese) is not a search.
+    if (e.key === "Enter" && !e.shiftKey && !e.nativeEvent.isComposing) {
       e.preventDefault();
       if (q.trim() !== "") e.currentTarget.form?.requestSubmit();
     }
@@ -166,9 +167,15 @@ export function SearchForm({ locale, edition, editionName, from, initial }: Form
   );
 }
 
-/** The reader bar's magnifying glass: opens the search form; Escape or a click outside closes it. */
+const noSubscribe = () => () => {};
+
+/**
+ * The reader bar's magnifying glass: opens the search form; Escape or a click outside closes it. Until the script
+ * runs (or without JavaScript), it is a link to the results page, which holds the same form.
+ */
 export function SearchLens(props: FormProps) {
   const t = useTranslations("Search");
+  const scripted = useSyncExternalStore(noSubscribe, () => true, () => false);
   const [open, setOpen] = useState(false);
   const rootRef = useRef<HTMLDivElement>(null);
   const buttonRef = useRef<HTMLButtonElement>(null);
@@ -198,15 +205,26 @@ export function SearchLens(props: FormProps) {
     };
   }, [open]);
 
+  const lensIcon = (
+    <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <circle cx="11" cy="11" r="7" />
+      <path d="m20 20-3.5-3.5" />
+    </svg>
+  );
+  if (!scripted) {
+    return (
+      <a href={`/${props.locale}/read/${editionSlug(props.edition)}/search?${new URLSearchParams({ from: props.from })}`} aria-label={t("open")}
+        className="inline-block rounded p-2 text-slate-700 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800">
+        {lensIcon}
+      </a>
+    );
+  }
   return (
     <div ref={rootRef} className="relative">
       <button ref={buttonRef} type="button" aria-label={t("open")} aria-expanded={open} aria-controls={open ? panelId : undefined}
         className="rounded p-2 text-slate-700 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800"
         onClick={() => setOpen((o) => !o)}>
-        <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-          <circle cx="11" cy="11" r="7" />
-          <path d="m20 20-3.5-3.5" />
-        </svg>
+        {lensIcon}
       </button>
       {open && (
         <div ref={panelRef} id={panelId} className="absolute right-0 top-full z-50 mt-2 w-72 rounded border border-slate-200 bg-white p-3 shadow-lg sm:w-80 dark:border-slate-800 dark:bg-slate-950">

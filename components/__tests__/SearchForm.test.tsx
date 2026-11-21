@@ -1,5 +1,6 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { act, fireEvent, render, screen } from "@testing-library/react";
+import { renderToString } from "react-dom/server";
 import { NextIntlClientProvider } from "next-intl";
 import en from "@/messages/en.json";
 import { SearchForm, SearchLens } from "@/components/SearchForm";
@@ -36,6 +37,15 @@ describe("SearchLens", () => {
     fireEvent.keyDown(document, { key: "Escape" });
     expect(screen.queryByRole("search")).toBeNull();
     expect(lens).toHaveFocus();
+  });
+});
+
+describe("SearchLens without JavaScript", () => {
+  it("isALinkToTheSearchPageUntilTheScriptRuns", () => {
+    const html = renderToString(wrap(<SearchLens {...props} />));
+    expect(html).toContain('href="/en/read/nabre/search?from=%2Fen%2Fread%2Fnabre%2Fjohn%2F3"');
+    expect(html).toContain('aria-label="Search"');
+    expect(html).not.toContain("<button");
   });
 });
 
@@ -126,6 +136,9 @@ describe("SearchForm", () => {
     fireEvent.keyDown(area, { key: "Enter", shiftKey: true });
     expect(submit).not.toHaveBeenCalled();
     fireEvent.change(area, { target: { value: "God forgives" } });
+    // Enter confirming an input method's candidate (Chinese, Japanese) is not a search.
+    fireEvent.keyDown(area, { key: "Enter", isComposing: true });
+    expect(submit).not.toHaveBeenCalled();
     fireEvent.keyDown(area, { key: "Enter" });
     expect(submit).toHaveBeenCalledTimes(1);
   });
