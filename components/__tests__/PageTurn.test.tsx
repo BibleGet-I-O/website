@@ -226,6 +226,71 @@ describe("PageTurn", () => {
     expect(push).toHaveBeenCalledWith("/en/read/drb/mark/1");
   });
 
+  it("aZoomedInPageCanBePannedSideways", async () => {
+    const vv = Object.assign(new EventTarget(), { scale: 1 });
+    Object.defineProperty(window, "visualViewport", { configurable: true, value: vv });
+    const { area } = mount();
+    expect(area.dataset.zoomed).toBeUndefined();
+    vv.scale = 2;
+    act(() => { vv.dispatchEvent(new Event("resize")); });
+    expect(area.dataset.zoomed).toBe("");
+    vv.scale = 1;
+    act(() => { vv.dispatchEvent(new Event("resize")); });
+    expect(area.dataset.zoomed).toBeUndefined();
+    const { readFileSync } = await import("node:fs");
+    const css = readFileSync("components/page-turn.module.css", "utf8");
+    expect(css).toMatch(/\.area\[data-zoomed\]\s*\{[^}]*touch-action:\s*auto/);
+  });
+
+  it("withReducedMotionACancelledTurnDoesNotCurlBack", () => {
+    reduced = true;
+    const { area } = mount();
+    drag(area, [300, 300], [200, 300], 300, false);
+    fireEvent.touchCancel(document.getElementById("text")!, { touches: [], changedTouches: [pt(200, 300)] });
+    tick(50);
+    expect(clip(area)).toBe("");
+    expect(flap()!.style.getPropertyValue("--flap-clip")).toBe("");
+    expect(area.dataset.state).toBe("idle");
+  });
+
+  it("aSecondFingerCancelsTheTurn", () => {
+    const { area } = mount();
+    const t = document.getElementById("text")!;
+    drag(area, [300, 300], [140, 300], 300, false);
+    fireEvent.touchStart(t, { touches: [pt(140, 300), pt(200, 400)], changedTouches: [pt(200, 400)] });
+    fireEvent.touchEnd(t, { touches: [pt(140, 300)], changedTouches: [pt(200, 400)] });
+    tick(600);
+    fireEvent.touchEnd(t, { touches: [], changedTouches: [pt(140, 300)] });
+    tick(600);
+    expect(push).not.toHaveBeenCalled();
+    expect(clip(area)).toBe("");
+  });
+
+  it("aFlickThenAPauseIsNotAFlick", () => {
+    const { area } = mount();
+    drag(area, [300, 300], [240, 300], 80, false);
+    tick(1000);
+    fireEvent.touchEnd(document.getElementById("text")!, { touches: [], changedTouches: [pt(240, 300)] });
+    tick(600);
+    expect(push).not.toHaveBeenCalled();
+  });
+
+  it("aDragThatEndsTheOtherWayDoesNotTurn", () => {
+    const { area } = mount();
+    const t = document.getElementById("text")!;
+    fireEvent.touchStart(t, { touches: [pt(200, 300)], changedTouches: [pt(200, 300)] });
+    tick(16);
+    fireEvent.touchMove(t, { touches: [pt(180, 300)], changedTouches: [pt(180, 300)] });
+    for (let x = 200; x <= 360; x += 20) {
+      tick(200);
+      fireEvent.touchMove(t, { touches: [pt(x, 300)], changedTouches: [pt(x, 300)] });
+    }
+    tick(200);
+    fireEvent.touchEnd(t, { touches: [], changedTouches: [pt(360, 300)] });
+    tick(600);
+    expect(push).not.toHaveBeenCalled();
+  });
+
   it("aTurnIgnoresNewGestures", () => {
     const { area } = mount();
     drag(area, [300, 300], [100, 300], 300);

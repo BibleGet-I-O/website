@@ -43,19 +43,25 @@ describe("swipe", () => {
   });
 
   it("aThirdOfThePageCompletes", () => {
-    expect(releaseOutcome({ dx: -140, dy: 0, w: 400, vx: 0, reducedMotion: false })).toBe("complete");
-    expect(releaseOutcome({ dx: -120, dy: 0, w: 400, vx: 0, reducedMotion: false })).toBe("back");
+    expect(releaseOutcome({ dx: -140, dy: 0, w: 400, vx: 0, reducedMotion: false, side: "next" })).toBe("complete");
+    expect(releaseOutcome({ dx: -120, dy: 0, w: 400, vx: 0, reducedMotion: false, side: "next" })).toBe("back");
   });
 
   it("aFlickCompletesButNotBelowTheMinimum", () => {
-    expect(releaseOutcome({ dx: -60, dy: 0, w: 400, vx: -0.6, reducedMotion: false })).toBe("complete");
-    expect(releaseOutcome({ dx: -40, dy: 0, w: 400, vx: -2, reducedMotion: false })).toBe("back");
-    expect(releaseOutcome({ dx: -60, dy: 0, w: 400, vx: 0.6, reducedMotion: false })).toBe("back");
+    expect(releaseOutcome({ dx: -60, dy: 0, w: 400, vx: -0.6, reducedMotion: false, side: "next" })).toBe("complete");
+    expect(releaseOutcome({ dx: -40, dy: 0, w: 400, vx: -2, reducedMotion: false, side: "next" })).toBe("back");
+    expect(releaseOutcome({ dx: -60, dy: 0, w: 400, vx: 0.6, reducedMotion: false, side: "next" })).toBe("back");
   });
 
   it("withReducedMotionASwipeIsEnough", () => {
-    expect(releaseOutcome({ dx: 60, dy: 20, w: 400, vx: 0, reducedMotion: true })).toBe("complete");
-    expect(releaseOutcome({ dx: 60, dy: 50, w: 400, vx: 0, reducedMotion: true })).toBe("back");
+    expect(releaseOutcome({ dx: 60, dy: 20, w: 400, vx: 0, reducedMotion: true, side: "prev" })).toBe("complete");
+    expect(releaseOutcome({ dx: 60, dy: 50, w: 400, vx: 0, reducedMotion: true, side: "prev" })).toBe("back");
+  });
+
+  it("aDisplacementAgainstTheTurnsSideGoesBack", () => {
+    expect(releaseOutcome({ dx: 160, dy: 0, w: 400, vx: 0.6, reducedMotion: false, side: "next" })).toBe("back");
+    expect(releaseOutcome({ dx: -160, dy: 0, w: 400, vx: 0, reducedMotion: true, side: "prev" })).toBe("back");
+    expect(releaseOutcome({ dx: 160, dy: 0, w: 400, vx: 0, reducedMotion: false, side: "prev" })).toBe("complete");
   });
 
   it("leftIsNextRightIsPrevious", () => {

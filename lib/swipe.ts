@@ -43,8 +43,12 @@ export function sideOf(dx: number): Side {
   return dx < 0 ? "next" : "prev";
 }
 
-/** `vx` is the sideways speed (px/ms) over the last movement. */
-export function releaseOutcome(o: { dx: number; dy: number; w: number; vx: number; reducedMotion: boolean }): "complete" | "back" {
+/**
+ * `vx` is the sideways speed (px/ms) over the last movement; `side` is the turn the drag started. A drag that has
+ * come back past where it started, to the other side, never turns.
+ */
+export function releaseOutcome(o: { dx: number; dy: number; w: number; vx: number; reducedMotion: boolean; side: Side }): "complete" | "back" {
+  if (o.dx === 0 || sideOf(o.dx) !== o.side) return "back";
   const far = Math.abs(o.dx) >= SWIPE_PX;
   if (o.reducedMotion) return far && Math.abs(o.dx) > RATIO * Math.abs(o.dy) ? "complete" : "back";
   const flick = Math.sign(o.vx) === Math.sign(o.dx) && Math.abs(o.vx) >= FLICK_PX_PER_MS;

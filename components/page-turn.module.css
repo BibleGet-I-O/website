@@ -4,6 +4,10 @@
   touch-action: pan-y pinch-zoom;
   clip-path: var(--clip, none);
 }
+/* Pinched in, a sideways drag pans the enlarged page (the script does not turn it then). */
+.area[data-zoomed] {
+  touch-action: auto;
+}
 .area[data-state="fading"] {
   opacity: 0;
   transition: opacity 0.15s ease;

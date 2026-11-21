@@ -65,6 +65,7 @@ export function PageTurn({ prev, next, children }: { prev?: string; next?: strin
   const [state, setState] = useState<State>("idle");
   const stateRef = useRef<State>("idle");
   const [slow, setSlow] = useState(false);
+  const [zoomed, setZoomed] = useState(false);
   const frame = useRef<number | null>(null);
   const timers = useRef<ReturnType<typeof setTimeout>[]>([]);
   const drag = useRef<{
@@ -208,6 +209,10 @@ export function PageTurn({ prev, next, children }: { prev?: string; next?: strin
 
   const springBack = useCallback(
     (side: Side, from: Point) => {
+      if (reducedMotion()) {
+        reset();
+        return;
+      }
       go("turning");
       const to = restCorner(side, pageWidth());
       animate(side, (k) => ({ x: from.x + (to.x - from.x) * easeOut(k), y: from.y + (to.y - from.y) * easeOut(k) }), BACK_MS, reset);
@@ -250,6 +255,13 @@ export function PageTurn({ prev, next, children }: { prev?: string; next?: strin
     if (!el) return;
     const now = () => performance.now();
     const onStart = (e: TouchEvent) => {
+      // A second finger on a page being turned: it is a pinch, not a turn.
+      const d = drag.current;
+      if (d && !singleTouch(e.touches)) {
+        drag.current = null;
+        if (d.axis === "turn" && d.side) springBack(d.side, cornerFor(d.side, d.dx, d.dy, pageWidth()));
+        return;
+      }
       if (stateRef.current !== "idle") return;
       if (!singleTouch(e.touches)) {
         drag.current = null;
@@ -299,10 +311,11 @@ export function PageTurn({ prev, next, children }: { prev?: string; next?: strin
       stopFrame();
       const first = d.samples[0];
       const last = d.samples[d.samples.length - 1];
-      const vx = last.t > first.t ? (last.x - first.x) / (last.t - first.t) : 0;
+      // A finger that stopped before it let go is not flicking, however fast it moved before.
+      const vx = last.t > first.t && now() - last.t <= VELOCITY_WINDOW_MS ? (last.x - first.x) / (last.t - first.t) : 0;
       const w = pageWidth();
       const motionless = reducedMotion();
-      const outcome = releaseOutcome({ dx: d.dx, dy: d.dy, w, vx, reducedMotion: motionless });
+      const outcome = releaseOutcome({ dx: d.dx, dy: d.dy, w, vx, reducedMotion: motionless, side: d.side });
       const href = target(d.side);
       if (motionless) {
         if (outcome === "complete" && href) fadeTo(href);
@@ -330,6 +343,16 @@ export function PageTurn({ prev, next, children }: { prev?: string; next?: strin
     };
   }, [complete, fadeTo, go, paint, pageWidth, springBack, stopFrame, target]);
 
+  // Pinched in, one finger pans the enlarged page sideways too (the CSS gives the browser every pan back).
+  useEffect(() => {
+    const vv = window.visualViewport;
+    if (!vv || typeof vv.addEventListener !== "function") return;
+    const onResize = () => setZoomed(zoomedIn());
+    onResize();
+    vv.addEventListener("resize", onResize);
+    return () => vv.removeEventListener("resize", onResize);
+  }, []);
+
   // Back to a page kept in the browser's cache (or any history move): never leave it clipped.
   useEffect(() => {
     const onShow = (e: PageTransitionEvent) => {
@@ -350,7 +373,7 @@ export function PageTurn({ prev, next, children }: { prev?: string; next?: strin
 
   return (
     <TurnContext.Provider value={{ play }}>
-      <div ref={area} data-page-turn="" data-state={state} className={styles.area}>
+      <div ref={area} data-page-turn="" data-state={state} data-zoomed={zoomed ? "" : undefined} className={styles.area}>
         {children}
       </div>
       <div ref={shade} aria-hidden className={styles.shade} />
