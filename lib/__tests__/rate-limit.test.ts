@@ -43,9 +43,11 @@ describe("createLimiter", () => {
 });
 
 describe("clientIp", () => {
-  it("clientIpTakesTheFirstForwardedAddress", () => {
-    expect(clientIp(new Headers({ "x-forwarded-for": "203.0.113.7, 10.0.0.1" }))).toBe("203.0.113.7");
-    expect(clientIp(new Headers({ "x-real-ip": "198.51.100.2" }))).toBe("198.51.100.2");
+  it("clientIpTrustsTheAddressTheProxySetNotOneTheClientSent", () => {
+    // nginx sets X-Real-IP to the connection's address, replacing any the client sent.
+    expect(clientIp(new Headers({ "x-real-ip": "198.51.100.2", "x-forwarded-for": "1.2.3.4, 198.51.100.2" }))).toBe("198.51.100.2");
+    // Without it, the last forwarded address is the one the proxy appended; the first is whatever the client wrote.
+    expect(clientIp(new Headers({ "x-forwarded-for": "1.2.3.4, 203.0.113.7" }))).toBe("203.0.113.7");
     expect(clientIp(new Headers())).toBe("unknown");
   });
 });

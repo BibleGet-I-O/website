@@ -39,10 +39,16 @@ export function createLimiter(o: { limit: number; windowMs: number }): Limiter {
   };
 }
 
-/** The visitor's address as the server's proxy passes it (Plesk's nginx in front of Passenger). */
+/**
+ * The visitor's address as the server's proxy states it: Plesk's nginx sets X-Real-IP to the connection's address
+ * (replacing any the client sent) before Apache/Passenger. Without it, the last X-Forwarded-For entry, the one the
+ * proxy appended; never the first, which the client controls.
+ */
 export function clientIp(h: Headers): string {
-  const forwarded = h.get("x-forwarded-for")?.split(",")[0]?.trim();
-  return forwarded || h.get("x-real-ip")?.trim() || "unknown";
+  const real = h.get("x-real-ip")?.trim();
+  if (real) return real;
+  const forwarded = (h.get("x-forwarded-for") ?? "").split(",").map((s) => s.trim()).filter(Boolean);
+  return forwarded[forwarded.length - 1] ?? "unknown";
 }
 
 export const suggestLimiter = createLimiter({ limit: 60, windowMs: 60_000 });
