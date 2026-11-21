@@ -22,3 +22,11 @@ export function printedLabel(r: VerseRow, chapter: number): string {
   const label = r.label ?? `${r.verse}${r.segment ?? ""}`;
   return r.chapter !== chapter && !label.includes(":") ? `${r.chapter}:${label}` : label;
 }
+
+/**
+ * The id a verse carries on a chapter page (`v3.16`, `v1.1a`), so a search result can link to it
+ * (`…/john/3#v3.16`). The chapter is part of it: a page also prints a neighbour chapter's verse.
+ */
+export function verseAnchor(r: { chapter: number; verse: number; segment?: string | null }): string {
+  return `v${r.chapter}.${r.verse}${r.segment ?? ""}`;
+}

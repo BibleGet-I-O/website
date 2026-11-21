@@ -1,5 +1,5 @@
 import { renderVerse } from "@/lib/formatted";
-import { printedLabel } from "@/lib/placement";
+import { printedLabel, verseAnchor } from "@/lib/placement";
 import type { VerseRow } from "@/lib/types";
 
 /**
@@ -29,7 +29,7 @@ export function BookPage({ heading, chapter, rows, lang }: { heading: string; ch
           ))}
           <p className="bg-text mb-4">
             {s.rows.map((r, j) => (
-              <span key={j}>
+              <span key={j} id={verseAnchor(r)} className="verse-target">
                 {renderVerse({
                   label: printedLabel(r, chapter),
                   text: r.text,

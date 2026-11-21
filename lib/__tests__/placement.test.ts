@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { placeAsPrinted, printedLabel } from "@/lib/placement";
+import { placeAsPrinted, printedLabel, verseAnchor } from "@/lib/placement";
 import type { VerseRow } from "@/lib/types";
 
 const row = (chapter: number, verse: number, extra: Partial<VerseRow> = {}): VerseRow => ({
@@ -57,3 +57,11 @@ describe("printedLabel with letters", () => {
   });
 });
 
+
+describe("verseAnchor", () => {
+  it("namesAVerseByItsChapterAndVerse", () => {
+    expect(verseAnchor({ chapter: 3, verse: 16 })).toBe("v3.16");
+    expect(verseAnchor({ chapter: 1, verse: 1, segment: "a" })).toBe("v1.1a");
+    expect(verseAnchor({ chapter: 1, verse: 1, segment: null })).toBe("v1.1");
+  });
+});
