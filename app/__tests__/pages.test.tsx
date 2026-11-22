@@ -274,6 +274,27 @@ describe("books", () => {
     expect(within(ot).queryByText("Matthew")).toBeNull();
   });
 
+  it("booksPageSearchesTheWholeEdition", async () => {
+    // Search runs over the whole edition, so its lens is there before a chapter is chosen; the results lead back here.
+    getEditions.mockResolvedValue([ed("DRB", "en", "Douay-Rheims")]);
+    getIndex.mockResolvedValue({ sigla: "DRB", books: [book(1, "Genesis", "Gen", 50)] });
+    const { container } = render(wrap(await BooksPage(params("drb", { book: "17", chapter: "1", with: "NABRE" }))));
+    fireEvent.click(screen.getByRole("button", { name: "Search" }));
+    const form = screen.getByRole("search");
+    expect(form).toHaveAttribute("action", "/en/read/drb/search");
+    expect(container.querySelector('input[name="from"]')).toHaveValue("/en/read/drb?with=NABRE");
+  });
+
+  it("booksPageAllEditionsLinkPointsBack", async () => {
+    getEditions.mockResolvedValue([ed("DRB", "en", "Douay-Rheims")]);
+    getIndex.mockResolvedValue({ sigla: "DRB", books: [book(1, "Genesis", "Gen", 50)] });
+    render(wrap(await BooksPage(params("drb"))));
+    const back = screen.getByRole("link", { name: "All editions" });
+    expect(back).toHaveAttribute("href", "/en");
+    // The arrow is drawn, not read: the link's name stays "All editions".
+    expect(back).toHaveTextContent(/^⟵\s*All editions$/);
+  });
+
   it("unknownEditionIs404", async () => {
     getEditions.mockResolvedValue([ed("DRB", "en")]);
     await expect(BooksPage(params("nope"))).rejects.toThrow("NEXT_NOT_FOUND");
