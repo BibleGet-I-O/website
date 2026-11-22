@@ -18,6 +18,22 @@ describe("the API reference's document", () => {
     expect(out.paths).toEqual(doc.paths);
   });
 
+  it("nestedServersCannotSendRequestsElsewhere", () => {
+    const nested = {
+      openapi: "3.0.3",
+      servers: [{ url: "https://internal/dev" }],
+      paths: {
+        "/quote": { servers: [{ url: "https://elsewhere" }], get: { servers: [{ url: "https://op-level" }], responses: {} } },
+        "/search": { post: { responses: {} } },
+      },
+    };
+    const out = withPublicServer(nested, "https://query.bibleget.io/dev") as typeof nested;
+    expect(JSON.stringify(out)).not.toContain("elsewhere");
+    expect(JSON.stringify(out)).not.toContain("op-level");
+    expect(out.paths["/quote"].get.responses).toEqual({});
+    expect(out.servers).toEqual([{ url: "https://query.bibleget.io/dev", description: "BibleGet I/O API" }]);
+  });
+
   it("isFetchedFromTheApiWithoutAnyKey", async () => {
     const fetch = vi.fn(async () => Response.json(doc));
     vi.stubGlobal("fetch", fetch);

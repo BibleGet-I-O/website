@@ -41,10 +41,21 @@ export default function ApiReference({ locale, title }: { locale: string; title:
   useEffect(() => () => document.body.classList.remove("light-mode", "dark-mode"), []);
   // A theme change restyles the same Scalar (its light-mode / dark-mode body class) rather than replacing it, which
   // would lose a test request being edited, and the key typed for it.
+  // Scalar's own colour-mode watcher may put back the mode it started with (on a system theme change, say, while
+  // the site has its own choice): the site's theme is held whatever Scalar does.
   useEffect(() => {
     if (dark === null) return;
-    document.body.classList.toggle("dark-mode", dark);
-    document.body.classList.toggle("light-mode", !dark);
+    const body = document.body;
+    const hold = () => {
+      if (body.classList.contains("dark-mode") !== dark || body.classList.contains("light-mode") === dark) {
+        body.classList.toggle("dark-mode", dark);
+        body.classList.toggle("light-mode", !dark);
+      }
+    };
+    hold();
+    const observer = new MutationObserver(hold);
+    observer.observe(body, { attributes: true, attributeFilter: ["class"] });
+    return () => observer.disconnect();
   }, [dark]);
   if (dark === null) return <div className={styles.reference} />;
   return (

@@ -69,6 +69,21 @@ describe("ApiReference", () => {
     scalar.mockImplementation(() => null);
   });
 
+  it("holdsTheSitesThemeWhenScalarResetsItsOwn", async () => {
+    systemDark(false);
+    document.documentElement.dataset.theme = "dark";
+    render(<ApiReference locale="en" title="API reference" />);
+    expect(document.body).toHaveClass("dark-mode");
+    // Scalar's colour-mode watcher puts back the mode it started with (a system theme change, say).
+    await act(async () => {
+      document.body.classList.remove("dark-mode");
+      document.body.classList.add("light-mode");
+      await new Promise((r) => setTimeout(r, 0));
+    });
+    expect(document.body).toHaveClass("dark-mode");
+    expect(document.body).not.toHaveClass("light-mode");
+  });
+
   it("switchesWhenTheReaderChangesTheTheme", async () => {
     systemDark(false);
     render(<ApiReference locale="en" title="API reference" />);
