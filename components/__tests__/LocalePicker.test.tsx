@@ -44,6 +44,14 @@ describe("LocalePicker", () => {
     expect(screen.getByRole("button", { name: "English" })).not.toHaveAttribute("aria-current");
   });
 
+  it("theListFloatsOverThePageAtEveryWidth", () => {
+    // In the header bar (not a menu panel), an open list in the flow would push the bar apart on a phone.
+    picker();
+    open();
+    expect(screen.getByRole("list")).toHaveClass("absolute", "right-0", "top-full");
+    expect(screen.getByRole("list").className).not.toMatch(/sm:absolute/);
+  });
+
   it("savesTheChoiceAndOpensTheSamePageQueryAndHashInThatLanguage", () => {
     picker();
     open();

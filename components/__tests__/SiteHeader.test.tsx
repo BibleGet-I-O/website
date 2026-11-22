@@ -22,17 +22,20 @@ describe("SiteHeader", () => {
     expect(logo).toHaveAttribute("alt", "");
   });
 
-  it("foldsLanguageThemeAndSignInIntoTheMenu", () => {
+  it("keepsLanguageAndThemeInTheBarAndFoldsPagesAndSignInIntoTheMenu", () => {
     render(
       <NextIntlClientProvider locale="en" messages={en}>
         <SiteHeader auth={<span>auth</span>} />
       </NextIntlClientProvider>,
     );
     expect(screen.getByRole("button", { name: "Open menu" })).toHaveAttribute("aria-expanded", "false");
-    const nav = within(screen.getByRole("navigation", { hidden: true }));
-    expect(nav.getByRole("button", { name: "Language", hidden: true })).toBeInTheDocument();
-    expect(nav.getByRole("button", { name: /Switch to (dark|light) theme/, hidden: true })).toBeInTheDocument();
-    expect(nav.getByText("auth")).toBeInTheDocument();
+    const panel = screen.getByRole("navigation", { hidden: true });
+    // Actions, not pages: always in the bar, never behind the hamburger.
+    const language = screen.getByRole("button", { name: "Language" });
+    const theme = screen.getByRole("button", { name: /Switch to (dark|light) theme/ });
+    expect(panel).not.toContainElement(language);
+    expect(panel).not.toContainElement(theme);
+    expect(within(panel).getByText("auth")).toBeInTheDocument();
   });
 
   it("linksTheApiReference", () => {

@@ -15,7 +15,7 @@ export function writeLocaleCookie(locale: Locale, secure: boolean): string {
 /**
  * The header's language picker: a globe button that opens the languages, each in its own name, the current one
  * marked. Choosing one saves it and opens the same page in that language, with its query and #hash. The list closes on a choice, on Escape (focus back on the globe) and on a
- * click outside; Escape stops here, so it doesn't also close the header's mobile panel around the picker.
+ * click outside; Escape stops here, so it closes only the list.
  */
 export function LocalePicker() {
   const locale = useLocale();
@@ -75,7 +75,7 @@ export function LocalePicker() {
       {open && (
         <ul
           id={listId}
-          className="z-50 mt-2 flex min-w-36 flex-col rounded border border-slate-200 bg-white py-1 text-sm shadow-lg dark:border-slate-800 dark:bg-slate-950 sm:absolute sm:right-0 sm:top-full"
+          className="absolute right-0 top-full z-50 mt-2 flex min-w-36 flex-col rounded border border-slate-200 bg-white py-1 text-sm shadow-lg dark:border-slate-800 dark:bg-slate-950"
         >
           {LOCALES.map((l) => (
             <li key={l}>
