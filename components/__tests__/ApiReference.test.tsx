@@ -1,5 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { act, render } from "@testing-library/react";
+import { useEffect } from "react";
 
 const { scalar } = vi.hoisted(() => ({ scalar: vi.fn((_props: { configuration: Record<string, unknown> }) => null) }));
 vi.mock("@scalar/api-reference-react", () => ({ ApiReferenceReact: scalar }));
@@ -47,6 +48,25 @@ describe("ApiReference", () => {
     systemDark(true);
     render(<ApiReference locale="en" title="API reference" />);
     expect(config().forceDarkModeState).toBe("dark");
+  });
+
+  it("aThemeChangeKeepsTheSameScalarSoARequestBeingEditedSurvives", async () => {
+    systemDark(false);
+    const mounts = vi.fn();
+    scalar.mockImplementation(() => {
+      useEffect(() => mounts(), []);
+      return null;
+    });
+    render(<ApiReference locale="en" title="API reference" />);
+    expect(document.body).toHaveClass("light-mode");
+    await act(async () => {
+      document.documentElement.dataset.theme = "dark";
+      await new Promise((r) => setTimeout(r, 0));
+    });
+    expect(mounts).toHaveBeenCalledTimes(1);
+    expect(document.body).toHaveClass("dark-mode");
+    expect(document.body).not.toHaveClass("light-mode");
+    scalar.mockImplementation(() => null);
   });
 
   it("switchesWhenTheReaderChangesTheTheme", async () => {

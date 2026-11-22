@@ -35,6 +35,17 @@ describe("the API reference's document", () => {
     expect((await (await openapi()).json()).servers[0].url).toBe("https://query.bibleget.io/dev");
   });
 
+  it("anEmptyPublicAddressFallsBackToTheApisOwn", async () => {
+    process.env.BIBLEGET_API_PUBLIC_URL = "";
+    vi.stubGlobal("fetch", vi.fn(async () => Response.json(doc)));
+    expect((await (await openapi()).json()).servers[0].url).toBe("https://api.test/dev");
+  });
+
+  it("answers502WhenTheBodyCannotBeRead", async () => {
+    vi.stubGlobal("fetch", vi.fn(async () => new Response("not json", { status: 200, headers: { "content-type": "application/json" } })));
+    expect((await openapi()).status).toBe(502);
+  });
+
   it("answers502WhenTheApiCannotGiveIt", async () => {
     vi.stubGlobal("fetch", vi.fn(async () => { throw new Error("down"); }));
     expect((await openapi()).status).toBe(502);

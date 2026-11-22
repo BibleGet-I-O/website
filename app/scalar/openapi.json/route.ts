@@ -12,6 +12,13 @@ export async function GET() {
     return Response.json({ title: "The API could not be reached" }, { status: 502 });
   }
   if (!res.ok) return Response.json({ title: "The API's document could not be loaded" }, { status: 502 });
-  const doc = withPublicServer((await res.json()) as Record<string, unknown>, pub);
+  let body: Record<string, unknown>;
+  try {
+    body = (await res.json()) as Record<string, unknown>;
+  } catch {
+    // The connection closed after the headers, or the body isn't JSON.
+    return Response.json({ title: "The API's document could not be read" }, { status: 502 });
+  }
+  const doc = withPublicServer(body, pub);
   return Response.json(doc, { headers: { "cache-control": "public, max-age=300" } });
 }

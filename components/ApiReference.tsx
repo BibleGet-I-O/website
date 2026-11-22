@@ -39,11 +39,18 @@ export default function ApiReference({ locale, title }: { locale: string; title:
   const dark = useSyncExternalStore(subscribe, isDark, () => null);
   // Scalar marks the body light-mode or dark-mode; leaving the reference, the rest of the site has its own scheme.
   useEffect(() => () => document.body.classList.remove("light-mode", "dark-mode"), []);
+  // A theme change restyles the same Scalar (its light-mode / dark-mode body class) rather than replacing it, which
+  // would lose a test request being edited, and the key typed for it.
+  useEffect(() => {
+    if (dark === null) return;
+    document.body.classList.toggle("dark-mode", dark);
+    document.body.classList.toggle("light-mode", !dark);
+  }, [dark]);
   if (dark === null) return <div className={styles.reference} />;
   return (
     <div className={styles.reference}>
       <ApiReferenceReact
-        key={`${dark ? "dark" : "light"}-${locale}`}
+        key={locale}
         configuration={{
           url: "/scalar/openapi.json",
           theme: "default",

@@ -14,7 +14,8 @@ export function apiBase(): string | null {
 
 /** The API's public address, shown to readers of the reference as the server to call. */
 export function apiPublicUrl(): string | null {
-  const url = process.env.BIBLEGET_API_PUBLIC_URL ?? process.env.BIBLEGET_API_URL;
+  // An empty value (a blank line copied from .env.example) counts as unset.
+  const url = process.env.BIBLEGET_API_PUBLIC_URL || process.env.BIBLEGET_API_URL;
   return url ? trim(url) : null;
 }
 
