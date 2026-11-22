@@ -73,7 +73,12 @@
   "Notice": {
     "signIn": "Diese Ausgabe zeigt Besuchern die ersten 30 Verse jedes Kapitels. Melden Sie sich an, um das ganze Kapitel zu lesen.",
     "verify": "Bestätigen Sie Ihre E-Mail-Adresse, um das ganze Kapitel zu lesen: Wir haben Ihnen bei der Registrierung einen Link gesendet. Melden Sie sich danach ab und wieder an.",
-    "unavailable": "Der vollständige Text dieser Ausgabe ist derzeit nicht verfügbar: Es werden nur die ersten 30 Verse jedes Kapitels angezeigt."
+    "unavailable": "Der vollständige Text dieser Ausgabe ist derzeit nicht verfügbar: Es werden nur die ersten 30 Verse jedes Kapitels angezeigt.",
+    "search": {
+      "signIn": "In dieser Ausgabe sehen Besucher die ersten 30 Treffer. Melden Sie sich an, um alle zu sehen.",
+      "verify": "Bestätigen Sie Ihre E-Mail-Adresse, um alle Treffer in dieser Ausgabe zu sehen: Wir haben Ihnen bei der Registrierung einen Link gesendet. Melden Sie sich danach ab und wieder an.",
+      "unavailable": "Der vollständige Text dieser Ausgabe ist derzeit nicht verfügbar: Es werden nur die ersten 30 Treffer angezeigt."
+    }
   },
   "Error": {
     "title": "Etwas ist schiefgelaufen",
@@ -112,10 +117,8 @@
     }
   },
   "Theme": {
-    "label": "Design",
-    "system": "System",
-    "light": "Hell",
-    "dark": "Dunkel"
+    "toDark": "Zum dunklen Design wechseln",
+    "toLight": "Zum hellen Design wechseln"
   },
   "Header": {
     "openMenu": "Menü öffnen",
@@ -165,5 +168,38 @@
     "changed": "Diese Verknüpfung hat sich inzwischen geändert.",
     "reload": "Kapitel neu laden",
     "capped": "Urheberrechtlich geschützte Ausgaben zeigen hier nur ihre ersten 30 Verse: Bestätigen Sie Ihre E-Mail-Adresse und melden Sie sich erneut an, um sie vollständig zu prüfen."
+  },
+  "Search": {
+    "heading": "In {edition} suchen",
+    "metaTitle": "Suche · {edition}",
+    "modes": {
+      "keyword": "Stichwort",
+      "semantic": "Semantisch",
+      "hybrid": "Hybrid"
+    },
+    "results": "{count, plural, one {# Treffer} other {# Treffer}}",
+    "range": "{from, number}–{to, number} von {total, number}",
+    "capped": "{shown, number} von {total, number} Treffern",
+    "pages": "Ergebnisseiten",
+    "previous": "Zurück",
+    "next": "Weiter",
+    "refused": "Versuchen Sie ein längeres oder selteneres Wort.",
+    "semanticUnavailable": "Die semantische Suche ist gerade nicht verfügbar.",
+    "tryKeyword": "Stattdessen nach diesen Wörtern suchen",
+    "tooMany": "Zu viele Suchanfragen; bitte in einer Minute erneut versuchen.",
+    "noResults": "Keine Treffer für „{q}“.",
+    "empty": "Geben Sie ein Wort oder eine Frage ein, um in dieser Ausgabe zu suchen.",
+    "back": "Zurück zum Lesen",
+    "open": "Suchen",
+    "searching": "Suche in {edition}",
+    "kind": "Art der Suche",
+    "keywordLabel": "Gesuchte Wörter",
+    "questionLabel": "Ihre Frage",
+    "exact": "Genaue Wörter",
+    "submit": "Suchen",
+    "suggestions": "Vorschläge",
+    "noMore": "Keine weiteren Treffer.",
+    "firstPage": "Erste Seite",
+    "refusedQuestion": "Versuchen Sie, Ihre Frage anders zu formulieren."
   }
 }

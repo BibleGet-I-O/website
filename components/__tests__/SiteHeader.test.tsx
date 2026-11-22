@@ -11,7 +11,7 @@ describe("SiteHeader", () => {
   it("linksHomeWithTheBibleGetLogo", () => {
     render(
       <NextIntlClientProvider locale="en" messages={en}>
-        <SiteHeader auth={<span>auth</span>} theme="system" />
+        <SiteHeader auth={<span>auth</span>} />
       </NextIntlClientProvider>,
     );
     const home = screen.getByRole("link", { name: "BibleGet" });
@@ -25,20 +25,20 @@ describe("SiteHeader", () => {
   it("foldsLanguageThemeAndSignInIntoTheMenu", () => {
     render(
       <NextIntlClientProvider locale="en" messages={en}>
-        <SiteHeader auth={<span>auth</span>} theme="dark" />
+        <SiteHeader auth={<span>auth</span>} />
       </NextIntlClientProvider>,
     );
     expect(screen.getByRole("button", { name: "Open menu" })).toHaveAttribute("aria-expanded", "false");
     const nav = within(screen.getByRole("navigation", { hidden: true }));
     expect(nav.getByRole("button", { name: "Language", hidden: true })).toBeInTheDocument();
-    expect(nav.getByRole("combobox", { name: "Theme", hidden: true })).toHaveValue("dark");
+    expect(nav.getByRole("button", { name: /Switch to (dark|light) theme/, hidden: true })).toBeInTheDocument();
     expect(nav.getByText("auth")).toBeInTheDocument();
   });
 
   it("linksTheApiReference", () => {
     render(
       <NextIntlClientProvider locale="en" messages={en}>
-        <SiteHeader auth={<span>auth</span>} theme="system" />
+        <SiteHeader auth={<span>auth</span>} />
       </NextIntlClientProvider>,
     );
     const nav = within(screen.getByRole("navigation", { hidden: true }));

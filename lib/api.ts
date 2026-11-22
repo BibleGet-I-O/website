@@ -32,6 +32,19 @@ function keyFor(access: Access): string {
 
 const UNAVAILABLE_4XX = new Set([401, 403, 408, 429]);
 
+/**
+ * The endpoint's answer as it is, for callers that read its status themselves (search: 422 and 503 mean something
+ * to the reader). Only an unreachable endpoint or a missing configuration throws (ApiUnavailable).
+ */
+export async function apiResponse(path: string, access: Access, init: FetchInit = { cache: "no-store" }): Promise<Response> {
+  try {
+    return await fetch(`${baseUrl()}${path}`, { ...init, headers: { Accept: "application/json", "X-Api-Key": keyFor(access) } });
+  } catch (e) {
+    if (e instanceof ApiUnavailable) throw e;
+    throw new ApiUnavailable(e instanceof Error ? e.message : "network error");
+  }
+}
+
 async function request(path: string, access: Access, init: FetchInit): Promise<unknown> {
   return (await requestWithHeaders(path, access, init)).body;
 }

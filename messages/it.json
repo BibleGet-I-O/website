@@ -73,7 +73,12 @@
   "Notice": {
     "signIn": "Questa edizione mostra ai visitatori i primi 30 versetti di ogni capitolo. Accedi per leggere il capitolo intero.",
     "verify": "Verifica il tuo indirizzo email per leggere il capitolo intero: ti abbiamo inviato un link al momento della registrazione. Poi esci e accedi di nuovo.",
-    "unavailable": "Il testo completo di questa edizione non è disponibile al momento: sono mostrati solo i primi 30 versetti di ogni capitolo."
+    "unavailable": "Il testo completo di questa edizione non è disponibile al momento: sono mostrati solo i primi 30 versetti di ogni capitolo.",
+    "search": {
+      "signIn": "In questa edizione i visitatori vedono i primi 30 risultati. Accedi per vederli tutti.",
+      "verify": "Verifica il tuo indirizzo email per vedere tutti i risultati in questa edizione: ti abbiamo inviato un link al momento della registrazione. Poi esci e accedi di nuovo.",
+      "unavailable": "Il testo completo di questa edizione non è disponibile al momento: sono mostrati solo i primi 30 risultati."
+    }
   },
   "Error": {
     "title": "Qualcosa è andato storto",
@@ -112,10 +117,8 @@
     }
   },
   "Theme": {
-    "label": "Tema",
-    "system": "Sistema",
-    "light": "Chiaro",
-    "dark": "Scuro"
+    "toDark": "Passa al tema scuro",
+    "toLight": "Passa al tema chiaro"
   },
   "Header": {
     "openMenu": "Apri il menu",
@@ -165,5 +168,38 @@
     "changed": "Questo collegamento è cambiato nel frattempo.",
     "reload": "Ricarica il capitolo",
     "capped": "Qui le edizioni protette da copyright mostrano solo i primi 30 versetti: verifica il tuo indirizzo email, poi accedi di nuovo, per rivederle per intero."
+  },
+  "Search": {
+    "heading": "Cerca in {edition}",
+    "metaTitle": "Ricerca · {edition}",
+    "modes": {
+      "keyword": "Parole",
+      "semantic": "Semantica",
+      "hybrid": "Ibrida"
+    },
+    "results": "{count, plural, one {# risultato} other {# risultati}}",
+    "range": "{from, number}–{to, number} di {total, number}",
+    "capped": "{shown, number} di {total, number} risultati",
+    "pages": "Pagine dei risultati",
+    "previous": "Precedente",
+    "next": "Successiva",
+    "refused": "Prova una parola più lunga o meno comune.",
+    "semanticUnavailable": "La ricerca semantica non è disponibile in questo momento.",
+    "tryKeyword": "Cerca invece queste parole",
+    "tooMany": "Troppe ricerche; riprova tra un minuto.",
+    "noResults": "Nessun risultato per «{q}».",
+    "empty": "Scrivi una parola o una domanda per cercare in questa edizione.",
+    "back": "Torna alla lettura",
+    "open": "Cerca",
+    "searching": "Ricerca in {edition}",
+    "kind": "Tipo di ricerca",
+    "keywordLabel": "Parole da trovare",
+    "questionLabel": "La tua domanda",
+    "exact": "Parole esatte",
+    "submit": "Cerca",
+    "suggestions": "Suggerimenti",
+    "noMore": "Non ci sono altri risultati.",
+    "firstPage": "Prima pagina",
+    "refusedQuestion": "Prova a riformulare la domanda."
   }
 }

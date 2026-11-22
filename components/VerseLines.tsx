@@ -1,5 +1,5 @@
 import { renderVerse } from "@/lib/formatted";
-import { printedLabel } from "@/lib/placement";
+import { printedLabel, verseAnchor } from "@/lib/placement";
 import type { VerseRow } from "@/lib/types";
 
 const labelClass = "shrink-0 pt-1 text-right font-sans text-xs text-slate-500 dark:text-slate-400";
@@ -30,13 +30,14 @@ export function Headings({ titles, compact = false }: { titles: string[]; compac
  * `headings={false}` leaves the headings before the verse to the caller (the interlinear gives them a row);
  * `compact` narrows the number's margin on a phone (three columns side by side).
  */
-export function VerseLine({ row, chapter, headings = true, compact = false }: { row: VerseRow; chapter: number; headings?: boolean; compact?: boolean }) {
+export function VerseLine({ row, chapter, headings = true, compact = false, anchor = false }: { row: VerseRow; chapter: number; headings?: boolean; compact?: boolean; anchor?: boolean }) {
   const mid = row.titlePosition != null;
   const m = margin(compact);
   return (
     <>
       {headings && <Headings titles={headingsBefore(row)} compact={compact} />}
-      <p data-testid="verse-line" className={`flex ${m.gap}`}>
+      {/* `anchor`: this line is the one a link to the verse (#v3.16) lands on; one side of a page only. */}
+      <p data-testid="verse-line" id={anchor ? verseAnchor(row) : undefined} className={`flex ${m.gap}${anchor ? " verse-target" : ""}`}>
         <span className={`${m.label} ${labelClass}`}>{printedLabel(row, chapter)}</span>
         <span className="bg-text bg-compact min-w-0">
           {renderVerse({ label: null, text: row.text, titles: mid ? row.titles : [], titlePosition: row.titlePosition, headingClass: midHeadingClass })}

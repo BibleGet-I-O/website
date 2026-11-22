@@ -203,4 +203,19 @@ describe("Spread", () => {
       expect(tags.map((e) => e.getAttribute("title"))).toEqual(["Septuagint", "Masoretic text"]);
     });
   });
+  it("theMainSidesVersesCanBeLinkedToAndNoOtherSideRepeatsTheirIds", () => {
+    // Esther's two texts are a Spread of one edition: a search result links to the main side's verse.
+    const rows = buildRows([row(5, 1), row(5, 2)], [[row(5, 1), row(5, 2)]], 47);
+    const { container } = render(wrap(<Spread sides={[A, B]} rows={rows} chapter={5} />));
+    expect(container.querySelectorAll("#v5\\.1")).toHaveLength(1);
+    expect(screen.getAllByTestId("cell-a")[0].querySelector("#v5\\.1")).not.toBeNull();
+  });
+  it("aVerseOnlyTheSecondSidePrintsCarriesItsOwnId", () => {
+    // Esther: a verse only the Hebrew text prints has no Greek cell; its Hebrew line is where a link lands.
+    const rows = buildRows([row(5, 1)], [[row(5, 1), row(5, 2)]], 47);
+    const { container } = render(wrap(<Spread sides={[A, B]} rows={rows} chapter={5} />));
+    expect(container.querySelectorAll("#v5\\.1")).toHaveLength(1);
+    expect(container.querySelectorAll("#v5\\.2")).toHaveLength(1);
+    expect(screen.getAllByTestId("cell-b")[1].querySelector("#v5\\.2")).not.toBeNull();
+  });
 });
