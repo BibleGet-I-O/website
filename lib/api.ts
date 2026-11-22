@@ -231,6 +231,7 @@ export function bookBySlug(index: EditionIndex, slug: string): Book | undefined 
 }
 
 type RawRow = {
+  univbooknum?: number | string;
   chapter: number;
   verse: number;
   verse_label?: string | null;
@@ -276,6 +277,30 @@ function quoteRequest(p: ChapterParams, query: string): Promise<{ results?: RawR
   if (p.tradition) qs.set("text_tradition", p.tradition);
   const init: FetchInit = p.access === "reader" ? { cache: "no-store" } : { next: { revalidate: 3600 } };
   return request(`/quote?${qs}`, p.access, init) as Promise<{ results?: RawRow[]; errors?: unknown[] }>;
+}
+
+/** A verse of a passage, with the book it is in (a reference can span books). */
+export type PassageRow = VerseRow & { bookNum: number };
+
+/**
+ * The verses of a Bible reference as the reader typed it (`Jonah 1:1-2:2;3:2`, in any language and notation the
+ * endpoint reads), in edition numbering. `readable` is false when the endpoint could not read it (400/422, or no
+ * verses); `capped` when it cut this edition's passage at the copyright cap.
+ */
+export async function getPassage(p: { sigla: string; query: string; access: Access }): Promise<{ rows: PassageRow[]; capped: boolean; readable: boolean }> {
+  const qs = new URLSearchParams({ query: p.query, version: p.sigla, numbering: "edition", return: "json" });
+  const init: FetchInit = p.access === "reader" ? { cache: "no-store" } : { next: { revalidate: 3600 } };
+  let body: { results?: RawRow[]; notices?: { code?: string; version?: string }[] };
+  try {
+    body = (await request(`/quote?${qs}`, p.access, init)) as typeof body;
+  } catch (e) {
+    if (e instanceof NotFound) return { rows: [], capped: false, readable: false };
+    throw e;
+  }
+  const results = body.results ?? [];
+  if (results.length === 0) return { rows: [], capped: false, readable: false };
+  const capped = (body.notices ?? []).some((n) => n.code === "VERSES_CAPPED" && n.version === p.sigla);
+  return { rows: results.map((r) => ({ ...toRow(r), bookNum: Number(r.univbooknum ?? 0) })), capped, readable: true };
 }
 
 export async function getChapter(p: ChapterParams): Promise<Chapter> {
