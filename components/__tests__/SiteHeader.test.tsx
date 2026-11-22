@@ -34,4 +34,14 @@ describe("SiteHeader", () => {
     expect(nav.getByRole("button", { name: /Switch to (dark|light) theme/, hidden: true })).toBeInTheDocument();
     expect(nav.getByText("auth")).toBeInTheDocument();
   });
+
+  it("linksTheApiReference", () => {
+    render(
+      <NextIntlClientProvider locale="en" messages={en}>
+        <SiteHeader auth={<span>auth</span>} />
+      </NextIntlClientProvider>,
+    );
+    const nav = within(screen.getByRole("navigation", { hidden: true }));
+    expect(nav.getByRole("link", { name: "API", hidden: true })).toHaveAttribute("href", "/en/scalar");
+  });
 });
