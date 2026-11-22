@@ -3,7 +3,7 @@ import { act, fireEvent, render, screen } from "@testing-library/react";
 import { renderToString } from "react-dom/server";
 import { NextIntlClientProvider } from "next-intl";
 import en from "@/messages/en.json";
-import { SearchForm, SearchLens } from "@/components/SearchForm";
+import { SearchForm, SearchLens, SearchPanel, SearchPanelProvider } from "@/components/SearchForm";
 
 const wrap = (ui: React.ReactNode) => <NextIntlClientProvider locale="en" messages={en}>{ui}</NextIntlClientProvider>;
 const props = { locale: "en", edition: "NABRE", editionName: "New American Bible", from: "/en/read/nabre/john/3" };
@@ -26,23 +26,65 @@ const typeAndWait = async (input: HTMLElement, value: string) => {
   });
 };
 
+// The lens sits in a row; the panel it opens follows the row, at its full width.
+const lensRow = () =>
+  wrap(
+    <SearchPanelProvider {...props}>
+      <div role="toolbar" aria-label="Reader">
+        <SearchLens />
+      </div>
+      <SearchPanel />
+    </SearchPanelProvider>,
+  );
+
 describe("SearchLens", () => {
-  it("theLensOpensTheFormAndEscapeCloses", () => {
-    render(wrap(<SearchLens {...props} />));
+  it("theLensOpensAPanelBelowItsRowAndFocusesTheField", () => {
+    render(lensRow());
     const lens = screen.getByRole("button", { name: "Search" });
     expect(lens).toHaveAttribute("aria-expanded", "false");
+    expect(screen.queryByRole("search")).toBeNull();
     fireEvent.click(lens);
     expect(lens).toHaveAttribute("aria-expanded", "true");
+    const panel = document.getElementById(lens.getAttribute("aria-controls")!)!;
+    const toolbar = screen.getByRole("toolbar");
+    expect(toolbar.contains(panel)).toBe(false);
+    expect(toolbar.nextElementSibling).toBe(panel);
+    expect(panel.querySelector("form[role=search]")).not.toBeNull();
+    expect(screen.getByRole("combobox", { name: "Words to find" })).toHaveFocus();
+  });
+
+  it("aTapOutsideLeavesThePanelOpen", () => {
+    render(lensRow());
+    fireEvent.click(screen.getByRole("button", { name: "Search" }));
+    fireEvent.pointerDown(document.body);
     expect(screen.getByRole("search")).toBeInTheDocument();
+  });
+
+  it("theCloseButtonAndEscapeCloseThePanel", () => {
+    render(lensRow());
+    const lens = screen.getByRole("button", { name: "Search" });
+    fireEvent.click(lens);
+    fireEvent.click(screen.getByRole("button", { name: "Close search" }));
+    expect(screen.queryByRole("search")).toBeNull();
+    expect(lens).toHaveFocus();
+    fireEvent.click(lens);
     fireEvent.keyDown(document, { key: "Escape" });
     expect(screen.queryByRole("search")).toBeNull();
     expect(lens).toHaveFocus();
+  });
+
+  it("theLensClosesWhatItOpened", () => {
+    render(lensRow());
+    const lens = screen.getByRole("button", { name: "Search" });
+    fireEvent.click(lens);
+    fireEvent.click(lens);
+    expect(screen.queryByRole("search")).toBeNull();
   });
 });
 
 describe("SearchLens without JavaScript", () => {
   it("isALinkToTheSearchPageUntilTheScriptRuns", () => {
-    const html = renderToString(wrap(<SearchLens {...props} />));
+    const html = renderToString(lensRow());
     expect(html).toContain('href="/en/read/nabre/search?from=%2Fen%2Fread%2Fnabre%2Fjohn%2F3"');
     expect(html).toContain('aria-label="Search"');
     expect(html).not.toContain("<button");

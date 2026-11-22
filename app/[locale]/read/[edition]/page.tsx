@@ -3,7 +3,7 @@ import { getTranslations, setRequestLocale } from "next-intl/server";
 import { notFound, redirect } from "next/navigation";
 import { routing } from "@/i18n/routing";
 import { Link } from "@/i18n/navigation";
-import { SearchLens } from "@/components/SearchForm";
+import { SearchLens, SearchPanel, SearchPanelProvider } from "@/components/SearchForm";
 import { editionSlug } from "@/lib/slug";
 import { getEditions, getIndex, NotFound, slugFor } from "@/lib/api";
 import type { Book } from "@/lib/types";
@@ -72,15 +72,18 @@ export default async function BooksPage({ params, searchParams }: { params: Prom
 
   return (
     <main className="mx-auto w-full max-w-3xl p-4 sm:p-6">
-      <div className="flex items-center justify-between gap-4">
-        {/* Back to the shelf, as in the Martyrology reader. */}
-        <Link href="/" className="text-sm text-slate-600 underline dark:text-slate-400">
-          <span aria-hidden>⟵ </span>
-          {t("allEditions")}
-        </Link>
-        {/* Search runs over the whole edition, so it is offered before a chapter is chosen. */}
-        <SearchLens locale={locale} edition={edition.sigla} editionName={edition.fullname} from={`/${locale}${base}${query}`} />
-      </div>
+      <SearchPanelProvider locale={locale} edition={edition.sigla} editionName={edition.fullname} from={`/${locale}${base}${query}`}>
+        <div className="flex items-center justify-between gap-4">
+          {/* Back to the shelf, as in the Martyrology reader. */}
+          <Link href="/" className="text-sm text-slate-600 underline dark:text-slate-400">
+            <span aria-hidden>⟵ </span>
+            {t("allEditions")}
+          </Link>
+          {/* Search runs over the whole edition, so it is offered before a chapter is chosen. */}
+          <SearchLens />
+        </div>
+        <SearchPanel className="mt-3" />
+      </SearchPanelProvider>
       <h1 className="mt-2 text-3xl font-semibold">{edition.fullname}</h1>
       <p className="text-slate-600 dark:text-slate-400">{[edition.year, edition.copyrightHolder].filter(Boolean).join(" · ")}</p>
       {groups.map((g) => (

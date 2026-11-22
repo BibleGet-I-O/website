@@ -289,6 +289,14 @@ describe("ReaderBar", () => {
     expect(form.querySelector("input[name=from]")).toHaveAttribute("value", "/en/read/nabre/tobit/3?with=DRB");
   });
 
+  it("theSearchPanelOpensBelowTheToolbar", () => {
+    render(wrap(<ReaderBar {...props} />));
+    fireEvent.click(screen.getByRole("button", { name: "Search" }));
+    const toolbar = screen.getByRole("toolbar");
+    expect(toolbar.querySelector("form[role=search]")).toBeNull();
+    expect(toolbar.nextElementSibling?.querySelector("form[role=search]")).not.toBeNull();
+  });
+
   it("theWayBackKeepsTheComparison", () => {
     const { container } = render(wrap(<ReaderBar {...props} withSiglas={["DRB"]} view="interlinear" />));
     fireEvent.click(screen.getByRole("button", { name: "Search" }));

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useId, useRef, useState, useSyncExternalStore, type KeyboardEvent } from "react";
+import { createContext, useContext, useEffect, useId, useRef, useState, useSyncExternalStore, type KeyboardEvent, type ReactNode, type RefObject } from "react";
 import { useTranslations } from "next-intl";
 import { editionSlug } from "@/lib/slug";
 import { SEARCH_MODES, type SearchMode } from "@/lib/search-modes";
@@ -103,19 +103,23 @@ export function SearchForm({ locale, edition, editionName, from, initial }: Form
 
   return (
     <form role="search" action={`/${locale}/read/${editionSlug(edition)}/search`} method="get" className="relative flex flex-col gap-2 text-sm">
-      <p className="font-semibold">{t("searching", { edition: editionName })}</p>
-      <div className="flex items-start gap-2">
-        <fieldset className="flex flex-wrap gap-3">
+      {/* pr-8: room for the panel's close button. */}
+      <p className="pr-8 font-semibold">{t("searching", { edition: editionName })}</p>
+      <div className="flex items-center gap-2">
+        {/* A segmented control: radio buttons underneath (keyboard, screen readers and no-JS forms as before). */}
+        <fieldset className="grid min-w-0 flex-1 grid-cols-3 divide-x divide-slate-300 overflow-hidden rounded border border-slate-300 dark:divide-slate-700 dark:border-slate-700">
           <legend className="sr-only">{t("kind")}</legend>
           {SEARCH_MODES.map((m) => (
-            <label key={m} className="flex items-center gap-1">
-              <input type="radio" name="mode" value={m} checked={mode === m} onChange={() => setMode(m)} />
-              {t(`modes.${m}`)}
+            <label key={m} className="min-w-0 cursor-pointer">
+              <input type="radio" name="mode" value={m} checked={mode === m} onChange={() => setMode(m)} className="peer sr-only" />
+              <span className="block truncate px-2 py-1.5 text-center hover:bg-slate-100 peer-checked:bg-red-700 peer-checked:text-white peer-focus-visible:outline peer-focus-visible:outline-2 peer-focus-visible:-outline-offset-2 peer-focus-visible:outline-blue-600 dark:hover:bg-slate-800 dark:peer-checked:bg-red-600">
+                {t(`modes.${m}`)}
+              </span>
             </label>
           ))}
         </fieldset>
         {/* What each kind of search is for: a native disclosure, so it opens without JavaScript too. */}
-        <details className="group ml-auto shrink-0">
+        <details className="group shrink-0">
           <summary aria-label={t("about")} title={t("about")}
             className="flex h-6 w-6 cursor-pointer list-none items-center justify-center rounded-full border border-slate-400 text-xs font-semibold text-slate-600 hover:bg-slate-100 dark:border-slate-600 dark:text-slate-300 dark:hover:bg-slate-800 [&::-webkit-details-marker]:hidden">
             i
@@ -190,17 +194,70 @@ export function SearchForm({ locale, edition, editionName, from, initial }: Form
 
 const noSubscribe = () => () => {};
 
+type PanelState = {
+  form: FormProps;
+  open: boolean;
+  setOpen: (open: boolean | ((o: boolean) => boolean)) => void;
+  panelId: string;
+  lensRef: RefObject<HTMLButtonElement | null>;
+};
+const PanelContext = createContext<PanelState | null>(null);
+
+function usePanel(): PanelState {
+  const state = useContext(PanelContext);
+  if (!state) throw new Error("SearchLens and SearchPanel must be inside a SearchPanelProvider");
+  return state;
+}
+
 /**
- * The reader bar's magnifying glass: opens the search form; Escape or a click outside closes it. Until the script
- * runs (or without JavaScript), it is a link to the results page, which holds the same form.
+ * The search over one edition as a lens in a row and a panel below that row: wrap the row (holding SearchLens)
+ * and SearchPanel in this, so the panel opens at the row's full width, between it and the text.
  */
-export function SearchLens(props: FormProps) {
+export function SearchPanelProvider({ children, ...form }: FormProps & { children: ReactNode }) {
+  const [open, setOpen] = useState(false);
+  const panelId = useId();
+  const lensRef = useRef<HTMLButtonElement>(null);
+  return <PanelContext.Provider value={{ form, open, setOpen, panelId, lensRef }}>{children}</PanelContext.Provider>;
+}
+
+/**
+ * The magnifying glass: opens and closes the search panel below its row. Until the script runs (or without
+ * JavaScript), it is a link to the results page, which holds the same form.
+ */
+export function SearchLens() {
   const t = useTranslations("Search");
   const scripted = useSyncExternalStore(noSubscribe, () => true, () => false);
-  const [open, setOpen] = useState(false);
-  const rootRef = useRef<HTMLDivElement>(null);
-  const buttonRef = useRef<HTMLButtonElement>(null);
-  const panelId = useId();
+  const { form, open, setOpen, panelId, lensRef } = usePanel();
+  const lensIcon = (
+    <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <circle cx="11" cy="11" r="7" />
+      <path d="m20 20-3.5-3.5" />
+    </svg>
+  );
+  if (!scripted) {
+    return (
+      <a href={`/${form.locale}/read/${editionSlug(form.edition)}/search?${new URLSearchParams({ from: form.from })}`} aria-label={t("open")}
+        className="inline-block rounded p-2 text-slate-700 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800">
+        {lensIcon}
+      </a>
+    );
+  }
+  return (
+    <button ref={lensRef} type="button" aria-label={t("open")} aria-expanded={open} aria-controls={open ? panelId : undefined}
+      className={`rounded p-2 text-slate-700 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800 ${open ? "bg-slate-100 dark:bg-slate-800" : ""}`}
+      onClick={() => setOpen((o) => !o)}>
+      {lensIcon}
+    </button>
+  );
+}
+
+/**
+ * The search form, open below the lens's row at its full width. It stays open while the reader scrolls or taps
+ * the text; the lens, its close button or Escape closes it, and the focus goes back to the lens.
+ */
+export function SearchPanel({ className = "" }: { className?: string }) {
+  const t = useTranslations("Search");
+  const { form, open, setOpen, panelId, lensRef } = usePanel();
   const panelRef = useRef<HTMLDivElement>(null);
 
   // Opened, the form's field takes the focus, so typing starts at once.
@@ -213,45 +270,26 @@ export function SearchLens(props: FormProps) {
     const onKey = (e: globalThis.KeyboardEvent) => {
       if (e.key !== "Escape") return;
       setOpen(false);
-      buttonRef.current?.focus();
-    };
-    const onPointer = (e: PointerEvent) => {
-      if (rootRef.current && !rootRef.current.contains(e.target as Node)) setOpen(false);
+      lensRef.current?.focus();
     };
     document.addEventListener("keydown", onKey);
-    document.addEventListener("pointerdown", onPointer);
-    return () => {
-      document.removeEventListener("keydown", onKey);
-      document.removeEventListener("pointerdown", onPointer);
-    };
-  }, [open]);
+    return () => document.removeEventListener("keydown", onKey);
+  }, [open, setOpen, lensRef]);
 
-  const lensIcon = (
-    <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-      <circle cx="11" cy="11" r="7" />
-      <path d="m20 20-3.5-3.5" />
-    </svg>
-  );
-  if (!scripted) {
-    return (
-      <a href={`/${props.locale}/read/${editionSlug(props.edition)}/search?${new URLSearchParams({ from: props.from })}`} aria-label={t("open")}
-        className="inline-block rounded p-2 text-slate-700 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800">
-        {lensIcon}
-      </a>
-    );
-  }
+  if (!open) return null;
   return (
-    <div ref={rootRef} className="relative">
-      <button ref={buttonRef} type="button" aria-label={t("open")} aria-expanded={open} aria-controls={open ? panelId : undefined}
-        className="rounded p-2 text-slate-700 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800"
-        onClick={() => setOpen((o) => !o)}>
-        {lensIcon}
-      </button>
-      {open && (
-        <div ref={panelRef} id={panelId} className="absolute right-0 top-full z-50 mt-2 w-72 rounded border border-slate-200 bg-white p-3 shadow-lg sm:w-80 dark:border-slate-800 dark:bg-slate-950">
-          <SearchForm {...props} />
-        </div>
-      )}
+    <div ref={panelRef} id={panelId} className={`${className} rounded border border-slate-200 bg-white p-3 dark:border-slate-800 dark:bg-slate-950`}>
+      <div className="relative">
+        <button type="button" aria-label={t("close")} title={t("close")}
+          className="absolute right-0 top-0 rounded px-1.5 text-lg leading-none text-slate-600 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800"
+          onClick={() => {
+            setOpen(false);
+            lensRef.current?.focus();
+          }}>
+          ×
+        </button>
+        <SearchForm {...form} />
+      </div>
     </div>
   );
 }

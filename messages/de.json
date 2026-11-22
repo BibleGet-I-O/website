@@ -216,6 +216,7 @@
       "keyword": "Findet die Verse, die die eingegebenen Wörter enthalten, in der Sprache der Ausgabe. Wählen Sie „Genaue Wortfolge“, um diese Wörter zusammen und genau so zu finden, wie sie geschrieben sind.",
       "semantic": "Findet Verse zu einem Thema oder Gedanken, auch wenn sie ihn mit anderen Worten ausdrücken: Synonyme, Umschreibungen und Fragen funktionieren gut, ebenso ein Wort oder eine Frage in einer anderen Sprache („enemy“ findet „Feind“ in einer deutschen Ausgabe).",
       "reference": "Zeigt genau die Verse einer Bibelstelle, z. B. Jona 1,1-2,2; 3,2, mit den Buchnamen und der Schreibweise Ihrer Sprache."
-    }
+    },
+    "close": "Suche schließen"
   }
 }
