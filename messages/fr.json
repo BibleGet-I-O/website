@@ -115,10 +115,8 @@
     }
   },
   "Theme": {
-    "label": "Thème",
-    "system": "Système",
-    "light": "Clair",
-    "dark": "Sombre"
+    "toDark": "Passer au thème sombre",
+    "toLight": "Passer au thème clair"
   },
   "Header": {
     "openMenu": "Ouvrir le menu",

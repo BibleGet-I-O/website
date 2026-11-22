@@ -115,10 +115,8 @@
     }
   },
   "Theme": {
-    "label": "Design",
-    "system": "System",
-    "light": "Hell",
-    "dark": "Dunkel"
+    "toDark": "Zum dunklen Design wechseln",
+    "toLight": "Zum hellen Design wechseln"
   },
   "Header": {
     "openMenu": "Menü öffnen",
