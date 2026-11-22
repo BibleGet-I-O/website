@@ -8,8 +8,9 @@ export async function ReferenceResults({ groups, hrefFor, bookName, lang }: { gr
   const t = await getTranslations("Search");
   return (
     <div className="space-y-6">
-      {groups.map((g) => (
-        <section key={`${g.bookNum}:${g.chapter}:${g.rows[0].verse}`}>
+      {groups.map((g, i) => (
+        // A reference can come back to the same place (Jonah 1:1; John 1:1; Jonah 1:1): its position keeps each apart.
+        <section key={`${i}:${g.bookNum}:${g.chapter}`}>
           <h2 className="mb-2 text-xl font-semibold">
             <Link href={hrefFor(g)} className="hover:underline">{t("passageHeading", { book: bookName(g.bookNum), chapter: g.chapter })}</Link>
           </h2>

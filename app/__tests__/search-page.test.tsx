@@ -183,6 +183,21 @@ describe("search page", () => {
     expect(screen.getByRole("link", { name: "Jonah 1" })).toHaveAttribute("href", "/en/read/nabre/jonah/1?with=DRB&view=interlinear#v1.1");
   });
 
+  it("headingLinksDoNotKeepAnEstherTextThePassageWasNotFetchedIn", async () => {
+    getPassage.mockResolvedValue({ readable: true, capped: false, partial: false, rows: [row(39, 1, 1, "x")] });
+    await page({ mode: "reference", q: "Jonah 1:1", from: "/en/read/nabre/esther/1?with=DRB&tradition=HEBREW" });
+    expect(screen.getByRole("link", { name: "Jonah 1" })).toHaveAttribute("href", "/en/read/nabre/jonah/1?with=DRB#v1.1");
+  });
+
+  it("aReferenceThatComesBackToTheSamePlaceRendersEachPartOnce", async () => {
+    const errors = vi.spyOn(console, "error").mockImplementation(() => {});
+    getPassage.mockResolvedValue({ readable: true, capped: false, partial: false, rows: [row(39, 1, 1, "a"), row(50, 1, 1, "b"), row(39, 1, 1, "c")] });
+    await page({ mode: "reference", q: "Jonah 1:1; John 1:1; Jonah 1:1" });
+    expect(screen.getAllByRole("heading", { level: 2 }).map((h) => h.textContent)).toEqual(["Jonah 1", "John 1", "Jonah 1"]);
+    expect(errors.mock.calls.map((c) => String(c[0])).filter((m) => m.includes("same key"))).toEqual([]);
+    errors.mockRestore();
+  });
+
   it("anOldHybridLinkSearchesSemantic", async () => {
     await page({ mode: "hybrid", q: "trust" });
     expect(searchEdition).toHaveBeenCalledWith(expect.objectContaining({ mode: "semantic" }));

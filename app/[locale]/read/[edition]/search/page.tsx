@@ -182,10 +182,13 @@ export default async function SearchPage({ params, searchParams }: { params: Pro
   }
 }
 
-/** The comparison the search started from (`with`, `view`, `tradition` of the reader page), as "?…" or "". */
+/**
+ * The comparison the search started from (`with`, `view` of the reader page), as "?…" or "". Not `tradition`: the
+ * passage was fetched in the edition's default Esther text, and its links must open that text.
+ */
 function readerChoices(from: string | undefined): string {
   const qs = new URLSearchParams(from?.split("#")[0].split("?")[1] ?? "");
-  const parts = (["with", "view", "tradition"] as const)
+  const parts = (["with", "view"] as const)
     .map((k) => [k, qs.get(k)] as const)
     .filter(([, v]) => v)
     .map(([k, v]) => `${k}=${encodeURIComponent(v!).replace(/%2C/gi, ",")}`);
