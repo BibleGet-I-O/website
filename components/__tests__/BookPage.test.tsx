@@ -29,6 +29,13 @@ const row = (chapter: number, verse: number, extra: Partial<VerseRow> = {}): Ver
 beforeEach(() => push.mockReset());
 
 describe("BookPage", () => {
+  it("printsVerseNumbersInRubricRedAndKeepsTheTitleAndSectionAtTheTop", () => {
+    const { container } = render(<BookPage heading="Genesis 4" chapter={4} rows={[row(4, 1, { titles: ["Cain and Abel"] }), row(4, 2)]} />);
+    expect(container.querySelector("sup")).toHaveClass("text-red-700", "dark:text-red-400");
+    expect(container.querySelector("[data-sticky-head]")).toContainElement(screen.getByRole("heading", { level: 1, name: "Genesis 4" }));
+    expect(screen.getByRole("heading", { level: 2, name: "Cain and Abel" })).toHaveAttribute("data-head-col", "0");
+  });
+
   it("givesEachVerseAnIdToLinkTo", () => {
     const { container } = render(<BookPage heading="John 3" chapter={3} rows={[row(3, 16), row(3, 17, { segment: "a" }), row(4, 1)]} />);
     expect(container.querySelector("#v3\\.16")).toHaveTextContent("Text of 3:16.");
@@ -94,7 +101,16 @@ describe("BookPage formatting", () => {
     const { container } = render(<BookPage heading="Genesis 1" chapter={1} rows={rows} />);
     expect(container.querySelectorAll("section")).toHaveLength(1);
     expect(screen.getAllByRole("heading", { level: 2 }).map((h) => h.textContent)).toEqual(["Creation", "The Lights"]);
-    expect(container.querySelector("p")?.textContent).toContain("And it was so. The LightsAnd God made");
+    expect(container.querySelector("section p")?.textContent).toContain("And it was so. The LightsAnd God made");
+    // It feeds the running head like any other.
+    expect(screen.getByRole("heading", { level: 2, name: "The Lights" })).toHaveAttribute("data-head-col", "0");
+  });
+
+  it("headingsOpeningASectionTogetherGiveTheRunningHeadTheirLast", () => {
+    render(<BookPage heading="Genesis 1" chapter={1} rows={[row(1, 1, { titles: ["Light", "The first day"] })]} />);
+    for (const name of ["Light", "The first day"]) {
+      expect(screen.getByRole("heading", { level: 2, name })).toHaveAttribute("data-head-text", "The first day");
+    }
   });
 });
 

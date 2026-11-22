@@ -3,6 +3,7 @@ import { getTranslations } from "next-intl/server";
 import { BookPage } from "@/components/BookPage";
 import { CappedNotice, type NoticeKind } from "@/components/CappedNotice";
 import { Spread, type SpreadSide } from "@/components/Spread";
+import { StickyHead } from "@/components/StickyHead";
 import { VerseLines } from "@/components/VerseLines";
 import type { View } from "@/lib/compare";
 import type { Second } from "@/lib/interlinear";
@@ -82,10 +83,10 @@ export async function Interlinear(p: InterlinearProps) {
 
   return (
     <article>
-      <h1 className="mb-6 text-center text-3xl font-semibold">{p.heading}</h1>
       {aligned.length > 0 ? (
         <>
           <Spread
+            title={p.heading}
             sides={[p.main, ...aligned.map((o) => o.side)]}
             rows={buildRows(p.rows, aligned.map(rowsOf), p.bookNum)}
             chapter={chapter}
@@ -95,7 +96,10 @@ export async function Interlinear(p: InterlinearProps) {
           {(await Promise.all(aligned.map(capped))).map((n, i) => <Fragment key={aligned[i].side.sigla}>{n}</Fragment>)}
         </>
       ) : (
-        <VerseLines rows={p.rows} chapter={chapter} lang={p.main.lang} />
+        <>
+          <StickyHead title={p.heading} columns={[]} gridClass="" running={1} />
+          <VerseLines rows={p.rows} chapter={chapter} lang={p.main.lang} headCol={0} />
+        </>
       )}
       {below}
     </article>
