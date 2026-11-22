@@ -90,3 +90,14 @@
   .bg-compact > .bg-line:first-child { margin-top: 0; }
   .bg-compact > .bg-line:last-child { margin-bottom: 0; }
 }
+
+/* A verse a search result links to (#v3.16): below the sticky header, and briefly marked. */
+.verse-target { scroll-margin-top: 6rem; }
+.verse-target:target { animation: verse-target-fade 2.5s ease-out; border-radius: 2px; }
+@keyframes verse-target-fade {
+  from { background-color: rgb(250 204 21 / 0.45); }
+  to { background-color: transparent; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .verse-target:target { animation: none; background-color: rgb(250 204 21 / 0.3); }
+}

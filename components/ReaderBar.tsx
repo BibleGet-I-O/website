@@ -4,6 +4,7 @@ import { useTranslations } from "next-intl";
 import { useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { ReaderSettings, type SettingsChange } from "@/components/ReaderSettings";
+import { SearchLens } from "@/components/SearchForm";
 import { compareQuery, type View } from "@/lib/compare";
 import { editionSlug } from "@/lib/slug";
 import { ESTHER, type Tradition } from "@/lib/esther";
@@ -109,7 +110,19 @@ export function ReaderBar(p: ReaderBarProps) {
         ))}
       </select>
 
-      <span className="ml-auto shrink-0">
+      <span className="ml-auto flex shrink-0 items-center">
+        {/* Search the edition on screen; comparing, the first one. */}
+        <SearchLens
+          locale={p.locale}
+          edition={p.edition}
+          editionName={p.editions.find((e) => e.sigla === p.edition)?.fullname ?? p.edition}
+          from={`/${p.locale}/read/${editionSlug(p.edition)}/${p.book}/${p.chapter}${compareQuery({
+            with: p.withSiglas,
+            view: p.view,
+            tradition: p.esther || p.tradition !== undefined ? p.tradition : undefined,
+            twoTexts: p.esther && p.withSiglas.length === 0,
+          })}`}
+        />
         <ReaderSettings
           editions={p.editions}
           main={p.edition}

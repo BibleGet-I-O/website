@@ -29,6 +29,14 @@ const row = (chapter: number, verse: number, extra: Partial<VerseRow> = {}): Ver
 beforeEach(() => push.mockReset());
 
 describe("BookPage", () => {
+  it("givesEachVerseAnIdToLinkTo", () => {
+    const { container } = render(<BookPage heading="John 3" chapter={3} rows={[row(3, 16), row(3, 17, { segment: "a" }), row(4, 1)]} />);
+    expect(container.querySelector("#v3\\.16")).toHaveTextContent("Text of 3:16.");
+    expect(container.querySelector("#v3\\.17a")).not.toBeNull();
+    // A neighbour chapter's verse printed on this page keeps its own chapter in its id.
+    expect(container.querySelector("#v4\\.1")).not.toBeNull();
+  });
+
   it("rendersHeadingsWhereTheyFallAndSuperscriptVerseNumbers", () => {
     const rows = [
       row(1, 1, { titles: ["The Creation"], text: "In the beginning God created heaven, and earth." }),

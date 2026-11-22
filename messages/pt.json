@@ -71,7 +71,12 @@
   "Notice": {
     "signIn": "Esta edição mostra aos visitantes os primeiros 30 versículos de cada capítulo. Entre para ler o capítulo inteiro.",
     "verify": "Confirme seu endereço de e-mail para ler o capítulo inteiro: enviamos um link quando você se cadastrou. Depois saia e entre novamente.",
-    "unavailable": "O texto completo desta edição não está disponível no momento: só são mostrados os primeiros 30 versículos de cada capítulo."
+    "unavailable": "O texto completo desta edição não está disponível no momento: só são mostrados os primeiros 30 versículos de cada capítulo.",
+    "search": {
+      "signIn": "Nesta edição os visitantes veem os primeiros 30 resultados. Entre para ver todos.",
+      "verify": "Confirme seu endereço de e-mail para ver todos os resultados desta edição: enviamos um link quando você se cadastrou. Depois saia e entre novamente.",
+      "unavailable": "O texto completo desta edição não está disponível no momento: só são mostrados os primeiros 30 resultados."
+    }
   },
   "Error": {
     "title": "Algo deu errado",
@@ -162,5 +167,38 @@
     "changed": "Esta ligação mudou entretanto.",
     "reload": "Recarregar o capítulo",
     "capped": "Aqui as edições protegidas por direitos autorais mostram só os primeiros 30 versículos: confirme o seu endereço de e-mail e entre novamente para revisá-las por completo."
+  },
+  "Search": {
+    "heading": "Pesquisar em {edition}",
+    "metaTitle": "Pesquisa · {edition}",
+    "modes": {
+      "keyword": "Palavras",
+      "semantic": "Semântica",
+      "hybrid": "Híbrida"
+    },
+    "results": "{count, plural, one {# resultado} other {# resultados}}",
+    "range": "{from, number}–{to, number} de {total, number}",
+    "capped": "{shown, number} de {total, number} resultados",
+    "pages": "Páginas de resultados",
+    "previous": "Anterior",
+    "next": "Próxima",
+    "refused": "Tente uma palavra mais longa ou menos comum.",
+    "semanticUnavailable": "A pesquisa semântica não está disponível neste momento.",
+    "tryKeyword": "Pesquisar essas palavras em vez disso",
+    "tooMany": "Pesquisas demais; tente novamente em um minuto.",
+    "noResults": "Nenhum resultado para «{q}».",
+    "empty": "Digite uma palavra ou uma pergunta para pesquisar nesta edição.",
+    "back": "Voltar à leitura",
+    "open": "Pesquisar",
+    "searching": "Pesquisando em {edition}",
+    "kind": "Tipo de pesquisa",
+    "keywordLabel": "Palavras a encontrar",
+    "questionLabel": "Sua pergunta",
+    "exact": "Palavras exatas",
+    "submit": "Pesquisar",
+    "suggestions": "Sugestões",
+    "noMore": "Não há mais resultados.",
+    "firstPage": "Primeira página",
+    "refusedQuestion": "Tente reformular sua pergunta."
   }
 }
