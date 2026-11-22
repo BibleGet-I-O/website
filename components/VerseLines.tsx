@@ -12,11 +12,11 @@ export function headingsBefore(row: VerseRow | undefined): string[] {
 
 /**
  * Section headings, level with the verse text. `col` makes them feed that column's running head at the top of
- * the page (StickyHead).
+ * the page (StickyHead); headings printed together give it their last, the most specific.
  */
 export function Headings({ titles, col }: { titles: string[]; col?: number }) {
   return titles.map((t, j) => (
-    <h2 key={j} data-head-col={col} className={j === 0 ? "mt-4 mb-1 font-semibold" : "mb-1 text-base font-semibold italic"}>
+    <h2 key={j} data-head-col={col} data-head-text={col == null ? undefined : titles.at(-1)} className={j === 0 ? "mt-4 mb-1 font-semibold" : "mb-1 text-base font-semibold italic"}>
       {t}
     </h2>
   ));
@@ -36,7 +36,7 @@ export function VerseLine({ row, chapter, headings = true, anchor = false, headC
     <>
       {headings && <Headings titles={headingsBefore(row)} col={headCol} />}
       <p data-testid="verse-line" id={anchor ? verseAnchor(row) : undefined} className={`bg-text bg-compact${anchor ? " verse-target" : ""}`}>
-        {renderVerse({ label: printedLabel(row, chapter), text: row.text, titles: mid ? row.titles : [], titlePosition: row.titlePosition, headingClass: midHeadingClass })}
+        {renderVerse({ label: printedLabel(row, chapter), text: row.text, titles: mid ? row.titles : [], titlePosition: row.titlePosition, headingClass: midHeadingClass, headCol })}
       </p>
     </>
   );

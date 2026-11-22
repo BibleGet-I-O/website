@@ -25,7 +25,7 @@ export function BookPage({ heading, chapter, rows, lang }: { heading: string; ch
       {sections.map((s, i) => (
         <section key={i}>
           {s.titles.map((t, j) => (
-            <h2 key={j} data-head-col={0} className={j === 0 ? "mt-6 mb-2 text-xl font-semibold" : "mb-2 text-base font-semibold italic"}>
+            <h2 key={j} data-head-col={0} data-head-text={s.titles.at(-1)} className={j === 0 ? "mt-6 mb-2 text-xl font-semibold" : "mb-2 text-base font-semibold italic"}>
               {t}
             </h2>
           ))}
@@ -37,6 +37,7 @@ export function BookPage({ heading, chapter, rows, lang }: { heading: string; ch
                   text: r.text,
                   titles: r.titlePosition == null ? [] : r.titles,
                   titlePosition: r.titlePosition,
+                  headCol: 0,
                 })}{" "}
               </span>
             ))}

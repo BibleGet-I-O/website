@@ -10,7 +10,8 @@ const nameClass = "text-center font-sans text-xs font-semibold text-slate-600 sm
  * The top of a chapter that stays in view while it scrolls: the book and chapter, the editions' names when
  * comparing (`columns`, laid out with the page's own `gridClass` so each sits over its column), and a running head
  * per column: the last section heading scrolled past. Headings take part by carrying `data-head-col` (their
- * column's index); `running` is how many columns have one (1 in a single column or interlinear).
+ * column's index), and `data-head-text` when they are printed in a group: the group's last heading, shown as soon as
+ * its first is passed; `running` is how many columns have one (1 in a single column or interlinear).
  */
 export function StickyHead({ title, columns, gridClass, running }: { title: string; columns: HeadColumn[]; gridClass: string; running: number }) {
   const ref = useRef<HTMLDivElement>(null);
@@ -26,7 +27,7 @@ export function StickyHead({ title, columns, gridClass, running }: { title: stri
       const next = Array.from({ length: running }, (_, c) => {
         let text = "";
         for (const h of page.querySelectorAll<HTMLElement>(`[data-head-col="${c}"]`)) {
-          if (h.getBoundingClientRect().top <= edge) text = h.textContent ?? "";
+          if (h.getBoundingClientRect().top <= edge) text = h.dataset.headText ?? h.textContent ?? "";
         }
         return text;
       });

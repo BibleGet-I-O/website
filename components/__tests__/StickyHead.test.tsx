@@ -3,15 +3,16 @@ import { act, render, screen } from "@testing-library/react";
 import { StickyHead } from "@/components/StickyHead";
 
 /** A heading whose top is at `top` (px from the viewport's top). */
-function heading(col: number, text: string, top: number) {
+function heading(col: number, text: string, top: number, groupLast?: string) {
   const h = document.createElement("h2");
   h.dataset.headCol = String(col);
+  if (groupLast) h.dataset.headText = groupLast;
   h.textContent = text;
   h.getBoundingClientRect = () => ({ top, bottom: top + 20, left: 0, right: 0, width: 0, height: 20, x: 0, y: top, toJSON() {} });
   return h;
 }
 
-function page(columns: string[], running: number, headings: [number, string, number][]) {
+function page(columns: string[], running: number, headings: [number, string, number, string?][]) {
   const r = render(
     <article>
       <StickyHead title="Genesis 4" columns={columns.map((name) => ({ key: name, label: name }))} gridClass="grid grid-cols-2" running={running} />
@@ -21,7 +22,7 @@ function page(columns: string[], running: number, headings: [number, string, num
   const head = r.container.querySelector("[data-sticky-head]") as HTMLElement;
   head.getBoundingClientRect = () => ({ top: 0, bottom: 100, left: 0, right: 0, width: 0, height: 100, x: 0, y: 0, toJSON() {} });
   const body = r.container.querySelector("#body")!;
-  for (const [c, t, top] of headings) body.appendChild(heading(c, t, top));
+  for (const [c, t, top, last] of headings) body.appendChild(heading(c, t, top, last));
   act(() => {
     window.dispatchEvent(new Event("scroll"));
   });
@@ -54,6 +55,11 @@ describe("StickyHead", () => {
   it("showsNothingBeforeTheFirstHeadingIsPassed", () => {
     const { head } = page([], 1, [[0, "The Creation", 300]]);
     expect(running(head).filter(Boolean)).toEqual([]);
+  });
+
+  it("aGroupOfHeadingsShowsItsLastOnceItsFirstIsPassed", () => {
+    const { head } = page([], 1, [[0, "The Creation", 80, "The First Account"], [0, "The First Account", 130, "The First Account"]]);
+    expect(running(head)).toEqual(["The First Account"]);
   });
 
   it("aHeadingJustUnderTheStripCountsAsPassed", () => {

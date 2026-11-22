@@ -132,6 +132,12 @@ describe("Spread", () => {
     expect(screen.getByTestId("verse-line")).toHaveTextContent("1First. MidSecond.");
   });
 
+  it("aMidVerseHeadingInAComparedColumnFeedsThatColumnsRunningHead", () => {
+    const b: VerseRow = { ...row(5, 1), titles: ["Mid"], titlePosition: 7, text: "First. Second." };
+    render(wrap(<Spread sides={[A, B]} rows={buildRows([row(5, 1)], [[b]], 47)} chapter={5} />));
+    expect(screen.getByRole("heading", { level: 2, name: "Mid" })).toHaveAttribute("data-head-col", "1");
+  });
+
   it("headingsGetTheirOwnRowSoTheVersesStayLevel", () => {
     // CEI2008 Gn 1 opens with two headings; the Nova Vulgata has none (synthetic text).
     const a = [row(1, 1), row(1, 2)];

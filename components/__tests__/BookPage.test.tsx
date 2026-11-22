@@ -102,6 +102,15 @@ describe("BookPage formatting", () => {
     expect(container.querySelectorAll("section")).toHaveLength(1);
     expect(screen.getAllByRole("heading", { level: 2 }).map((h) => h.textContent)).toEqual(["Creation", "The Lights"]);
     expect(container.querySelector("section p")?.textContent).toContain("And it was so. The LightsAnd God made");
+    // It feeds the running head like any other.
+    expect(screen.getByRole("heading", { level: 2, name: "The Lights" })).toHaveAttribute("data-head-col", "0");
+  });
+
+  it("headingsOpeningASectionTogetherGiveTheRunningHeadTheirLast", () => {
+    render(<BookPage heading="Genesis 1" chapter={1} rows={[row(1, 1, { titles: ["Light", "The first day"] })]} />);
+    for (const name of ["Light", "The first day"]) {
+      expect(screen.getByRole("heading", { level: 2, name })).toHaveAttribute("data-head-text", "The first day");
+    }
   });
 });
 

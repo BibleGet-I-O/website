@@ -169,14 +169,15 @@ const labelClass = "font-sans text-xs text-red-700 dark:text-red-400";
  *
  * `titles` are placed here only when `titlePosition` is set: a 0-based offset into `text` in code points,
  * tags included, and the verse reads `text[:pos]` + headings + `text[pos:]`. With no position the caller
- * prints the headings before the verse.
+ * prints the headings before the verse. `headCol` makes them feed that column's running head (StickyHead).
  */
-export function renderVerse({ label, text, titles = [], titlePosition = null, headingClass = defaultHeadingClass }: {
+export function renderVerse({ label, text, titles = [], titlePosition = null, headingClass = defaultHeadingClass, headCol }: {
   label: string | null;
   text: string;
   titles?: string[];
   titlePosition?: number | null;
   headingClass?: (j: number) => string;
+  headCol?: number;
 }): ReactNode {
   let marked = text.replaceAll(MARKER, "");
   let marker: ReactNode;
@@ -184,7 +185,7 @@ export function renderVerse({ label, text, titles = [], titlePosition = null, he
     const cps = Array.from(marked);
     marked = cps.slice(0, titlePosition).join("") + MARKER + cps.slice(titlePosition).join("");
     marker = titles.map((t, j) => (
-      <span key={`h${j}`} role="heading" aria-level={2} className={headingClass(j)}>
+      <span key={`h${j}`} role="heading" aria-level={2} data-head-col={headCol} data-head-text={headCol == null ? undefined : titles.at(-1)} className={headingClass(j)}>
         {t}
       </span>
     ));

@@ -47,7 +47,9 @@ export function Spread({ sides, rows, chapter, truncated = [], view = "side-by-s
     // Numbered against the main chapter: VGCL 9:22 beside NABRE Psalm 10 reads "9:22".
     // A row's verse can be linked to (a search result: Esther's two texts are a Spread): on the first cell that
     // prints it, the main side's when it does, so one id per verse.
-    if (v) return <VerseLine row={v} chapter={chapter} headings={false} anchor={s === cellsOf(r).findIndex(Boolean)} />;
+    // A mid-verse heading feeds its column's running head (only the main edition's, interlinear).
+    const headCol = interlinear ? (s === 0 ? 0 : undefined) : s;
+    if (v) return <VerseLine row={v} chapter={chapter} headings={false} anchor={s === cellsOf(r).findIndex(Boolean)} headCol={headCol} />;
     if (truncated[s] && i > last[s]) return null;
     if (s > 0 && r.a && r.a.chapter !== chapter) return null;
     return gapNotes ? <GapNote edition={sides[s].name} /> : null;
