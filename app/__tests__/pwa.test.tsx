@@ -8,7 +8,20 @@ import { ServiceWorkerRegister } from "@/components/ServiceWorkerRegister";
 import { SignOutButton } from "@/components/SignOutButton";
 import { config } from "@/proxy";
 
+let pathname = "/en/read/nabre/john/3";
+vi.mock("next/navigation", async () => ({ ...(await vi.importActual<object>("next/navigation")), usePathname: () => pathname }));
+
+/** A browser with a service worker: `controller` is the worker already running the page (none on first install). */
+function worker(controller: { postMessage: ReturnType<typeof vi.fn> } | null) {
+  const active = { postMessage: vi.fn() };
+  const register = vi.fn(async () => ({}));
+  vi.stubGlobal("navigator", { ...navigator, serviceWorker: { register, controller, ready: Promise.resolve({ active }) } });
+  return { register, active };
+}
+
 afterEach(() => {
+  pathname = "/en/read/nabre/john/3";
+  window.history.replaceState(null, "", "/");
   vi.unstubAllEnvs();
   vi.unstubAllGlobals();
 });
@@ -44,10 +57,45 @@ describe("the offline page", () => {
 describe("ServiceWorkerRegister", () => {
   it("registersTheWorkerInProduction", () => {
     vi.stubEnv("NODE_ENV", "production");
-    const register = vi.fn(async () => ({}));
-    vi.stubGlobal("navigator", { ...navigator, serviceWorker: { register } });
+    const { register } = worker({ postMessage: vi.fn() });
     render(<ServiceWorkerRegister />);
     expect(register).toHaveBeenCalledWith("/sw.js", { scope: "/" });
+  });
+
+  it("onFirstInstallAsksTheWorkerToKeepThisPageAndItsBuiltFiles", async () => {
+    vi.stubEnv("NODE_ENV", "production");
+    window.history.replaceState(null, "", "/en/read/nabre/john/3?with=DRB");
+    vi.spyOn(performance, "getEntriesByType").mockReturnValue([
+      { name: "http://localhost:3000/_next/static/chunks/app.js" },
+      { name: "http://localhost:3000/api/search/suggest" },
+    ] as unknown as PerformanceEntryList);
+    const { active } = worker(null);
+    render(<ServiceWorkerRegister />);
+    await vi.waitFor(() =>
+      expect(active.postMessage).toHaveBeenCalledWith({ type: "keep", urls: ["/en/read/nabre/john/3?with=DRB", "/_next/static/chunks/app.js"] }),
+    );
+  });
+
+  it("aPageReachedInTheAppIsSentToTheWorkerToKeep", () => {
+    vi.stubEnv("NODE_ENV", "production");
+    const controller = { postMessage: vi.fn() };
+    worker(controller);
+    const { rerender } = render(<ServiceWorkerRegister />);
+    // The worker kept the page it loaded itself.
+    expect(controller.postMessage).not.toHaveBeenCalled();
+    pathname = "/en/read/nabre/john/4";
+    window.history.replaceState(null, "", pathname);
+    rerender(<ServiceWorkerRegister />);
+    expect(controller.postMessage).toHaveBeenCalledWith({ type: "keep", urls: ["/en/read/nabre/john/4"] });
+  });
+
+  it("dropsTheSignedOutMarkFromTheAddress", () => {
+    vi.stubEnv("NODE_ENV", "production");
+    worker({ postMessage: vi.fn() });
+    pathname = "/en";
+    window.history.replaceState(null, "", "/en?signed-out");
+    render(<ServiceWorkerRegister />);
+    expect(window.location.pathname + window.location.search).toBe("/en");
   });
 
   it("leavesDevelopmentAlone", () => {
@@ -72,5 +120,24 @@ describe("SignOutButton", () => {
     );
     fireEvent.click(screen.getByRole("button", { name: "Sign out" }));
     expect(del).toHaveBeenCalledWith("bg-pages");
+  });
+
+  it("tellsTheWorkerSoAPageStillLoadingIsNotKept", () => {
+    vi.stubGlobal("caches", { delete: vi.fn(async () => true) });
+    const controller = { postMessage: vi.fn() };
+    worker(controller);
+    render(
+      <form onSubmit={(e) => e.preventDefault()}>
+        <SignOutButton label="Sign out" className="x" />
+      </form>,
+    );
+    fireEvent.click(screen.getByRole("button", { name: "Sign out" }));
+    expect(controller.postMessage).toHaveBeenCalledWith({ type: "signed-out" });
+  });
+});
+
+describe("signing out", () => {
+  it("redirectsToTheHomePageMarkedSoTheWorkerForgetsThePagesKept", () => {
+    expect(readFileSync("components/AuthStatus.tsx", "utf8")).toContain("redirectTo: `/${locale}?signed-out`");
   });
 });

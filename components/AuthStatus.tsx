@@ -45,7 +45,7 @@ export async function AuthStatus() {
       <form
         action={async () => {
           "use server";
-          await signOut({ redirectTo: `/${locale}` });
+          await signOut({ redirectTo: `/${locale}?signed-out` });
         }}
       >
         <SignOutButton label={t("signOut")} className={buttonClass} />
