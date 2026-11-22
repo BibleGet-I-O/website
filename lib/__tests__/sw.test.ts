@@ -4,14 +4,15 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 /** A small CacheStorage: caches by name, entries by URL, in insertion order. */
 let putGate: Promise<void> | null = null;
-let failNextPut = false;
+let failPuts = 0;
+let deleteGate: Promise<void> | null = null;
 let failNextMatch = false;
 class FakeCache {
   entries = new Map<string, Response>();
   async put(req: { url: string } | string, res: Response) {
     if (putGate) await putGate;
-    if (failNextPut) {
-      failNextPut = false;
+    if (failPuts > 0) {
+      failPuts--;
       throw new DOMException("Quota exceeded", "QuotaExceededError");
     }
     const url = typeof req === "string" ? new URL(req, ORIGIN).href : req.url;
@@ -47,6 +48,7 @@ class FakeCaches {
     return [...this.stores.keys()];
   }
   async delete(name: string) {
+    if (deleteGate) await deleteGate;
     return this.stores.delete(name);
   }
   async match(req: { url: string } | string) {
@@ -121,7 +123,8 @@ async function lifecycle(type: "install" | "activate") {
 beforeEach(() => {
   online = true;
   putGate = null;
-  failNextPut = false;
+  failPuts = 0;
+  deleteGate = null;
   failNextMatch = false;
   fetchMock.mockClear();
   load();
@@ -233,7 +236,16 @@ describe("service worker", () => {
   it("aFailedCacheWriteStillAnswersAndKeepsTheEarlierCopy", async () => {
     await fetchEvent(req("/en/read/nabre/john/3"));
     fetchMock.mockResolvedValueOnce(new Response("newer", { status: 200 }));
-    failNextPut = true;
+    failPuts = 1;
+    expect(await (await fetchEvent(req("/en/read/nabre/john/3")))!.text()).toBe("newer");
+    online = false;
+    expect(await (await fetchEvent(req("/en/read/nabre/john/3")))!.text()).toBe("network:/en/read/nabre/john/3");
+  });
+
+  it("writesThatKeepFailingStillLeaveTheEarlierCopy", async () => {
+    await fetchEvent(req("/en/read/nabre/john/3"));
+    fetchMock.mockResolvedValueOnce(new Response("newer", { status: 200 }));
+    failPuts = 5;
     expect(await (await fetchEvent(req("/en/read/nabre/john/3")))!.text()).toBe("newer");
     online = false;
     expect(await (await fetchEvent(req("/en/read/nabre/john/3")))!.text()).toBe("network:/en/read/nabre/john/3");
@@ -281,6 +293,23 @@ describe("service worker", () => {
     fetchMock.mockImplementationOnce(() => new Promise<Response>((r) => (finish = r)));
     const { answer, waits } = dispatch(req("/en/read/nabre/john/3"));
     await message({ type: "signed-out" });
+    finish(new Response("full text, signed in", { status: 200 }));
+    await answer;
+    await Promise.all(waits);
+    expect(await kept()).toEqual([]);
+  });
+
+  it("aPageRequestedWhileThePagesAreBeingForgottenIsNotKept", async () => {
+    await fetchEvent(req("/en/read/nabre/john/2"));
+    let cleared!: () => void;
+    deleteGate = new Promise((r) => (cleared = r));
+    const signingOut = message({ type: "signed-out" });
+    let finish!: (r: Response) => void;
+    fetchMock.mockImplementationOnce(() => new Promise<Response>((r) => (finish = r)));
+    const { answer, waits } = dispatch(req("/en/read/nabre/john/3"));
+    cleared();
+    await signingOut;
+    deleteGate = null;
     finish(new Response("full text, signed in", { status: 200 }));
     await answer;
     await Promise.all(waits);

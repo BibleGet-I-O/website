@@ -47,7 +47,10 @@ export default async function LocaleLayout({ children, params }: { children: Rea
           <Suspense fallback={null}>
             <SiteFooter />
           </Suspense>
-          <ServiceWorkerRegister />
+          {/* It reads the query (useSearchParams), which a page rendered ahead of time only has in the browser. */}
+          <Suspense fallback={null}>
+            <ServiceWorkerRegister />
+          </Suspense>
         </NextIntlClientProvider>
       </body>
     </html>

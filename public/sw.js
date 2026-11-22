@@ -16,7 +16,7 @@
  *   redirect ends in ?signed-out, which the worker sees whether the form was sent by the page's script or before it
  *   loaded; the button also sends a "signed-out" message. A page still loading when the reader signs out is not kept.
  * - Keeping a copy never holds back or breaks the answer: the page streams while its copy is written, and a failed
- *   write leaves the earlier copy.
+ *   write leaves the earlier copy as it was.
  *
  * Only what the reader was shown is kept, on their own device, as a browser cache would: nothing is fetched ahead.
  */
@@ -43,9 +43,14 @@ function isKeptPage(url) {
   return /^\/read(\/|$)/.test(rest) && !/\/search(\/|$)/.test(rest);
 }
 
+// Bumped before and after the clear, so a page requested while it runs is not kept either.
 async function forgetPages() {
   epoch++;
-  await caches.delete(PAGES);
+  try {
+    await caches.delete(PAGES);
+  } finally {
+    epoch++;
+  }
 }
 
 /** An entry of a cache, or nothing when it cannot be read. */
@@ -65,20 +70,14 @@ async function trim(name, max) {
 }
 
 /**
- * Keeps a copy, as the newest entry (deleted first, then written again). A failed write puts the earlier copy
- * back; `still` is asked just before writing (a sign-out may have come meanwhile).
+ * Keeps a copy as the newest entry. One put does it: it replaces an earlier entry for the URL and appends the new
+ * one, in a single step, so a failed write leaves the earlier copy as it was. `still` is asked just before writing
+ * (a sign-out may have come meanwhile).
  */
 async function keep(name, request, response, max, still = () => true) {
   const cache = await caches.open(name);
-  const earlier = await cache.match(request);
   if (!still()) return;
-  await cache.delete(request);
-  try {
-    await cache.put(request, response);
-  } catch (err) {
-    if (earlier) await cache.put(request, earlier).catch(() => undefined);
-    throw err;
-  }
+  await cache.put(request, response);
   await trim(name, max);
 }
 

@@ -9,18 +9,30 @@ import { SignOutButton } from "@/components/SignOutButton";
 import { config } from "@/proxy";
 
 let pathname = "/en/read/nabre/john/3";
-vi.mock("next/navigation", async () => ({ ...(await vi.importActual<object>("next/navigation")), usePathname: () => pathname }));
+let search = "";
+vi.mock("next/navigation", async () => ({
+  ...(await vi.importActual<object>("next/navigation")),
+  usePathname: () => pathname,
+  useSearchParams: () => new URLSearchParams(search),
+}));
 
 /** A browser with a service worker: `controller` is the worker already running the page (none on first install). */
 function worker(controller: { postMessage: ReturnType<typeof vi.fn> } | null) {
   const active = { postMessage: vi.fn() };
   const register = vi.fn(async () => ({}));
-  vi.stubGlobal("navigator", { ...navigator, serviceWorker: { register, controller, ready: Promise.resolve({ active }) } });
-  return { register, active };
+  const sw = Object.assign(new EventTarget(), { register, controller, ready: Promise.resolve({ active }) });
+  vi.stubGlobal("navigator", { ...navigator, serviceWorker: sw });
+  /** The worker takes over the page (clients.claim()). */
+  const claim = () => {
+    sw.controller = active;
+    sw.dispatchEvent(new Event("controllerchange"));
+  };
+  return { register, active, claim };
 }
 
 afterEach(() => {
   pathname = "/en/read/nabre/john/3";
+  search = "";
   window.history.replaceState(null, "", "/");
   vi.unstubAllEnvs();
   vi.unstubAllGlobals();
@@ -62,18 +74,21 @@ describe("ServiceWorkerRegister", () => {
     expect(register).toHaveBeenCalledWith("/sw.js", { scope: "/" });
   });
 
-  it("onFirstInstallAsksTheWorkerToKeepThisPageAndItsBuiltFiles", async () => {
+  it("onFirstInstallAsksTheWorkerToKeepThisPageAndEveryFileItLoadedBeforeTheWorkerTookOver", () => {
     vi.stubEnv("NODE_ENV", "production");
     window.history.replaceState(null, "", "/en/read/nabre/john/3?with=DRB");
-    vi.spyOn(performance, "getEntriesByType").mockReturnValue([
-      { name: "http://localhost:3000/_next/static/chunks/app.js" },
-      { name: "http://localhost:3000/api/search/suggest" },
-    ] as unknown as PerformanceEntryList);
-    const { active } = worker(null);
+    const entries = [{ name: "http://localhost:3000/_next/static/chunks/app.js" }, { name: "http://localhost:3000/api/search/suggest" }];
+    vi.spyOn(performance, "getEntriesByType").mockImplementation(() => entries as unknown as PerformanceEntryList);
+    const { active, claim } = worker(null);
     render(<ServiceWorkerRegister />);
-    await vi.waitFor(() =>
-      expect(active.postMessage).toHaveBeenCalledWith({ type: "keep", urls: ["/en/read/nabre/john/3?with=DRB", "/_next/static/chunks/app.js"] }),
-    );
+    // A file the page loads after it rendered, while the worker is still installing.
+    entries.push({ name: "http://localhost:3000/_next/static/chunks/late.js" });
+    expect(active.postMessage).not.toHaveBeenCalled();
+    claim();
+    expect(active.postMessage).toHaveBeenCalledWith({
+      type: "keep",
+      urls: ["/en/read/nabre/john/3?with=DRB", "/_next/static/chunks/app.js", "/_next/static/chunks/late.js"],
+    });
   });
 
   it("aPageReachedInTheAppIsSentToTheWorkerToKeep", () => {
@@ -87,6 +102,31 @@ describe("ServiceWorkerRegister", () => {
     window.history.replaceState(null, "", pathname);
     rerender(<ServiceWorkerRegister />);
     expect(controller.postMessage).toHaveBeenCalledWith({ type: "keep", urls: ["/en/read/nabre/john/4"] });
+  });
+
+  it("aComparisonAddedInTheAppIsSentToTheWorkerToKeep", () => {
+    vi.stubEnv("NODE_ENV", "production");
+    const controller = { postMessage: vi.fn() };
+    worker(controller);
+    const { rerender } = render(<ServiceWorkerRegister />);
+    search = "with=DRB";
+    window.history.replaceState(null, "", "/en/read/nabre/john/3?with=DRB");
+    rerender(<ServiceWorkerRegister />);
+    expect(controller.postMessage).toHaveBeenCalledWith({ type: "keep", urls: ["/en/read/nabre/john/3?with=DRB"] });
+  });
+
+  it("dropsTheSignedOutMarkAfterASignOutInTheAppToo", () => {
+    vi.stubEnv("NODE_ENV", "production");
+    const controller = { postMessage: vi.fn() };
+    worker(controller);
+    const { rerender } = render(<ServiceWorkerRegister />);
+    pathname = "/en";
+    search = "signed-out";
+    window.history.replaceState(null, "", "/en?signed-out");
+    rerender(<ServiceWorkerRegister />);
+    expect(window.location.pathname + window.location.search).toBe("/en");
+    // The home page reached by signing out is not worth a keep message for the marked address.
+    expect(controller.postMessage).not.toHaveBeenCalledWith({ type: "keep", urls: ["/en?signed-out"] });
   });
 
   it("dropsTheSignedOutMarkFromTheAddress", () => {
