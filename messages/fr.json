@@ -188,19 +188,19 @@
     "tryKeyword": "Chercher plutôt ces mots",
     "tooMany": "Trop de recherches ; réessayez dans une minute.",
     "noResults": "Aucun résultat pour « {q} ».",
-    "empty": "Saisissez un mot ou une question pour chercher dans cette édition.",
+    "empty": "Saisissez un mot, un thème ou une référence pour chercher dans cette édition.",
     "back": "Retour à la lecture",
     "open": "Rechercher",
     "searching": "Recherche dans {edition}",
     "kind": "Type de recherche",
     "keywordLabel": "Mots à trouver",
-    "questionLabel": "Votre question",
+    "questionLabel": "Thème ou idée",
     "exact": "Expression exacte",
     "submit": "Rechercher",
     "suggestions": "Suggestions",
     "noMore": "Il n’y a pas d’autres résultats.",
     "firstPage": "Première page",
-    "refusedQuestion": "Essayez de reformuler votre question.",
+    "refusedQuestion": "Essayez d'autres mots pour ce thème ou cette idée.",
     "placeholders": {
       "keyword": "Mots du verset, p. ex. berger",
       "semantic": "Un thème ou une idée, p. ex. confiance en Dieu",
@@ -214,7 +214,7 @@
     "about": "À propos des types de recherche",
     "help": {
       "keyword": "Trouve les versets qui contiennent les mots saisis, dans la langue de l'édition. Cochez « Expression exacte » pour trouver ces mots ensemble, tels qu'ils sont écrits.",
-      "semantic": "Trouve des versets sur un thème ou une idée même lorsqu'ils l'expriment avec d'autres mots : synonymes, paraphrases et questions fonctionnent bien, tout comme un mot ou une question dans une autre langue (« enemy » trouve « ennemi » dans une édition française).",
+      "semantic": "Trouve des versets sur un thème ou une idée même lorsqu'ils l'expriment avec d'autres mots : synonymes et paraphrases fonctionnent bien, tout comme un mot dans une autre langue (« enemy » trouve « ennemi » dans une édition française).",
       "reference": "Affiche exactement les versets d'une référence biblique, comme Jonas 1,1-2,2; 3,2, avec les noms des livres et la notation de votre langue."
     }
   }

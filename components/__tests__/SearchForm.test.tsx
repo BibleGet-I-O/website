@@ -136,7 +136,7 @@ describe("SearchForm", () => {
   it("semanticModeIsATextAreaEnterSubmitsShiftEnterNewLine", () => {
     const { container } = render(wrap(<SearchForm {...props} />));
     fireEvent.click(screen.getByRole("radio", { name: "Meaning" }));
-    const area = screen.getByRole("textbox", { name: "Your question" });
+    const area = screen.getByRole("textbox", { name: "Theme or idea" });
     expect(area.tagName).toBe("TEXTAREA");
     expect(area).toHaveAttribute("maxLength", "500");
     expect(screen.queryByRole("checkbox", { name: "Exact phrase" })).toBeNull();
@@ -169,7 +169,7 @@ describe("SearchForm", () => {
     render(wrap(<SearchForm {...props} />));
     expect(screen.getByRole("combobox", { name: "Words to find" })).toHaveAttribute("placeholder", "Words in the verse, e.g. shepherd");
     fireEvent.click(screen.getByRole("radio", { name: "Meaning" }));
-    expect(screen.getByRole("textbox", { name: "Your question" })).toHaveAttribute("placeholder", "A theme or idea, e.g. trust in God");
+    expect(screen.getByRole("textbox", { name: "Theme or idea" })).toHaveAttribute("placeholder", "A theme or idea, e.g. trust in God");
   });
 
   it("theReferenceFieldIsOneLineWithoutSuggestionsOrExactWords", async () => {
@@ -203,7 +203,7 @@ describe("SearchForm", () => {
     const note = details.textContent ?? "";
     expect(note).toContain("Words");
     expect(note).toContain("“Exact phrase”");
-    expect(note).toContain("synonyms, paraphrases");
+    expect(note).toContain("synonyms and paraphrases");
     expect(note).toContain("another language");
     expect(note).toContain("Jonah 1:1-2:2; 3:2");
   });
@@ -211,6 +211,6 @@ describe("SearchForm", () => {
   it("startsFromTheSearchShown", () => {
     render(wrap(<SearchForm {...props} initial={{ mode: "semantic", q: "light of the world", exact: false }} />));
     expect(screen.getByRole("radio", { name: "Meaning" })).toBeChecked();
-    expect(screen.getByRole("textbox", { name: "Your question" })).toHaveValue("light of the world");
+    expect(screen.getByRole("textbox", { name: "Theme or idea" })).toHaveValue("light of the world");
   });
 });

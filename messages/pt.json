@@ -188,19 +188,19 @@
     "tryKeyword": "Pesquisar essas palavras em vez disso",
     "tooMany": "Pesquisas demais; tente novamente em um minuto.",
     "noResults": "Nenhum resultado para «{q}».",
-    "empty": "Digite uma palavra ou uma pergunta para pesquisar nesta edição.",
+    "empty": "Digite uma palavra, um tema ou uma referência para pesquisar nesta edição.",
     "back": "Voltar à leitura",
     "open": "Pesquisar",
     "searching": "Pesquisando em {edition}",
     "kind": "Tipo de pesquisa",
     "keywordLabel": "Palavras a encontrar",
-    "questionLabel": "Sua pergunta",
+    "questionLabel": "Tema ou ideia",
     "exact": "Frase exata",
     "submit": "Pesquisar",
     "suggestions": "Sugestões",
     "noMore": "Não há mais resultados.",
     "firstPage": "Primeira página",
-    "refusedQuestion": "Tente reformular sua pergunta.",
+    "refusedQuestion": "Tente outras palavras para esse tema ou ideia.",
     "placeholders": {
       "keyword": "Palavras do versículo, p. ex. pastor",
       "semantic": "Um tema ou uma ideia, p. ex. confiança em Deus",
@@ -214,7 +214,7 @@
     "about": "Sobre os tipos de pesquisa",
     "help": {
       "keyword": "Encontra os versículos que contêm as palavras digitadas, na língua da edição. Marque «Frase exata» para encontrar essas palavras juntas, exatamente como estão escritas.",
-      "semantic": "Encontra versículos sobre um tema ou uma ideia mesmo quando o dizem com outras palavras: sinônimos, paráfrases e perguntas funcionam bem, assim como uma palavra ou pergunta em outra língua («enemy» encontra «inimigo» em uma edição em português).",
+      "semantic": "Encontra versículos sobre um tema ou uma ideia mesmo quando o dizem com outras palavras: sinônimos e paráfrases funcionam bem, assim como uma palavra em outra língua («enemy» encontra «inimigo» em uma edição em português).",
       "reference": "Mostra exatamente os versículos de uma referência bíblica, como Jonas 1,1-2,2; 3,2, com os nomes dos livros e a notação da sua língua."
     }
   }
