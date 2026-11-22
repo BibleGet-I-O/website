@@ -127,7 +127,7 @@ describe("SearchForm", () => {
 
   it("exactWordsSetsMatchExact", () => {
     const { container } = render(wrap(<SearchForm {...props} />));
-    const exact = screen.getByRole("checkbox", { name: "Exact words" });
+    const exact = screen.getByRole("checkbox", { name: "Exact phrase" });
     expect(exact).toHaveAttribute("name", "match");
     expect(exact).toHaveAttribute("value", "exact");
     expect(container.querySelector("input[name=match]")).toBe(exact);
@@ -135,11 +135,11 @@ describe("SearchForm", () => {
 
   it("semanticModeIsATextAreaEnterSubmitsShiftEnterNewLine", () => {
     const { container } = render(wrap(<SearchForm {...props} />));
-    fireEvent.click(screen.getByRole("radio", { name: "Semantic" }));
+    fireEvent.click(screen.getByRole("radio", { name: "Meaning" }));
     const area = screen.getByRole("textbox", { name: "Your question" });
     expect(area.tagName).toBe("TEXTAREA");
     expect(area).toHaveAttribute("maxLength", "500");
-    expect(screen.queryByRole("checkbox", { name: "Exact words" })).toBeNull();
+    expect(screen.queryByRole("checkbox", { name: "Exact phrase" })).toBeNull();
     const form = container.querySelector("form")!;
     const submit = vi.fn((e: Event) => e.preventDefault());
     form.addEventListener("submit", submit);
@@ -160,7 +160,7 @@ describe("SearchForm", () => {
       await vi.advanceTimersByTimeAsync(400);
     });
     expect(fetchMock).not.toHaveBeenCalled();
-    expect(screen.getByRole("checkbox", { name: "Exact words" })).toBeChecked();
+    expect(screen.getByRole("checkbox", { name: "Exact phrase" })).toBeChecked();
     await typeAndWait(screen.getByRole("combobox", { name: "Words to find" }), "light lig");
     expect(fetchMock).toHaveBeenCalledTimes(1);
   });
@@ -168,7 +168,7 @@ describe("SearchForm", () => {
   it("eachModeShowsItsPlaceholder", () => {
     render(wrap(<SearchForm {...props} />));
     expect(screen.getByRole("combobox", { name: "Words to find" })).toHaveAttribute("placeholder", "Words in the verse, e.g. shepherd");
-    fireEvent.click(screen.getByRole("radio", { name: "Semantic" }));
+    fireEvent.click(screen.getByRole("radio", { name: "Meaning" }));
     expect(screen.getByRole("textbox", { name: "Your question" })).toHaveAttribute("placeholder", "A theme or idea, e.g. trust in God");
   });
 
@@ -179,7 +179,7 @@ describe("SearchForm", () => {
     expect(field.tagName).toBe("INPUT");
     expect(field).toHaveAttribute("name", "q");
     expect(field).toHaveAttribute("placeholder", "Jonah 1:1-2:2; 3:2");
-    expect(screen.queryByRole("checkbox", { name: "Exact words" })).toBeNull();
+    expect(screen.queryByRole("checkbox", { name: "Exact phrase" })).toBeNull();
     await typeAndWait(field, "Jo");
     await act(async () => {
       await vi.advanceTimersByTimeAsync(300);
@@ -187,9 +187,30 @@ describe("SearchForm", () => {
     expect(fetchMock).not.toHaveBeenCalled();
   });
 
+  it("labelsTheModesByWhatTheyAreFor", () => {
+    render(wrap(<SearchForm {...props} />));
+    expect(screen.getAllByRole("radio").map((r) => r.closest("label")?.textContent)).toEqual(["Words", "Meaning", "Reference"]);
+  });
+
+  it("theInfoIconExplainsEachKindOfSearch", () => {
+    const { container } = render(wrap(<SearchForm {...props} />));
+    const details = container.querySelector("details")!;
+    const summary = details.querySelector("summary")!;
+    expect(summary).toHaveAttribute("aria-label", "About the kinds of search");
+    expect(details).not.toHaveAttribute("open");
+    fireEvent.click(summary);
+    expect(details).toHaveAttribute("open");
+    const note = details.textContent ?? "";
+    expect(note).toContain("Words");
+    expect(note).toContain("“Exact phrase”");
+    expect(note).toContain("synonyms, paraphrases");
+    expect(note).toContain("another language");
+    expect(note).toContain("Jonah 1:1-2:2; 3:2");
+  });
+
   it("startsFromTheSearchShown", () => {
     render(wrap(<SearchForm {...props} initial={{ mode: "semantic", q: "light of the world", exact: false }} />));
-    expect(screen.getByRole("radio", { name: "Semantic" })).toBeChecked();
+    expect(screen.getByRole("radio", { name: "Meaning" })).toBeChecked();
     expect(screen.getByRole("textbox", { name: "Your question" })).toHaveValue("light of the world");
   });
 });
