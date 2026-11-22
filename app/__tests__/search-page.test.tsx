@@ -201,7 +201,7 @@ describe("search page", () => {
   it("anOldHybridLinkSearchesSemantic", async () => {
     await page({ mode: "hybrid", q: "trust" });
     expect(searchEdition).toHaveBeenCalledWith(expect.objectContaining({ mode: "semantic" }));
-    expect(screen.getByRole("radio", { name: "Semantic" })).toBeChecked();
+    expect(screen.getByRole("radio", { name: "Meaning" })).toBeChecked();
   });
 
   it("noResultsSaysSo", async () => {
@@ -252,7 +252,7 @@ describe("search page", () => {
     searchEdition.mockResolvedValue({ kind: "ok", hits: [hit()], total: 1, capped: null });
     const second = await SearchPage({ params: Promise.resolve({ locale: "en", edition: "nabre" }), searchParams: Promise.resolve({ mode: "keyword", q: "light" }) });
     rerender(<NextIntlClientProvider locale="en" messages={en}>{second}</NextIntlClientProvider>);
-    expect(screen.getByRole("radio", { name: "Keyword" })).toBeChecked();
+    expect(screen.getByRole("radio", { name: "Words" })).toBeChecked();
     expect(screen.getByRole("combobox", { name: "Words to find" })).toHaveValue("light");
   });
 

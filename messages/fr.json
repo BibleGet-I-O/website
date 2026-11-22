@@ -174,7 +174,7 @@
     "metaTitle": "Recherche · {edition}",
     "modes": {
       "keyword": "Mots",
-      "semantic": "Sémantique",
+      "semantic": "Sens",
       "reference": "Référence"
     },
     "results": "{count, plural, one {# résultat} other {# résultats}}",
@@ -210,6 +210,12 @@
     "unreadableReference": "Impossible de lire cette référence. Essayez par exemple {example}.",
     "compareLater": "Seule {edition} est affichée : les éditions comparées seront alignées verset par verset dès que la correspondance des versets sera prête.",
     "passageHeading": "{book} {chapter}",
-    "partialReference": "Une partie de cette référence n'a pas pu être lue ; le reste est affiché ci-dessous. Essayez par exemple {example}."
+    "partialReference": "Une partie de cette référence n'a pas pu être lue ; le reste est affiché ci-dessous. Essayez par exemple {example}.",
+    "about": "À propos des types de recherche",
+    "help": {
+      "keyword": "Trouve les versets qui contiennent les mots saisis, dans la langue de l'édition. Cochez « Mots exacts » pour les trouver tels qu'ils sont écrits.",
+      "semantic": "Trouve des versets sur un thème ou une idée même lorsqu'ils l'expriment avec d'autres mots : synonymes, paraphrases et questions fonctionnent bien, tout comme un mot ou une question dans une autre langue (« enemy » trouve « ennemi » dans une édition française).",
+      "reference": "Affiche exactement les versets d'une référence biblique, comme Jonas 1,1-2,2; 3,2, avec les noms des livres et la notation de votre langue."
+    }
   }
 }

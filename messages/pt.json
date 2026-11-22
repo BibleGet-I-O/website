@@ -174,7 +174,7 @@
     "metaTitle": "Pesquisa · {edition}",
     "modes": {
       "keyword": "Palavras",
-      "semantic": "Semântica",
+      "semantic": "Significado",
       "reference": "Referência"
     },
     "results": "{count, plural, one {# resultado} other {# resultados}}",
@@ -210,6 +210,12 @@
     "unreadableReference": "Não foi possível ler a referência. Tente uma como {example}.",
     "compareLater": "Só {edition} é mostrada: as edições comparadas serão alinhadas versículo a versículo quando a correspondência dos versículos estiver pronta.",
     "passageHeading": "{book} {chapter}",
-    "partialReference": "Parte da referência não pôde ser lida; o resto é mostrado abaixo. Tente uma como {example}."
+    "partialReference": "Parte da referência não pôde ser lida; o resto é mostrado abaixo. Tente uma como {example}.",
+    "about": "Sobre os tipos de pesquisa",
+    "help": {
+      "keyword": "Encontra os versículos que contêm as palavras digitadas, na língua da edição. Marque «Palavras exatas» para encontrá-las exatamente como estão escritas.",
+      "semantic": "Encontra versículos sobre um tema ou uma ideia mesmo quando o dizem com outras palavras: sinônimos, paráfrases e perguntas funcionam bem, assim como uma palavra ou pergunta em outra língua («enemy» encontra «inimigo» em uma edição em português).",
+      "reference": "Mostra exatamente os versículos de uma referência bíblica, como Jonas 1,1-2,2; 3,2, com os nomes dos livros e a notação da sua língua."
+    }
   }
 }

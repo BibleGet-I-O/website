@@ -173,8 +173,8 @@
     "heading": "In {edition} suchen",
     "metaTitle": "Suche · {edition}",
     "modes": {
-      "keyword": "Stichwort",
-      "semantic": "Semantisch",
+      "keyword": "Wörter",
+      "semantic": "Bedeutung",
       "reference": "Bibelstelle"
     },
     "results": "{count, plural, one {# Treffer} other {# Treffer}}",
@@ -210,6 +210,12 @@
     "unreadableReference": "Diese Bibelstelle konnte nicht gelesen werden. Versuchen Sie z. B. {example}.",
     "compareLater": "Nur {edition} wird angezeigt: Die verglichenen Ausgaben werden Vers für Vers zugeordnet, sobald die Verszuordnung fertig ist.",
     "passageHeading": "{book} {chapter}",
-    "partialReference": "Ein Teil dieser Bibelstelle konnte nicht gelesen werden; der Rest steht unten. Versuchen Sie z. B. {example}."
+    "partialReference": "Ein Teil dieser Bibelstelle konnte nicht gelesen werden; der Rest steht unten. Versuchen Sie z. B. {example}.",
+    "about": "Über die Arten der Suche",
+    "help": {
+      "keyword": "Findet die Verse, die die eingegebenen Wörter enthalten, in der Sprache der Ausgabe. Wählen Sie „Genaue Wörter“, um sie genau so zu finden, wie sie geschrieben sind.",
+      "semantic": "Findet Verse zu einem Thema oder Gedanken, auch wenn sie ihn mit anderen Worten ausdrücken: Synonyme, Umschreibungen und Fragen funktionieren gut, ebenso ein Wort oder eine Frage in einer anderen Sprache („enemy“ findet „Feind“ in einer deutschen Ausgabe).",
+      "reference": "Zeigt genau die Verse einer Bibelstelle, z. B. Jona 1,1-2,2; 3,2, mit den Buchnamen und der Schreibweise Ihrer Sprache."
+    }
   }
 }

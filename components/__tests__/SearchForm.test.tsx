@@ -135,7 +135,7 @@ describe("SearchForm", () => {
 
   it("semanticModeIsATextAreaEnterSubmitsShiftEnterNewLine", () => {
     const { container } = render(wrap(<SearchForm {...props} />));
-    fireEvent.click(screen.getByRole("radio", { name: "Semantic" }));
+    fireEvent.click(screen.getByRole("radio", { name: "Meaning" }));
     const area = screen.getByRole("textbox", { name: "Your question" });
     expect(area.tagName).toBe("TEXTAREA");
     expect(area).toHaveAttribute("maxLength", "500");
@@ -168,7 +168,7 @@ describe("SearchForm", () => {
   it("eachModeShowsItsPlaceholder", () => {
     render(wrap(<SearchForm {...props} />));
     expect(screen.getByRole("combobox", { name: "Words to find" })).toHaveAttribute("placeholder", "Words in the verse, e.g. shepherd");
-    fireEvent.click(screen.getByRole("radio", { name: "Semantic" }));
+    fireEvent.click(screen.getByRole("radio", { name: "Meaning" }));
     expect(screen.getByRole("textbox", { name: "Your question" })).toHaveAttribute("placeholder", "A theme or idea, e.g. trust in God");
   });
 
@@ -187,9 +187,29 @@ describe("SearchForm", () => {
     expect(fetchMock).not.toHaveBeenCalled();
   });
 
+  it("labelsTheModesByWhatTheyAreFor", () => {
+    render(wrap(<SearchForm {...props} />));
+    expect(screen.getAllByRole("radio").map((r) => r.closest("label")?.textContent)).toEqual(["Words", "Meaning", "Reference"]);
+  });
+
+  it("theInfoIconExplainsEachKindOfSearch", () => {
+    const { container } = render(wrap(<SearchForm {...props} />));
+    const details = container.querySelector("details")!;
+    const summary = details.querySelector("summary")!;
+    expect(summary).toHaveAttribute("aria-label", "About the kinds of search");
+    expect(details).not.toHaveAttribute("open");
+    fireEvent.click(summary);
+    expect(details).toHaveAttribute("open");
+    const note = details.textContent ?? "";
+    expect(note).toContain("Words");
+    expect(note).toContain("synonyms, paraphrases");
+    expect(note).toContain("another language");
+    expect(note).toContain("Jonah 1:1-2:2; 3:2");
+  });
+
   it("startsFromTheSearchShown", () => {
     render(wrap(<SearchForm {...props} initial={{ mode: "semantic", q: "light of the world", exact: false }} />));
-    expect(screen.getByRole("radio", { name: "Semantic" })).toBeChecked();
+    expect(screen.getByRole("radio", { name: "Meaning" })).toBeChecked();
     expect(screen.getByRole("textbox", { name: "Your question" })).toHaveValue("light of the world");
   });
 });

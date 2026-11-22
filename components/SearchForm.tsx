@@ -102,17 +102,34 @@ export function SearchForm({ locale, edition, editionName, from, initial }: Form
   };
 
   return (
-    <form role="search" action={`/${locale}/read/${editionSlug(edition)}/search`} method="get" className="flex flex-col gap-2 text-sm">
+    <form role="search" action={`/${locale}/read/${editionSlug(edition)}/search`} method="get" className="relative flex flex-col gap-2 text-sm">
       <p className="font-semibold">{t("searching", { edition: editionName })}</p>
-      <fieldset className="flex flex-wrap gap-3">
-        <legend className="sr-only">{t("kind")}</legend>
-        {SEARCH_MODES.map((m) => (
-          <label key={m} className="flex items-center gap-1">
-            <input type="radio" name="mode" value={m} checked={mode === m} onChange={() => setMode(m)} />
-            {t(`modes.${m}`)}
-          </label>
-        ))}
-      </fieldset>
+      <div className="flex items-start gap-2">
+        <fieldset className="flex flex-wrap gap-3">
+          <legend className="sr-only">{t("kind")}</legend>
+          {SEARCH_MODES.map((m) => (
+            <label key={m} className="flex items-center gap-1">
+              <input type="radio" name="mode" value={m} checked={mode === m} onChange={() => setMode(m)} />
+              {t(`modes.${m}`)}
+            </label>
+          ))}
+        </fieldset>
+        {/* What each kind of search is for: a native disclosure, so it opens without JavaScript too. */}
+        <details className="group ml-auto shrink-0">
+          <summary aria-label={t("about")} title={t("about")}
+            className="flex h-6 w-6 cursor-pointer list-none items-center justify-center rounded-full border border-slate-400 text-xs font-semibold text-slate-600 hover:bg-slate-100 dark:border-slate-600 dark:text-slate-300 dark:hover:bg-slate-800 [&::-webkit-details-marker]:hidden">
+            i
+          </summary>
+          <dl className="absolute left-0 right-0 z-50 mt-2 space-y-2 rounded border border-slate-200 bg-white p-3 text-sm shadow-lg dark:border-slate-800 dark:bg-slate-950">
+            {SEARCH_MODES.map((m) => (
+              <div key={m}>
+                <dt className="font-semibold">{t(`modes.${m}`)}</dt>
+                <dd className="text-slate-700 dark:text-slate-300">{t(`help.${m}`)}</dd>
+              </div>
+            ))}
+          </dl>
+        </details>
+      </div>
       {mode === "keyword" ? (
         <div>
           <div className="relative">

@@ -174,7 +174,7 @@
     "metaTitle": "Ricerca · {edition}",
     "modes": {
       "keyword": "Parole",
-      "semantic": "Semantica",
+      "semantic": "Significato",
       "reference": "Riferimento"
     },
     "results": "{count, plural, one {# risultato} other {# risultati}}",
@@ -210,6 +210,12 @@
     "unreadableReference": "Non è stato possibile leggere il riferimento. Provane uno come {example}.",
     "compareLater": "Viene mostrata solo {edition}: le edizioni a confronto saranno allineate versetto per versetto quando la corrispondenza dei versetti sarà pronta.",
     "passageHeading": "{book} {chapter}",
-    "partialReference": "Una parte del riferimento non è stata letta; il resto è mostrato qui sotto. Provane uno come {example}."
+    "partialReference": "Una parte del riferimento non è stata letta; il resto è mostrato qui sotto. Provane uno come {example}.",
+    "about": "Informazioni sui tipi di ricerca",
+    "help": {
+      "keyword": "Trova i versetti che contengono le parole digitate, nella lingua dell'edizione. Spunta «Parole esatte» per trovarle esattamente come scritte.",
+      "semantic": "Trova i versetti su un tema o un'idea anche quando la esprimono con altre parole: funzionano bene sinonimi, parafrasi e domande, e anche una parola o una domanda in un'altra lingua («enemy» trova «nemico» in un'edizione italiana).",
+      "reference": "Mostra esattamente i versetti di un riferimento biblico, come Giona 1,1-2,2; 3,2, con i nomi dei libri e la notazione della tua lingua."
+    }
   }
 }
