@@ -6,9 +6,9 @@ import { NavMenu } from "@/components/NavMenu";
 import { ThemeSwitch } from "@/components/ThemeSwitch";
 
 /**
- * The site header on every page: the BibleGet logo and name, linking home, then the menu: the API reference, the
- * language picker, the light/dark switch and the sign-in state (`auth`), in a row from `sm` up and behind a hamburger
- * button below it.
+ * The site header on every page: the BibleGet logo and name, linking home; the actions, the language picker and the
+ * light/dark switch, always in the bar; and the navigation, the API reference and the sign-in state (`auth`), in a
+ * row from `sm` up and behind a hamburger button below it (after the actions, at the bar's end).
  */
 export function SiteHeader({ auth }: { auth: React.ReactNode }) {
   const t = useTranslations("Metadata");
@@ -20,14 +20,19 @@ export function SiteHeader({ auth }: { auth: React.ReactNode }) {
         <Image src="/bibleget-logo.png" alt="" width={32} height={32} unoptimized priority />
         {t("siteName")}
       </Link>
-      <NavMenu>
-        <Link href="/scalar" className="hover:underline">
-          {h("api")}
-        </Link>
+      <div className="flex items-center gap-1 sm:gap-3">
+        {/* From sm up the pages come first (API, sign in); on a phone the hamburger closes the bar. */}
+        <div className="order-last sm:order-first">
+          <NavMenu>
+            <Link href="/scalar" className="hover:underline">
+              {h("api")}
+            </Link>
+            {auth}
+          </NavMenu>
+        </div>
         <LocalePicker />
         <ThemeSwitch />
-        {auth}
-      </NavMenu>
+      </div>
     </header>
   );
 }
