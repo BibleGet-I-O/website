@@ -205,6 +205,10 @@
       "keyword": "Words in the verse, e.g. shepherd",
       "semantic": "A theme or idea, e.g. trust in God",
       "reference": "Jonah 1:1-2:2; 3:2"
-    }
+    },
+    "referenceLabel": "Bible reference",
+    "unreadableReference": "That reference could not be read. Try one like {example}.",
+    "compareLater": "Only {edition} is shown: the compared editions will be matched verse by verse once the verse mapping is ready.",
+    "passageHeading": "{book} {chapter}"
   }
 }

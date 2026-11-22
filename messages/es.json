@@ -205,6 +205,10 @@
       "keyword": "Palabras del versículo, p. ej. pastor",
       "semantic": "Un tema o una idea, p. ej. confianza en Dios",
       "reference": "Jonás 1,1-2,2; 3,2"
-    }
+    },
+    "referenceLabel": "Referencia bíblica",
+    "unreadableReference": "No se pudo leer la referencia. Prueba una como {example}.",
+    "compareLater": "Solo se muestra {edition}: las ediciones comparadas se alinearán versículo a versículo cuando la correspondencia de versículos esté lista.",
+    "passageHeading": "{book} {chapter}"
   }
 }

@@ -172,6 +172,21 @@ describe("SearchForm", () => {
     expect(screen.getByRole("textbox", { name: "Your question" })).toHaveAttribute("placeholder", "A theme or idea, e.g. trust in God");
   });
 
+  it("theReferenceFieldIsOneLineWithoutSuggestionsOrExactWords", async () => {
+    render(wrap(<SearchForm {...props} />));
+    fireEvent.click(screen.getByRole("radio", { name: "Reference" }));
+    const field = screen.getByRole("textbox", { name: "Bible reference" });
+    expect(field.tagName).toBe("INPUT");
+    expect(field).toHaveAttribute("name", "q");
+    expect(field).toHaveAttribute("placeholder", "Jonah 1:1-2:2; 3:2");
+    expect(screen.queryByRole("checkbox", { name: "Exact words" })).toBeNull();
+    await typeAndWait(field, "Jo");
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(300);
+    });
+    expect(fetchMock).not.toHaveBeenCalled();
+  });
+
   it("startsFromTheSearchShown", () => {
     render(wrap(<SearchForm {...props} initial={{ mode: "semantic", q: "light of the world", exact: false }} />));
     expect(screen.getByRole("radio", { name: "Semantic" })).toBeChecked();

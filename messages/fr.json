@@ -205,6 +205,10 @@
       "keyword": "Mots du verset, p. ex. berger",
       "semantic": "Un thème ou une idée, p. ex. confiance en Dieu",
       "reference": "Jonas 1,1-2,2; 3,2"
-    }
+    },
+    "referenceLabel": "Référence biblique",
+    "unreadableReference": "Impossible de lire cette référence. Essayez par exemple {example}.",
+    "compareLater": "Seule {edition} est affichée : les éditions comparées seront alignées verset par verset dès que la correspondance des versets sera prête.",
+    "passageHeading": "{book} {chapter}"
   }
 }

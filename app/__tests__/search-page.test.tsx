@@ -6,10 +6,12 @@ import en from "@/messages/en.json";
 vi.mock("server-only", () => ({}));
 const getEditions = vi.fn();
 const getIndex = vi.fn();
+const getPassage = vi.fn();
 vi.mock("@/lib/api", async () => ({
   ...(await vi.importActual<typeof import("@/lib/api")>("@/lib/api")),
   getEditions: () => getEditions(),
   getIndex: (s: string) => getIndex(s),
+  getPassage: (p: unknown) => getPassage(p),
 }));
 const searchEdition = vi.fn();
 vi.mock("@/lib/search", async () => ({ ...(await vi.importActual<object>("@/lib/search")), searchEdition: (p: unknown) => searchEdition(p) }));
@@ -36,10 +38,14 @@ const ed = { sigla: "NABRE", fullname: "New American Bible", year: "2011", langu
 const index = {
   books: [
     { bookNum: 27, name: "Wisdom", abbrev: "Ws", chapters: 19, versesPerChapter: [] },
+    { bookNum: 39, name: "Jonah", abbrev: "Jon", chapters: 4, versesPerChapter: [] },
     { bookNum: 50, name: "John", abbrev: "Jn", chapters: 21, versesPerChapter: [] },
   ],
 };
 const hit = (extra: object = {}) => ({ bookNum: 50, book: "John", chapter: 3, verse: 16, segment: null, printedChapter: null, label: null, text: "God so loved the world, the Light", ...extra });
+
+const row = (bookNum: number, chapter: number, verse: number, text: string) =>
+  ({ bookNum, chapter, verse, text, segment: null, label: null, printedChapter: null, titles: [] });
 
 async function page(search: Record<string, string>) {
   const ui = await SearchPage({ params: Promise.resolve({ locale: "en", edition: "nabre" }), searchParams: Promise.resolve(search) });
@@ -49,6 +55,7 @@ async function page(search: Record<string, string>) {
 beforeEach(() => {
   getEditions.mockReset().mockResolvedValue([ed]);
   getIndex.mockReset().mockResolvedValue(index);
+  getPassage.mockReset();
   searchEdition.mockReset().mockResolvedValue({ kind: "ok", hits: [hit()], total: 1, capped: null });
   getAccess.mockReset().mockResolvedValue({ access: "visitor", signedIn: false, emailVerified: false });
   semanticHit.mockReset().mockReturnValue({ ok: true, retryAfter: 0 });
@@ -127,6 +134,46 @@ describe("search page", () => {
     await page({ mode: "semantic", q: "light" });
     expect(searchEdition).not.toHaveBeenCalled();
     expect(screen.getByText("Too many searches; try again in a minute.")).toBeInTheDocument();
+  });
+
+  it("aReferenceSearchShowsThePassage", async () => {
+    getPassage.mockResolvedValue({ readable: true, capped: false, rows: [row(39, 1, 1, "The word of the Lord came"), row(39, 1, 2, "Arise, go to Nineveh")] });
+    await page({ mode: "reference", q: "Jonah 1:1-2" });
+    expect(getPassage).toHaveBeenCalledWith({ sigla: "NABRE", query: "Jonah 1:1-2", access: "visitor" });
+    expect(searchEdition).not.toHaveBeenCalled();
+    expect(semanticHit).not.toHaveBeenCalled();
+    expect(screen.getByRole("link", { name: "Jonah 1" })).toHaveAttribute("href", "/en/read/nabre/jonah/1#v1.1");
+    expect(screen.getByText("Arise, go to Nineveh")).toBeInTheDocument();
+    expect(screen.queryByRole("note")).toBeNull();
+  });
+
+  it("aPassageAcrossBooksHasAHeadingForEach", async () => {
+    getPassage.mockResolvedValue({ readable: true, capped: false, rows: [row(39, 4, 11, "Nineveh"), row(50, 1, 1, "In the beginning was the Word")] });
+    await page({ mode: "reference", q: "Jonah 4:11; John 1:1" });
+    expect(screen.getAllByRole("heading", { level: 2 }).map((h) => h.textContent)).toEqual(["Jonah 4", "John 1"]);
+    expect(screen.getByRole("link", { name: "John 1" })).toHaveAttribute("href", "/en/read/nabre/john/1#v1.1");
+  });
+
+  it("anUnreadableReferenceSaysSoWithTheExample", async () => {
+    getPassage.mockResolvedValue({ readable: false, capped: false, rows: [] });
+    await page({ mode: "reference", q: "Xyz 9" });
+    expect(screen.getByRole("status")).toHaveTextContent("That reference could not be read. Try one like Jonah 1:1-2:2; 3:2.");
+  });
+
+  it("aCappedReferenceOffersToSignIn", async () => {
+    getPassage.mockResolvedValue({ readable: true, capped: true, rows: [row(39, 1, 1, "x")] });
+    await page({ mode: "reference", q: "Jonah 1-4" });
+    const note = screen.getByRole("note");
+    expect(within(note).getByRole("button")).toBeInTheDocument();
+    expect(note.querySelector("input[name=redirectTo]")?.getAttribute("value") ?? note.innerHTML).toContain("/en/read/nabre/search?mode=reference&q=Jonah+1-4");
+  });
+
+  it("aComparisonShowsTheNoteAndKeepsItInTheLinks", async () => {
+    getPassage.mockResolvedValue({ readable: true, capped: false, rows: [row(39, 1, 1, "x")] });
+    await page({ mode: "reference", q: "Jonah 1:1", from: "/en/read/nabre/john/3?with=DRB&view=interlinear" });
+    expect(getPassage).toHaveBeenCalledTimes(1);
+    expect(screen.getByRole("note")).toHaveTextContent("Only New American Bible is shown");
+    expect(screen.getByRole("link", { name: "Jonah 1" })).toHaveAttribute("href", "/en/read/nabre/jonah/1?with=DRB&view=interlinear#v1.1");
   });
 
   it("anOldHybridLinkSearchesSemantic", async () => {

@@ -205,6 +205,10 @@
       "keyword": "Parole del versetto, es. pastore",
       "semantic": "Un tema o un'idea, es. fiducia in Dio",
       "reference": "Giona 1,1-2,2; 3,2"
-    }
+    },
+    "referenceLabel": "Riferimento biblico",
+    "unreadableReference": "Non è stato possibile leggere il riferimento. Provane uno come {example}.",
+    "compareLater": "Viene mostrata solo {edition}: le edizioni a confronto saranno allineate versetto per versetto quando la corrispondenza dei versetti sarà pronta.",
+    "passageHeading": "{book} {chapter}"
   }
 }

@@ -156,6 +156,9 @@ export function SearchForm({ locale, edition, editionName, from, initial }: Form
             {t("exact")}
           </label>
         </div>
+      ) : mode === "reference" ? (
+        <input type="text" name="q" aria-label={t("referenceLabel")} placeholder={t("placeholders.reference")} maxLength={200}
+          autoComplete="off" className={fieldClass} value={q} onChange={(e) => setQ(e.target.value)} />
       ) : (
         <textarea name="q" aria-label={t("questionLabel")} placeholder={t("placeholders.semantic")} maxLength={500} rows={3} className={fieldClass}
           value={q} onChange={(e) => setQ(e.target.value)} onKeyDown={onQuestionKey} />

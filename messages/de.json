@@ -205,6 +205,10 @@
       "keyword": "Wörter im Vers, z. B. Hirte",
       "semantic": "Ein Thema oder Gedanke, z. B. Vertrauen auf Gott",
       "reference": "Jona 1,1-2,2; 3,2"
-    }
+    },
+    "referenceLabel": "Bibelstelle",
+    "unreadableReference": "Diese Bibelstelle konnte nicht gelesen werden. Versuchen Sie z. B. {example}.",
+    "compareLater": "Nur {edition} wird angezeigt: Die verglichenen Ausgaben werden Vers für Vers zugeordnet, sobald die Verszuordnung fertig ist.",
+    "passageHeading": "{book} {chapter}"
   }
 }

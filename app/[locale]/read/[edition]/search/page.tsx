@@ -6,10 +6,12 @@ import { headers } from "next/headers";
 import { notFound } from "next/navigation";
 import { routing } from "@/i18n/routing";
 import { CappedNotice, noticeFor } from "@/components/CappedNotice";
+import { ReferenceResults } from "@/components/ReferenceResults";
 import { SearchForm } from "@/components/SearchForm";
 import { SearchResults, queryWords } from "@/components/SearchResults";
 import { getAccess } from "@/lib/access";
-import { getEditions, getIndex, slugFor } from "@/lib/api";
+import { getEditions, getIndex, getPassage, slugFor } from "@/lib/api";
+import { groupPassage, type PassageGroup } from "@/lib/passage";
 import { verseAnchor } from "@/lib/placement";
 import { clientIp, semanticLimiter } from "@/lib/rate-limit";
 import { PAGE_SIZE, searchEdition, type SearchHit, type SearchMode, type SearchOutcome } from "@/lib/search";
@@ -69,7 +71,9 @@ export default async function SearchPage({ params, searchParams }: { params: Pro
     const allowed = mode === "keyword" || semanticLimiter.hit(clientIp(await headers())).ok;
     outcome = allowed ? await searchEdition({ sigla: edition.sigla, mode, q, exact, page, access: (await getAccess()).access }) : "tooMany";
   }
-  const index = outcome && outcome !== "tooMany" && outcome.kind === "ok" ? await getIndex(edition.sigla) : null;
+  // A reference is looked up in this (the main) edition only: compared editions wait for the verse mapping.
+  const passage = q !== "" && mode === "reference" ? await getPassage({ sigla: edition.sigla, query: q, access: (await getAccess()).access }) : null;
+  const index = (outcome && outcome !== "tooMany" && outcome.kind === "ok") || passage?.readable ? await getIndex(edition.sigla) : null;
   const bookOf = (h: SearchHit) => index?.books.find((b) => b.bookNum === h.bookNum);
   const hrefFor = (h: SearchHit) => {
     const b = bookOf(h);
@@ -101,6 +105,7 @@ export default async function SearchPage({ params, searchParams }: { params: Pro
   );
 
   async function body() {
+    if (passage) return referenceBody(passage);
     if (outcome === "tooMany") return <p role="status">{t("tooMany")}</p>;
     if (!outcome) return null;
     if (outcome.kind === "refused") return <p role="status">{t(mode === "keyword" ? "refused" : "refusedQuestion")}</p>;
@@ -147,4 +152,41 @@ export default async function SearchPage({ params, searchParams }: { params: Pro
       </>
     );
   }
+
+  async function referenceBody(p: NonNullable<typeof passage>) {
+    const keep = readerChoices(cameFrom);
+    const note = keep.includes("with=") ? <aside role="note" className="mb-4 rounded border border-slate-200 p-3 text-sm dark:border-slate-800">{t("compareLater", { edition: edition!.fullname })}</aside> : null;
+    if (!p.readable) {
+      return (
+        <>
+          {note}
+          <p role="status">{t("unreadableReference", { example: t("placeholders.reference") })}</p>
+        </>
+      );
+    }
+    const books = index?.books ?? [];
+    const hrefFor = (g: PassageGroup) => {
+      const b = books.find((x) => x.bookNum === g.bookNum);
+      return `/${locale}/read/${slug}/${b ? slugFor(b, books) : g.bookNum}/${g.chapter}${keep}#${verseAnchor(g.rows[0])}`;
+    };
+    const access = p.capped ? await getAccess() : null;
+    const notice = access ? noticeFor(true, access, edition!.copyright) : null;
+    return (
+      <>
+        {note}
+        {await ReferenceResults({ groups: groupPassage(p.rows), hrefFor, bookName: (n) => books.find((x) => x.bookNum === n)?.name ?? String(n), lang: edition!.language || undefined })}
+        {notice && await CappedNotice({ kind: notice, about: "search", redirectTo: searchHref(locale, slug, { mode, q, exact: false, from: cameFrom }) })}
+      </>
+    );
+  }
+}
+
+/** The comparison the search started from (`with`, `view`, `tradition` of the reader page), as "?…" or "". */
+function readerChoices(from: string | undefined): string {
+  const qs = new URLSearchParams(from?.split("#")[0].split("?")[1] ?? "");
+  const parts = (["with", "view", "tradition"] as const)
+    .map((k) => [k, qs.get(k)] as const)
+    .filter(([, v]) => v)
+    .map(([k, v]) => `${k}=${encodeURIComponent(v!).replace(/%2C/gi, ",")}`);
+  return parts.length ? `?${parts.join("&")}` : "";
 }
