@@ -43,8 +43,9 @@ export function Spread({ sides, rows, chapter, truncated = [], view = "side-by-s
   const cell = (r: ParallelRow, i: number, s: number): ReactNode => {
     const v = cellsOf(r)[s];
     // Numbered against the main chapter: VGCL 9:22 beside NABRE Psalm 10 reads "9:22".
-    // The main side's verses can be linked to (a search result: Esther's two texts are a Spread).
-    if (v) return <VerseLine row={v} chapter={chapter} headings={false} compact={compact} anchor={s === 0} />;
+    // A row's verse can be linked to (a search result: Esther's two texts are a Spread): on the first cell that
+    // prints it, the main side's when it does, so one id per verse.
+    if (v) return <VerseLine row={v} chapter={chapter} headings={false} compact={compact} anchor={s === cellsOf(r).findIndex(Boolean)} />;
     if (truncated[s] && i > last[s]) return null;
     if (s > 0 && r.a && r.a.chapter !== chapter) return null;
     return gapNotes ? <GapNote edition={sides[s].name} /> : null;
