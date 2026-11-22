@@ -124,9 +124,15 @@ describe("search page", () => {
 
   it("tooManySemanticSearchesSaysWait", async () => {
     semanticHit.mockReturnValue({ ok: false, retryAfter: 30 });
-    await page({ mode: "hybrid", q: "light" });
+    await page({ mode: "semantic", q: "light" });
     expect(searchEdition).not.toHaveBeenCalled();
     expect(screen.getByText("Too many searches; try again in a minute.")).toBeInTheDocument();
+  });
+
+  it("anOldHybridLinkSearchesSemantic", async () => {
+    await page({ mode: "hybrid", q: "trust" });
+    expect(searchEdition).toHaveBeenCalledWith(expect.objectContaining({ mode: "semantic" }));
+    expect(screen.getByRole("radio", { name: "Semantic" })).toBeChecked();
   });
 
   it("noResultsSaysSo", async () => {

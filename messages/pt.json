@@ -175,7 +175,7 @@
     "modes": {
       "keyword": "Palavras",
       "semantic": "Semântica",
-      "hybrid": "Híbrida"
+      "reference": "Referência"
     },
     "results": "{count, plural, one {# resultado} other {# resultados}}",
     "range": "{from, number}–{to, number} de {total, number}",
@@ -200,6 +200,11 @@
     "suggestions": "Sugestões",
     "noMore": "Não há mais resultados.",
     "firstPage": "Primeira página",
-    "refusedQuestion": "Tente reformular sua pergunta."
+    "refusedQuestion": "Tente reformular sua pergunta.",
+    "placeholders": {
+      "keyword": "Palavras do versículo, p. ex. pastor",
+      "semantic": "Um tema ou uma ideia, p. ex. confiança em Deus",
+      "reference": "Jonas 1,1-2,2; 3,2"
+    }
   }
 }

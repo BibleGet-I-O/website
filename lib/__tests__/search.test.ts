@@ -47,16 +47,13 @@ describe("searchEdition", () => {
     expect(url(fn).searchParams.get("match")).toBe("exact");
   });
 
-  it("asksSemanticAndHybridForThirty", async () => {
-    for (const mode of ["semantic", "hybrid"] as const) {
-      const fn = stub(() => json({ results: [raw(1), raw(2)], info: {} }));
-      const out = await searchEdition({ ...base, mode, q: "God forgives" });
-      const u = url(fn);
-      expect(u.pathname).toBe(`/dev/search/${mode}`);
-      expect(Object.fromEntries(u.searchParams)).toMatchObject({ query: "God forgives", version: "NABRE", limit: "30" });
-      expect(out).toMatchObject({ kind: "ok", total: 2, capped: null });
-      vi.unstubAllGlobals();
-    }
+  it("asksSemanticThroughTheHybridRouteForThirty", async () => {
+    const fn = stub(() => json({ results: [raw(1), raw(2)], info: {} }));
+    const out = await searchEdition({ ...base, mode: "semantic", q: "God forgives" });
+    const u = url(fn);
+    expect(u.pathname).toBe("/dev/search/hybrid");
+    expect(Object.fromEntries(u.searchParams)).toEqual({ query: "God forgives", version: "NABRE", limit: "30" });
+    expect(out).toMatchObject({ kind: "ok", total: 2, capped: null });
   });
 
   it("usesTheReaderKeyForAReader", async () => {

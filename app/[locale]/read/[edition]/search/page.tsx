@@ -12,7 +12,8 @@ import { getAccess } from "@/lib/access";
 import { getEditions, getIndex, slugFor } from "@/lib/api";
 import { verseAnchor } from "@/lib/placement";
 import { clientIp, semanticLimiter } from "@/lib/rate-limit";
-import { PAGE_SIZE, SEARCH_MODES, searchEdition, type SearchHit, type SearchMode, type SearchOutcome } from "@/lib/search";
+import { PAGE_SIZE, searchEdition, type SearchHit, type SearchMode, type SearchOutcome } from "@/lib/search";
+import { parseMode } from "@/lib/search-modes";
 import { editionSlug } from "@/lib/slug";
 
 type Params = { locale: string; edition: string };
@@ -39,8 +40,8 @@ function searchHref(locale: string, slug: string, p: { mode: SearchMode; q: stri
 }
 
 /**
- * The results of a search over one edition: `?mode=keyword|semantic|hybrid&q=…[&match=exact][&page=N][&from=…]`.
- * Keyword results come 50 to a page; semantic and hybrid at most 30. The API applies the copyright cap to the
+ * The results of a search over one edition: `?mode=keyword|semantic|reference&q=…[&match=exact][&page=N][&from=…]`
+ * (an old `mode=hybrid` is semantic). Keyword results come 50 to a page; semantic at most 30. The API applies the copyright cap to the
  * reader's key; a capped search says so and offers to sign in, coming back to this search.
  */
 export default async function SearchPage({ params, searchParams }: { params: Promise<Params>; searchParams: Promise<Search> }) {
@@ -53,8 +54,7 @@ export default async function SearchPage({ params, searchParams }: { params: Pro
   const edition = (await getEditions()).find((e) => editionSlug(e.sigla) === editionParam.toLowerCase());
   if (!edition) notFound();
   const slug = editionSlug(edition.sigla);
-  const rawMode = one(search.mode);
-  const mode: SearchMode = SEARCH_MODES.includes(rawMode as SearchMode) ? (rawMode as SearchMode) : "keyword";
+  const mode = parseMode(one(search.mode));
   const q = (one(search.q) ?? "").trim().slice(0, MAX_QUERY);
   const exact = mode === "keyword" && one(search.match) === "exact";
   const pageParam = Number(one(search.page) ?? "1");
@@ -65,7 +65,7 @@ export default async function SearchPage({ params, searchParams }: { params: Pro
   const back = cameFrom ?? `/${locale}/read/${slug}`;
 
   let outcome: SearchOutcome | "tooMany" | null = null;
-  if (q !== "") {
+  if (q !== "" && mode !== "reference") {
     const allowed = mode === "keyword" || semanticLimiter.hit(clientIp(await headers())).ok;
     outcome = allowed ? await searchEdition({ sigla: edition.sigla, mode, q, exact, page, access: (await getAccess()).access }) : "tooMany";
   }

@@ -175,7 +175,7 @@
     "modes": {
       "keyword": "Stichwort",
       "semantic": "Semantisch",
-      "hybrid": "Hybrid"
+      "reference": "Bibelstelle"
     },
     "results": "{count, plural, one {# Treffer} other {# Treffer}}",
     "range": "{from, number}–{to, number} von {total, number}",
@@ -200,6 +200,11 @@
     "suggestions": "Vorschläge",
     "noMore": "Keine weiteren Treffer.",
     "firstPage": "Erste Seite",
-    "refusedQuestion": "Versuchen Sie, Ihre Frage anders zu formulieren."
+    "refusedQuestion": "Versuchen Sie, Ihre Frage anders zu formulieren.",
+    "placeholders": {
+      "keyword": "Wörter im Vers, z. B. Hirte",
+      "semantic": "Ein Thema oder Gedanke, z. B. Vertrauen auf Gott",
+      "reference": "Jona 1,1-2,2; 3,2"
+    }
   }
 }

@@ -2,10 +2,11 @@ import "server-only";
 import { ApiUnavailable, apiResponse } from "./api";
 import type { Access } from "./types";
 
-export type SearchMode = "keyword" | "semantic" | "hybrid";
-export const SEARCH_MODES: readonly SearchMode[] = ["keyword", "semantic", "hybrid"];
+import type { SearchMode } from "./search-modes";
 
-/** Keyword results come in pages of this many; semantic and hybrid return at most SEMANTIC_LIMIT, unpaged. */
+export { SEARCH_MODES, type SearchMode } from "./search-modes";
+
+/** Keyword results come in pages of this many; semantic returns at most SEMANTIC_LIMIT, unpaged. */
 export const PAGE_SIZE = 50;
 export const SEMANTIC_LIMIT = 30;
 
@@ -48,7 +49,10 @@ const toHit = (r: RawHit): SearchHit => ({
   text: r.text_plain ?? r.text ?? "",
 });
 
-function searchPath(p: { sigla: string; mode: SearchMode; q: string; exact: boolean; page: number }): string {
+/** The modes searchEdition runs: a reference is looked up through /quote instead (getPassage). */
+type WordMode = Exclude<SearchMode, "reference">;
+
+function searchPath(p: { sigla: string; mode: WordMode; q: string; exact: boolean; page: number }): string {
   if (p.mode === "keyword") {
     const qs = new URLSearchParams({
       keyword: p.q, version: p.sigla, match: p.exact ? "exact" : "fulltext",
@@ -56,11 +60,12 @@ function searchPath(p: { sigla: string; mode: SearchMode; q: string; exact: bool
     });
     return `/search/keyword?${qs}`;
   }
-  return `/search/${p.mode}?${new URLSearchParams({ query: p.q, version: p.sigla, limit: String(SEMANTIC_LIMIT) })}`;
+  // Semantic through the hybrid route: on a question it is the semantic ranking, on a few words it adds their matches.
+  return `/search/hybrid?${new URLSearchParams({ query: p.q, version: p.sigla, limit: String(SEMANTIC_LIMIT) })}`;
 }
 
 /** Search one edition with the reader's key (the API applies the copyright cap to it). */
-export async function searchEdition(p: { sigla: string; mode: SearchMode; q: string; exact: boolean; page: number; access: Access }): Promise<SearchOutcome> {
+export async function searchEdition(p: { sigla: string; mode: WordMode; q: string; exact: boolean; page: number; access: Access }): Promise<SearchOutcome> {
   const res = await apiResponse(searchPath(p), p.access);
   // A keyword too short or only common words, or a question the API can't take.
   if (res.status === 422) return { kind: "refused" };

@@ -175,7 +175,7 @@
     "modes": {
       "keyword": "Keyword",
       "semantic": "Semantic",
-      "hybrid": "Hybrid"
+      "reference": "Reference"
     },
     "results": "{count, plural, one {# result} other {# results}}",
     "range": "{from, number}–{to, number} of {total, number}",
@@ -200,6 +200,11 @@
     "suggestions": "Suggestions",
     "noMore": "No more results.",
     "firstPage": "First page",
-    "refusedQuestion": "Try rephrasing your question."
+    "refusedQuestion": "Try rephrasing your question.",
+    "placeholders": {
+      "keyword": "Words in the verse, e.g. shepherd",
+      "semantic": "A theme or idea, e.g. trust in God",
+      "reference": "Jonah 1:1-2:2; 3:2"
+    }
   }
 }
