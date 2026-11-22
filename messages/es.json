@@ -175,7 +175,7 @@
     "modes": {
       "keyword": "Palabras",
       "semantic": "Semántica",
-      "hybrid": "Híbrida"
+      "reference": "Referencia"
     },
     "results": "{count, plural, one {# resultado} other {# resultados}}",
     "range": "{from, number}–{to, number} de {total, number}",
@@ -200,6 +200,16 @@
     "suggestions": "Sugerencias",
     "noMore": "No hay más resultados.",
     "firstPage": "Primera página",
-    "refusedQuestion": "Prueba a formular la pregunta de otra manera."
+    "refusedQuestion": "Prueba a formular la pregunta de otra manera.",
+    "placeholders": {
+      "keyword": "Palabras del versículo, p. ej. pastor",
+      "semantic": "Un tema o una idea, p. ej. confianza en Dios",
+      "reference": "Jonás 1,1-2,2; 3,2"
+    },
+    "referenceLabel": "Referencia bíblica",
+    "unreadableReference": "No se pudo leer la referencia. Prueba una como {example}.",
+    "compareLater": "Solo se muestra {edition}: las ediciones comparadas se alinearán versículo a versículo cuando la correspondencia de versículos esté lista.",
+    "passageHeading": "{book} {chapter}",
+    "partialReference": "Una parte de la referencia no se pudo leer; el resto se muestra abajo. Prueba una como {example}."
   }
 }

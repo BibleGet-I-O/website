@@ -175,7 +175,7 @@
     "modes": {
       "keyword": "Parole",
       "semantic": "Semantica",
-      "hybrid": "Ibrida"
+      "reference": "Riferimento"
     },
     "results": "{count, plural, one {# risultato} other {# risultati}}",
     "range": "{from, number}–{to, number} di {total, number}",
@@ -200,6 +200,16 @@
     "suggestions": "Suggerimenti",
     "noMore": "Non ci sono altri risultati.",
     "firstPage": "Prima pagina",
-    "refusedQuestion": "Prova a riformulare la domanda."
+    "refusedQuestion": "Prova a riformulare la domanda.",
+    "placeholders": {
+      "keyword": "Parole del versetto, es. pastore",
+      "semantic": "Un tema o un'idea, es. fiducia in Dio",
+      "reference": "Giona 1,1-2,2; 3,2"
+    },
+    "referenceLabel": "Riferimento biblico",
+    "unreadableReference": "Non è stato possibile leggere il riferimento. Provane uno come {example}.",
+    "compareLater": "Viene mostrata solo {edition}: le edizioni a confronto saranno allineate versetto per versetto quando la corrispondenza dei versetti sarà pronta.",
+    "passageHeading": "{book} {chapter}",
+    "partialReference": "Una parte del riferimento non è stata letta; il resto è mostrato qui sotto. Provane uno come {example}."
   }
 }

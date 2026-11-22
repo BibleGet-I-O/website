@@ -175,7 +175,7 @@
     "modes": {
       "keyword": "Keyword",
       "semantic": "Semantic",
-      "hybrid": "Hybrid"
+      "reference": "Reference"
     },
     "results": "{count, plural, one {# result} other {# results}}",
     "range": "{from, number}–{to, number} of {total, number}",
@@ -200,6 +200,16 @@
     "suggestions": "Suggestions",
     "noMore": "No more results.",
     "firstPage": "First page",
-    "refusedQuestion": "Try rephrasing your question."
+    "refusedQuestion": "Try rephrasing your question.",
+    "placeholders": {
+      "keyword": "Words in the verse, e.g. shepherd",
+      "semantic": "A theme or idea, e.g. trust in God",
+      "reference": "Jonah 1:1-2:2; 3:2"
+    },
+    "referenceLabel": "Bible reference",
+    "unreadableReference": "That reference could not be read. Try one like {example}.",
+    "compareLater": "Only {edition} is shown: the compared editions will be matched verse by verse once the verse mapping is ready.",
+    "passageHeading": "{book} {chapter}",
+    "partialReference": "Part of that reference could not be read; the rest is shown below. Try one like {example}."
   }
 }

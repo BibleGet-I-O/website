@@ -175,7 +175,7 @@
     "modes": {
       "keyword": "Mots",
       "semantic": "Sémantique",
-      "hybrid": "Hybride"
+      "reference": "Référence"
     },
     "results": "{count, plural, one {# résultat} other {# résultats}}",
     "range": "{from, number}–{to, number} sur {total, number}",
@@ -200,6 +200,16 @@
     "suggestions": "Suggestions",
     "noMore": "Il n’y a pas d’autres résultats.",
     "firstPage": "Première page",
-    "refusedQuestion": "Essayez de reformuler votre question."
+    "refusedQuestion": "Essayez de reformuler votre question.",
+    "placeholders": {
+      "keyword": "Mots du verset, p. ex. berger",
+      "semantic": "Un thème ou une idée, p. ex. confiance en Dieu",
+      "reference": "Jonas 1,1-2,2; 3,2"
+    },
+    "referenceLabel": "Référence biblique",
+    "unreadableReference": "Impossible de lire cette référence. Essayez par exemple {example}.",
+    "compareLater": "Seule {edition} est affichée : les éditions comparées seront alignées verset par verset dès que la correspondance des versets sera prête.",
+    "passageHeading": "{book} {chapter}",
+    "partialReference": "Une partie de cette référence n'a pas pu être lue ; le reste est affiché ci-dessous. Essayez par exemple {example}."
   }
 }

@@ -3,9 +3,8 @@
 import { useEffect, useId, useRef, useState, useSyncExternalStore, type KeyboardEvent } from "react";
 import { useTranslations } from "next-intl";
 import { editionSlug } from "@/lib/slug";
+import { SEARCH_MODES, type SearchMode } from "@/lib/search-modes";
 
-export type SearchMode = "keyword" | "semantic" | "hybrid";
-const MODES: SearchMode[] = ["keyword", "semantic", "hybrid"];
 const DEBOUNCE_MS = 200;
 /** The word being typed: the letters at the end of the input. */
 const LAST_WORD = /\p{L}+$/u;
@@ -52,8 +51,8 @@ function useSuggestions(edition: string, value: string, enabled: boolean): [stri
 }
 
 /**
- * The search over one edition: Keyword (one line, with suggestions for the word being typed), Semantic or Hybrid
- * (a text area for a question; Enter searches, Shift+Enter adds a line). A plain GET form to the results page, so
+ * The search over one edition: Keyword (one line, with suggestions for the word being typed), Semantic
+ * (a text area for a question or a theme; Enter searches, Shift+Enter adds a line). A plain GET form to the results page, so
  * it also works without JavaScript (without suggestions).
  */
 export function SearchForm({ locale, edition, editionName, from, initial }: FormProps) {
@@ -107,7 +106,7 @@ export function SearchForm({ locale, edition, editionName, from, initial }: Form
       <p className="font-semibold">{t("searching", { edition: editionName })}</p>
       <fieldset className="flex flex-wrap gap-3">
         <legend className="sr-only">{t("kind")}</legend>
-        {MODES.map((m) => (
+        {SEARCH_MODES.map((m) => (
           <label key={m} className="flex items-center gap-1">
             <input type="radio" name="mode" value={m} checked={mode === m} onChange={() => setMode(m)} />
             {t(`modes.${m}`)}
@@ -122,6 +121,7 @@ export function SearchForm({ locale, edition, editionName, from, initial }: Form
               name="q"
               role="combobox"
               aria-label={t("keywordLabel")}
+              placeholder={t("placeholders.keyword")}
               aria-autocomplete="list"
               aria-expanded={open}
               aria-controls={listId}
@@ -156,8 +156,11 @@ export function SearchForm({ locale, edition, editionName, from, initial }: Form
             {t("exact")}
           </label>
         </div>
+      ) : mode === "reference" ? (
+        <input type="text" name="q" aria-label={t("referenceLabel")} placeholder={t("placeholders.reference")} maxLength={200}
+          autoComplete="off" className={fieldClass} value={q} onChange={(e) => setQ(e.target.value)} />
       ) : (
-        <textarea name="q" aria-label={t("questionLabel")} maxLength={500} rows={3} className={fieldClass}
+        <textarea name="q" aria-label={t("questionLabel")} placeholder={t("placeholders.semantic")} maxLength={500} rows={3} className={fieldClass}
           value={q} onChange={(e) => setQ(e.target.value)} onKeyDown={onQuestionKey} />
       )}
       <input type="hidden" name="from" value={from} />

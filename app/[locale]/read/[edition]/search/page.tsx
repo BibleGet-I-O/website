@@ -6,13 +6,16 @@ import { headers } from "next/headers";
 import { notFound } from "next/navigation";
 import { routing } from "@/i18n/routing";
 import { CappedNotice, noticeFor } from "@/components/CappedNotice";
+import { ReferenceResults } from "@/components/ReferenceResults";
 import { SearchForm } from "@/components/SearchForm";
 import { SearchResults, queryWords } from "@/components/SearchResults";
 import { getAccess } from "@/lib/access";
-import { getEditions, getIndex, slugFor } from "@/lib/api";
+import { getEditions, getIndex, getPassage, slugFor } from "@/lib/api";
+import { groupPassage, type PassageGroup } from "@/lib/passage";
 import { verseAnchor } from "@/lib/placement";
 import { clientIp, semanticLimiter } from "@/lib/rate-limit";
-import { PAGE_SIZE, SEARCH_MODES, searchEdition, type SearchHit, type SearchMode, type SearchOutcome } from "@/lib/search";
+import { PAGE_SIZE, searchEdition, type SearchHit, type SearchMode, type SearchOutcome } from "@/lib/search";
+import { parseMode } from "@/lib/search-modes";
 import { editionSlug } from "@/lib/slug";
 
 type Params = { locale: string; edition: string };
@@ -39,8 +42,8 @@ function searchHref(locale: string, slug: string, p: { mode: SearchMode; q: stri
 }
 
 /**
- * The results of a search over one edition: `?mode=keyword|semantic|hybrid&q=…[&match=exact][&page=N][&from=…]`.
- * Keyword results come 50 to a page; semantic and hybrid at most 30. The API applies the copyright cap to the
+ * The results of a search over one edition: `?mode=keyword|semantic|reference&q=…[&match=exact][&page=N][&from=…]`
+ * (an old `mode=hybrid` is semantic). Keyword results come 50 to a page; semantic at most 30. The API applies the copyright cap to the
  * reader's key; a capped search says so and offers to sign in, coming back to this search.
  */
 export default async function SearchPage({ params, searchParams }: { params: Promise<Params>; searchParams: Promise<Search> }) {
@@ -53,8 +56,7 @@ export default async function SearchPage({ params, searchParams }: { params: Pro
   const edition = (await getEditions()).find((e) => editionSlug(e.sigla) === editionParam.toLowerCase());
   if (!edition) notFound();
   const slug = editionSlug(edition.sigla);
-  const rawMode = one(search.mode);
-  const mode: SearchMode = SEARCH_MODES.includes(rawMode as SearchMode) ? (rawMode as SearchMode) : "keyword";
+  const mode = parseMode(one(search.mode));
   const q = (one(search.q) ?? "").trim().slice(0, MAX_QUERY);
   const exact = mode === "keyword" && one(search.match) === "exact";
   const pageParam = Number(one(search.page) ?? "1");
@@ -65,11 +67,13 @@ export default async function SearchPage({ params, searchParams }: { params: Pro
   const back = cameFrom ?? `/${locale}/read/${slug}`;
 
   let outcome: SearchOutcome | "tooMany" | null = null;
-  if (q !== "") {
+  if (q !== "" && mode !== "reference") {
     const allowed = mode === "keyword" || semanticLimiter.hit(clientIp(await headers())).ok;
     outcome = allowed ? await searchEdition({ sigla: edition.sigla, mode, q, exact, page, access: (await getAccess()).access }) : "tooMany";
   }
-  const index = outcome && outcome !== "tooMany" && outcome.kind === "ok" ? await getIndex(edition.sigla) : null;
+  // A reference is looked up in this (the main) edition only: compared editions wait for the verse mapping.
+  const passage = q !== "" && mode === "reference" ? await getPassage({ sigla: edition.sigla, query: q, access: (await getAccess()).access }) : null;
+  const index = (outcome && outcome !== "tooMany" && outcome.kind === "ok") || passage?.readable ? await getIndex(edition.sigla) : null;
   const bookOf = (h: SearchHit) => index?.books.find((b) => b.bookNum === h.bookNum);
   const hrefFor = (h: SearchHit) => {
     const b = bookOf(h);
@@ -101,6 +105,7 @@ export default async function SearchPage({ params, searchParams }: { params: Pro
   );
 
   async function body() {
+    if (passage) return referenceBody(passage);
     if (outcome === "tooMany") return <p role="status">{t("tooMany")}</p>;
     if (!outcome) return null;
     if (outcome.kind === "refused") return <p role="status">{t(mode === "keyword" ? "refused" : "refusedQuestion")}</p>;
@@ -147,4 +152,45 @@ export default async function SearchPage({ params, searchParams }: { params: Pro
       </>
     );
   }
+
+  async function referenceBody(p: NonNullable<typeof passage>) {
+    const keep = readerChoices(cameFrom);
+    const note = keep.includes("with=") ? <aside role="note" className="mb-4 rounded border border-slate-200 p-3 text-sm dark:border-slate-800">{t("compareLater", { edition: edition!.fullname })}</aside> : null;
+    if (!p.readable) {
+      return (
+        <>
+          {note}
+          <p role="status">{t("unreadableReference", { example: t("placeholders.reference") })}</p>
+        </>
+      );
+    }
+    const books = index?.books ?? [];
+    const hrefFor = (g: PassageGroup) => {
+      const b = books.find((x) => x.bookNum === g.bookNum);
+      return `/${locale}/read/${slug}/${b ? slugFor(b, books) : g.bookNum}/${g.chapter}${keep}#${verseAnchor(g.rows[0])}`;
+    };
+    const access = p.capped ? await getAccess() : null;
+    const notice = access ? noticeFor(true, access, edition!.copyright) : null;
+    return (
+      <>
+        {note}
+        {p.partial && <p role="status" className="mb-4">{t("partialReference", { example: t("placeholders.reference") })}</p>}
+        {await ReferenceResults({ groups: groupPassage(p.rows), hrefFor, bookName: (n) => books.find((x) => x.bookNum === n)?.name ?? String(n), lang: edition!.language || undefined })}
+        {notice && await CappedNotice({ kind: notice, about: "search", redirectTo: searchHref(locale, slug, { mode, q, exact: false, from: cameFrom }) })}
+      </>
+    );
+  }
+}
+
+/**
+ * The comparison the search started from (`with`, `view` of the reader page), as "?…" or "". Not `tradition`: the
+ * passage was fetched in the edition's default Esther text, and its links must open that text.
+ */
+function readerChoices(from: string | undefined): string {
+  const qs = new URLSearchParams(from?.split("#")[0].split("?")[1] ?? "");
+  const parts = (["with", "view"] as const)
+    .map((k) => [k, qs.get(k)] as const)
+    .filter(([, v]) => v)
+    .map(([k, v]) => `${k}=${encodeURIComponent(v!).replace(/%2C/gi, ",")}`);
+  return parts.length ? `?${parts.join("&")}` : "";
 }
