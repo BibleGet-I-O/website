@@ -3,7 +3,9 @@
   "version": "0.1.0",
   "private": true,
   "type": "module",
-  "engines": { "node": ">=24" },
+  "engines": {
+    "node": ">=24"
+  },
   "scripts": {
     "dev": "next dev",
     "build": "next build",
@@ -15,6 +17,7 @@
     "sync-messages": "node scripts/sync-messages.mjs"
   },
   "dependencies": {
+    "@scalar/api-reference-react": "^0.9.88",
     "next": "^16.4.6",
     "next-auth": "5.0.0-beta.32",
     "next-intl": "^4.14.9",
@@ -37,5 +40,7 @@
     "typescript": "^5.7.0",
     "vitest": "^5.1.0"
   },
-  "overrides": { "postcss": "^8.5.24" }
+  "overrides": {
+    "postcss": "^8.5.24"
+  }
 }

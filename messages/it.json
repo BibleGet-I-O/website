@@ -1,7 +1,9 @@
 {
   "Metadata": {
     "siteName": "BibleGet",
-    "siteDescription": "Leggi la Bibbia in molte edizioni e lingue."
+    "siteDescription": "Leggi la Bibbia in molte edizioni e lingue.",
+    "apiReferenceTitle": "Riferimento API",
+    "apiReferenceDescription": "La documentazione dell'API di BibleGet I/O: citazioni bibliche, metadati e ricerca."
   },
   "Home": {
     "title": "BibleGet",
@@ -115,16 +117,15 @@
     }
   },
   "Theme": {
-    "label": "Tema",
-    "system": "Sistema",
-    "light": "Chiaro",
-    "dark": "Scuro"
+    "toDark": "Passa al tema scuro",
+    "toLight": "Passa al tema chiaro"
   },
   "Header": {
     "openMenu": "Apri il menu",
     "closeMenu": "Chiudi il menu",
     "mainNav": "Navigazione principale",
-    "language": "Lingua"
+    "language": "Lingua",
+    "api": "API"
   },
   "Review": {
     "title": "Revisione",
