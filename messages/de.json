@@ -195,7 +195,7 @@
     "kind": "Art der Suche",
     "keywordLabel": "Gesuchte Wörter",
     "questionLabel": "Ihre Frage",
-    "exact": "Genaue Wörter",
+    "exact": "Genaue Wortfolge",
     "submit": "Suchen",
     "suggestions": "Vorschläge",
     "noMore": "Keine weiteren Treffer.",
@@ -213,7 +213,7 @@
     "partialReference": "Ein Teil dieser Bibelstelle konnte nicht gelesen werden; der Rest steht unten. Versuchen Sie z. B. {example}.",
     "about": "Über die Arten der Suche",
     "help": {
-      "keyword": "Findet die Verse, die die eingegebenen Wörter enthalten, in der Sprache der Ausgabe. Wählen Sie „Genaue Wörter“, um sie genau so zu finden, wie sie geschrieben sind.",
+      "keyword": "Findet die Verse, die die eingegebenen Wörter enthalten, in der Sprache der Ausgabe. Wählen Sie „Genaue Wortfolge“, um diese Wörter zusammen und genau so zu finden, wie sie geschrieben sind.",
       "semantic": "Findet Verse zu einem Thema oder Gedanken, auch wenn sie ihn mit anderen Worten ausdrücken: Synonyme, Umschreibungen und Fragen funktionieren gut, ebenso ein Wort oder eine Frage in einer anderen Sprache („enemy“ findet „Feind“ in einer deutschen Ausgabe).",
       "reference": "Zeigt genau die Verse einer Bibelstelle, z. B. Jona 1,1-2,2; 3,2, mit den Buchnamen und der Schreibweise Ihrer Sprache."
     }

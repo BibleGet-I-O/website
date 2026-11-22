@@ -195,7 +195,7 @@
     "kind": "Type de recherche",
     "keywordLabel": "Mots à trouver",
     "questionLabel": "Votre question",
-    "exact": "Mots exacts",
+    "exact": "Expression exacte",
     "submit": "Rechercher",
     "suggestions": "Suggestions",
     "noMore": "Il n’y a pas d’autres résultats.",
@@ -213,7 +213,7 @@
     "partialReference": "Une partie de cette référence n'a pas pu être lue ; le reste est affiché ci-dessous. Essayez par exemple {example}.",
     "about": "À propos des types de recherche",
     "help": {
-      "keyword": "Trouve les versets qui contiennent les mots saisis, dans la langue de l'édition. Cochez « Mots exacts » pour les trouver tels qu'ils sont écrits.",
+      "keyword": "Trouve les versets qui contiennent les mots saisis, dans la langue de l'édition. Cochez « Expression exacte » pour trouver ces mots ensemble, tels qu'ils sont écrits.",
       "semantic": "Trouve des versets sur un thème ou une idée même lorsqu'ils l'expriment avec d'autres mots : synonymes, paraphrases et questions fonctionnent bien, tout comme un mot ou une question dans une autre langue (« enemy » trouve « ennemi » dans une édition française).",
       "reference": "Affiche exactement les versets d'une référence biblique, comme Jonas 1,1-2,2; 3,2, avec les noms des livres et la notation de votre langue."
     }

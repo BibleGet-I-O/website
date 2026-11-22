@@ -195,7 +195,7 @@
     "kind": "Tipo de búsqueda",
     "keywordLabel": "Palabras que buscar",
     "questionLabel": "Tu pregunta",
-    "exact": "Palabras exactas",
+    "exact": "Frase exacta",
     "submit": "Buscar",
     "suggestions": "Sugerencias",
     "noMore": "No hay más resultados.",
@@ -213,7 +213,7 @@
     "partialReference": "Una parte de la referencia no se pudo leer; el resto se muestra abajo. Prueba una como {example}.",
     "about": "Acerca de los tipos de búsqueda",
     "help": {
-      "keyword": "Encuentra los versículos que contienen las palabras que escribes, en el idioma de la edición. Marca «Palabras exactas» para buscarlas tal como están escritas.",
+      "keyword": "Encuentra los versículos que contienen las palabras que escribes, en el idioma de la edición. Marca «Frase exacta» para encontrar esas palabras juntas, tal como están escritas.",
       "semantic": "Encuentra versículos sobre un tema o una idea aunque lo digan con otras palabras: funcionan bien los sinónimos, las paráfrasis y las preguntas, y también una palabra o pregunta en otro idioma («enemy» encuentra «enemigo» en una edición española).",
       "reference": "Muestra exactamente los versículos de una referencia bíblica, como Jonás 1,1-2,2; 3,2, con los nombres de los libros y la notación de tu idioma."
     }

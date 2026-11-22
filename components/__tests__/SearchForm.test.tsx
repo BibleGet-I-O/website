@@ -127,7 +127,7 @@ describe("SearchForm", () => {
 
   it("exactWordsSetsMatchExact", () => {
     const { container } = render(wrap(<SearchForm {...props} />));
-    const exact = screen.getByRole("checkbox", { name: "Exact words" });
+    const exact = screen.getByRole("checkbox", { name: "Exact phrase" });
     expect(exact).toHaveAttribute("name", "match");
     expect(exact).toHaveAttribute("value", "exact");
     expect(container.querySelector("input[name=match]")).toBe(exact);
@@ -139,7 +139,7 @@ describe("SearchForm", () => {
     const area = screen.getByRole("textbox", { name: "Your question" });
     expect(area.tagName).toBe("TEXTAREA");
     expect(area).toHaveAttribute("maxLength", "500");
-    expect(screen.queryByRole("checkbox", { name: "Exact words" })).toBeNull();
+    expect(screen.queryByRole("checkbox", { name: "Exact phrase" })).toBeNull();
     const form = container.querySelector("form")!;
     const submit = vi.fn((e: Event) => e.preventDefault());
     form.addEventListener("submit", submit);
@@ -160,7 +160,7 @@ describe("SearchForm", () => {
       await vi.advanceTimersByTimeAsync(400);
     });
     expect(fetchMock).not.toHaveBeenCalled();
-    expect(screen.getByRole("checkbox", { name: "Exact words" })).toBeChecked();
+    expect(screen.getByRole("checkbox", { name: "Exact phrase" })).toBeChecked();
     await typeAndWait(screen.getByRole("combobox", { name: "Words to find" }), "light lig");
     expect(fetchMock).toHaveBeenCalledTimes(1);
   });
@@ -179,7 +179,7 @@ describe("SearchForm", () => {
     expect(field.tagName).toBe("INPUT");
     expect(field).toHaveAttribute("name", "q");
     expect(field).toHaveAttribute("placeholder", "Jonah 1:1-2:2; 3:2");
-    expect(screen.queryByRole("checkbox", { name: "Exact words" })).toBeNull();
+    expect(screen.queryByRole("checkbox", { name: "Exact phrase" })).toBeNull();
     await typeAndWait(field, "Jo");
     await act(async () => {
       await vi.advanceTimersByTimeAsync(300);
@@ -202,6 +202,7 @@ describe("SearchForm", () => {
     expect(details).toHaveAttribute("open");
     const note = details.textContent ?? "";
     expect(note).toContain("Words");
+    expect(note).toContain("“Exact phrase”");
     expect(note).toContain("synonyms, paraphrases");
     expect(note).toContain("another language");
     expect(note).toContain("Jonah 1:1-2:2; 3:2");

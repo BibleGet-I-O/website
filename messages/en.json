@@ -195,7 +195,7 @@
     "kind": "Kind of search",
     "keywordLabel": "Words to find",
     "questionLabel": "Your question",
-    "exact": "Exact words",
+    "exact": "Exact phrase",
     "submit": "Search",
     "suggestions": "Suggestions",
     "noMore": "No more results.",
@@ -213,7 +213,7 @@
     "partialReference": "Part of that reference could not be read; the rest is shown below. Try one like {example}.",
     "about": "About the kinds of search",
     "help": {
-      "keyword": "Finds the verses that contain the words you type, in the edition's own language. Tick “Exact words” to match them exactly as written.",
+      "keyword": "Finds the verses that contain the words you type, in the edition's own language. Tick “Exact phrase” to find those words together, exactly as written.",
       "semantic": "Finds verses about a theme or idea even when they say it in other words: synonyms, paraphrases and questions work well, and so does a word or question in another language (“nemico” finds “enemy” in an English edition).",
       "reference": "Shows exactly the verses of a Bible reference, such as Jonah 1:1-2:2; 3:2, using the book names and notation of your language."
     }
