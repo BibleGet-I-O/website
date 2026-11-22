@@ -44,17 +44,25 @@ describe("the web app manifest", () => {
     expect(m).toMatchObject({ name: "BibleGet", short_name: "BibleGet", start_url: "/", scope: "/", display: "standalone" });
     expect(m.icons).toEqual(
       expect.arrayContaining([
-        expect.objectContaining({ src: "/icons/icon-192.png", sizes: "192x192", type: "image/png" }),
-        expect.objectContaining({ src: "/icons/icon-512.png", sizes: "512x512", type: "image/png" }),
-        expect.objectContaining({ src: "/icons/icon-maskable-512.png", sizes: "512x512", purpose: "maskable" }),
+        expect.objectContaining({ src: "/app-icons/icon-192.png", sizes: "192x192", type: "image/png" }),
+        expect.objectContaining({ src: "/app-icons/icon-512.png", sizes: "512x512", type: "image/png" }),
+        expect.objectContaining({ src: "/app-icons/icon-maskable-512.png", sizes: "512x512", purpose: "maskable" }),
       ]),
     );
     for (const icon of m.icons ?? []) expect(existsSync(`public${icon.src}`)).toBe(true);
   });
 
+  it("servesItsIconsOutsideApachesReservedIconsPath", () => {
+    // Apache's stock configuration aliases /icons/ to its own directory (mod_alias, for autoindex), so on the Plesk
+    // host a file under public/icons/ is never reached: it answers 404.
+    expect(existsSync("public/icons")).toBe(false);
+    for (const icon of manifest().icons ?? []) expect(icon.src.startsWith("/icons/")).toBe(false);
+    expect(readFileSync("public/offline.html", "utf8")).not.toContain('"/icons/');
+  });
+
   it("andTheWorkerAndTheOfflinePageAreNotRoutedThroughTheI18nProxy", () => {
     const matcher = new RegExp(`^${config.matcher[0]}$`);
-    for (const path of ["/sw.js", "/offline.html", "/manifest.webmanifest", "/icons/icon-192.png"]) expect(matcher.test(path)).toBe(false);
+    for (const path of ["/sw.js", "/offline.html", "/manifest.webmanifest", "/app-icons/icon-192.png"]) expect(matcher.test(path)).toBe(false);
   });
 });
 
