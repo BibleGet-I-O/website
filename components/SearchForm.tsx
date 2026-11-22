@@ -281,7 +281,7 @@ export function SearchPanel({ className = "" }: { className?: string }) {
     <div ref={panelRef} id={panelId} className={`${className} rounded border border-slate-200 bg-white p-3 dark:border-slate-800 dark:bg-slate-950`}>
       <div className="relative">
         <button type="button" aria-label={t("close")} title={t("close")}
-          className="absolute right-0 top-0 rounded px-1.5 text-lg leading-none text-slate-600 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800"
+          className="absolute right-0 top-0 z-10 rounded px-1.5 text-lg leading-none text-slate-600 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800"
           onClick={() => {
             setOpen(false);
             lensRef.current?.focus();

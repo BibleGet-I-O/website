@@ -294,7 +294,7 @@ describe("ReaderBar", () => {
     fireEvent.click(screen.getByRole("button", { name: "Search" }));
     const toolbar = screen.getByRole("toolbar");
     expect(toolbar.querySelector("form[role=search]")).toBeNull();
-    expect(toolbar.nextElementSibling?.querySelector("form[role=search]")).not.toBeNull();
+    expect(toolbar.nextElementSibling?.querySelector("form[role=search]")).toBeTruthy();
   });
 
   it("theWayBackKeepsTheComparison", () => {
