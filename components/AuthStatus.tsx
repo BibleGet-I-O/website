@@ -2,6 +2,7 @@ import { headers } from "next/headers";
 import { getLocale, getTranslations } from "next-intl/server";
 import { unstable_rethrow } from "next/navigation";
 import { auth, signOut } from "@/auth";
+import { SignOutButton } from "@/components/SignOutButton";
 import { Link } from "@/i18n/navigation";
 import { SignInButton } from "@/components/SignInButton";
 import { RETURN_TO_HEADER } from "@/lib/return-to";
@@ -47,9 +48,7 @@ export async function AuthStatus() {
           await signOut({ redirectTo: `/${locale}` });
         }}
       >
-        <button type="submit" className={buttonClass}>
-          {t("signOut")}
-        </button>
+        <SignOutButton label={t("signOut")} className={buttonClass} />
       </form>
     </div>
   );

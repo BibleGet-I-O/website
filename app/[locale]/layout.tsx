@@ -2,11 +2,13 @@ import { hasLocale, NextIntlClientProvider } from "next-intl";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import { cookies } from "next/headers";
 import { notFound } from "next/navigation";
+import type { Viewport } from "next";
 import { Suspense } from "react";
 import "../globals.css";
 import { routing } from "@/i18n/routing";
 import { AuthStatus } from "@/components/AuthStatus";
 import { SiteFooter } from "@/components/SiteFooter";
+import { ServiceWorkerRegister } from "@/components/ServiceWorkerRegister";
 import { SiteHeader } from "@/components/SiteHeader";
 import { THEME_COOKIE, parseTheme } from "@/lib/theme";
 
@@ -14,11 +16,19 @@ export function generateStaticParams() {
   return routing.locales.map((locale) => ({ locale }));
 }
 
+/** The browser's bar takes the page's colour, light or dark (the installed app's too). */
+export const viewport: Viewport = {
+  themeColor: [
+    { media: "(prefers-color-scheme: light)", color: "#ffffff" },
+    { media: "(prefers-color-scheme: dark)", color: "#020617" },
+  ],
+};
+
 export async function generateMetadata({ params }: { params: Promise<{ locale: string }> }) {
   const { locale } = await params;
   if (!hasLocale(routing.locales, locale)) return {};
   const t = await getTranslations({ locale, namespace: "Metadata" });
-  return { title: t("siteName"), description: t("siteDescription") };
+  return { title: t("siteName"), description: t("siteDescription"), appleWebApp: { capable: true, title: t("siteName") } };
 }
 
 export default async function LocaleLayout({ children, params }: { children: React.ReactNode; params: Promise<{ locale: string }> }) {
@@ -37,6 +47,7 @@ export default async function LocaleLayout({ children, params }: { children: Rea
           <Suspense fallback={null}>
             <SiteFooter />
           </Suspense>
+          <ServiceWorkerRegister />
         </NextIntlClientProvider>
       </body>
     </html>
