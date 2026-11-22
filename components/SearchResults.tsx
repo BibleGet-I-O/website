@@ -4,16 +4,21 @@ import type { SearchHit } from "@/lib/search";
 /** Lowercased and without accents, so "Israël" and "israel" compare equal. */
 const fold = (s: string) => s.normalize("NFD").replace(/\p{M}+/gu, "").toLowerCase();
 
+/**
+ * A word: letters and digits, with the combining marks attached to them, so an accent stored decomposed
+ * ("Sen" + U+0303 + "or") stays inside its word.
+ */
+const WORD = /([\p{L}\p{N}][\p{L}\p{N}\p{M}]*)/u;
+
 /** The text with the searched words in <mark>: whole words (letters and digits), compared without case or accents. */
 export function markWords(text: string, words: string[]): ReactNode {
   const wanted = new Set(words.map(fold).filter((w) => w.length > 0));
   if (wanted.size === 0) return text;
-  return text.split(/([\p{L}\p{N}]+)/u).map((part, i) =>
+  return text.split(WORD).map((part, i) =>
     i % 2 === 1 && wanted.has(fold(part)) ? <mark key={i} className={markClass}>{part}</mark> : <Fragment key={i}>{part}</Fragment>,
   );
 }
 
-const WORD = /([\p{L}\p{N}]+)/u;
 /** A gap between words, compared as the endpoint's exact match does: without case or accents, spaces collapsed. */
 const gap = (s: string) => fold(s).replace(/\s+/g, " ");
 const markClass = "bg-amber-200 dark:bg-amber-700 dark:text-white";
