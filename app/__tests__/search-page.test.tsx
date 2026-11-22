@@ -79,6 +79,12 @@ describe("search page", () => {
     expect(Array.from(container.querySelectorAll("mark")).map((m) => m.textContent)).toEqual(["Israël"]);
   });
 
+  it("anExactPhraseSearchMarksOnlyThePhrase", async () => {
+    searchEdition.mockResolvedValue({ kind: "ok", hits: [hit({ text: "Abel fue pastor de ovejas y Caín agricultor de la tierra." })], total: 1, capped: null });
+    const { container } = await page({ mode: "keyword", q: "pastor de ovejas", match: "exact" });
+    expect(Array.from(container.querySelectorAll("mark")).map((m) => m.textContent)).toEqual(["pastor de ovejas"]);
+  });
+
   it("marksWordsWithDigitsWhole", async () => {
     searchEdition.mockResolvedValue({ kind: "ok", hits: [hit({ text: "TEST2 Gen 3:1" })], total: 1, capped: null });
     const { container } = await page({ mode: "keyword", q: "test2" });
