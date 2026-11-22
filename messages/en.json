@@ -107,7 +107,7 @@
   },
   "Footer": {
     "copyright": "© {year} <link>Catholic Digital Commons Foundation</link>. All rights reserved.",
-    "rights": "The texts of each edition belong to their rights holders, named on the back of each book.",
+    "rights": "The texts of each edition belong to their rights holders: see <link>copyright and permissions</link>.",
     "apiVersion": "API {version}",
     "siteVersion": "Site {version}",
     "sourceCode": "Source code:",
@@ -216,6 +216,20 @@
       "keyword": "Finds the verses that contain the words you type, in the edition's own language. Tick “Exact phrase” to find those words together, exactly as written.",
       "semantic": "Finds verses about a theme or idea even when they say it in other words: synonyms, paraphrases and questions work well, and so does a word or question in another language (“nemico” finds “enemy” in an English edition).",
       "reference": "Shows exactly the verses of a Bible reference, such as Jonah 1:1-2:2; 3:2, using the book names and notation of your language."
+    }
+  },
+  "Copyright": {
+    "title": "Copyright and permissions",
+    "intro": "BibleGet is a project of the Catholic Digital Commons Foundation. The editions below are quoted by permission of their rights holders; each carries the notice its permission asks for, as the agreement states it.",
+    "holder": "Rights holder",
+    "permission": "Permission",
+    "source": "Source",
+    "notice": "Notice",
+    "permissions": {
+      "nabre": "License agreement with the Confraternity of Christian Doctrine, Inc. (2015).",
+      "cei2008": "Permission of the rights holder.",
+      "blpd": "Agreement with the Fundación Palabra de Vida and Editorial Verbo Divino (Buenos Aires, 28 October 2020).",
+      "nvbse": "The edition published on the website of the Holy See."
     }
   }
 }

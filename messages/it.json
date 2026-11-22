@@ -107,7 +107,7 @@
   },
   "Footer": {
     "copyright": "© {year} <link>Catholic Digital Commons Foundation</link>. Tutti i diritti riservati.",
-    "rights": "I testi di ogni edizione appartengono ai rispettivi titolari dei diritti, indicati sul retro di ciascun libro.",
+    "rights": "I testi di ciascuna edizione appartengono ai titolari dei diritti: vedi <link>copyright e autorizzazioni</link>.",
     "apiVersion": "API {version}",
     "siteVersion": "Sito {version}",
     "sourceCode": "Codice sorgente:",
@@ -216,6 +216,20 @@
       "keyword": "Trova i versetti che contengono le parole digitate, nella lingua dell'edizione. Spunta «Frase esatta» per trovare quelle parole insieme, esattamente come scritte.",
       "semantic": "Trova i versetti su un tema o un'idea anche quando la esprimono con altre parole: funzionano bene sinonimi, parafrasi e domande, e anche una parola o una domanda in un'altra lingua («enemy» trova «nemico» in un'edizione italiana).",
       "reference": "Mostra esattamente i versetti di un riferimento biblico, come Giona 1,1-2,2; 3,2, con i nomi dei libri e la notazione della tua lingua."
+    }
+  },
+  "Copyright": {
+    "title": "Copyright e autorizzazioni",
+    "intro": "BibleGet è un progetto della Catholic Digital Commons Foundation. Le edizioni seguenti sono citate con l'autorizzazione dei titolari dei diritti; ciascuna riporta la nota richiesta dalla sua autorizzazione, come stabilita dall'accordo.",
+    "holder": "Titolare dei diritti",
+    "permission": "Autorizzazione",
+    "source": "Fonte",
+    "notice": "Nota",
+    "permissions": {
+      "nabre": "Contratto di licenza con la Confraternity of Christian Doctrine, Inc. (2015).",
+      "cei2008": "Autorizzazione del titolare dei diritti.",
+      "blpd": "Accordo con la Fundación Palabra de Vida e l'Editorial Verbo Divino (Buenos Aires, 28 ottobre 2020).",
+      "nvbse": "L'edizione pubblicata sul sito della Santa Sede."
     }
   }
 }
