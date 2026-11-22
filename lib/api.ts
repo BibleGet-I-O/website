@@ -285,22 +285,23 @@ export type PassageRow = VerseRow & { bookNum: number };
 /**
  * The verses of a Bible reference as the reader typed it (`Jonah 1:1-2:2;3:2`, in any language and notation the
  * endpoint reads), in edition numbering. `readable` is false when the endpoint could not read it (400/422, or no
- * verses); `capped` when it cut this edition's passage at the copyright cap.
+ * verses); `partial` when it read only part of it (verses and errors); `capped` when it cut this edition's
+ * passage at the copyright cap.
  */
-export async function getPassage(p: { sigla: string; query: string; access: Access }): Promise<{ rows: PassageRow[]; capped: boolean; readable: boolean }> {
+export async function getPassage(p: { sigla: string; query: string; access: Access }): Promise<{ rows: PassageRow[]; capped: boolean; readable: boolean; partial: boolean }> {
   const qs = new URLSearchParams({ query: p.query, version: p.sigla, numbering: "edition", return: "json" });
   const init: FetchInit = p.access === "reader" ? { cache: "no-store" } : { next: { revalidate: 3600 } };
-  let body: { results?: RawRow[]; notices?: { code?: string; version?: string }[] };
+  let body: { results?: RawRow[]; errors?: unknown[]; notices?: { code?: string; version?: string }[] };
   try {
     body = (await request(`/quote?${qs}`, p.access, init)) as typeof body;
   } catch (e) {
-    if (e instanceof NotFound) return { rows: [], capped: false, readable: false };
+    if (e instanceof NotFound) return { rows: [], capped: false, readable: false, partial: false };
     throw e;
   }
   const results = body.results ?? [];
-  if (results.length === 0) return { rows: [], capped: false, readable: false };
+  if (results.length === 0) return { rows: [], capped: false, readable: false, partial: false };
   const capped = (body.notices ?? []).some((n) => n.code === "VERSES_CAPPED" && n.version === p.sigla);
-  return { rows: results.map((r) => ({ ...toRow(r), bookNum: Number(r.univbooknum ?? 0) })), capped, readable: true };
+  return { rows: results.map((r) => ({ ...toRow(r), bookNum: Number(r.univbooknum ?? 0) })), capped, readable: true, partial: (body.errors?.length ?? 0) > 0 };
 }
 
 export async function getChapter(p: ChapterParams): Promise<Chapter> {

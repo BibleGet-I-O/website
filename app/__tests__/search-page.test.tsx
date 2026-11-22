@@ -154,6 +154,13 @@ describe("search page", () => {
     expect(screen.getByRole("link", { name: "John 1" })).toHaveAttribute("href", "/en/read/nabre/john/1#v1.1");
   });
 
+  it("aPartlyReadableReferenceShowsTheRestAndSaysSo", async () => {
+    getPassage.mockResolvedValue({ readable: true, capped: false, partial: true, rows: [row(39, 1, 1, "The word of the Lord came")] });
+    await page({ mode: "reference", q: "Jonah 1:1; Xyz 3:4" });
+    expect(screen.getByRole("status")).toHaveTextContent("Part of that reference could not be read; the rest is shown below. Try one like Jonah 1:1-2:2; 3:2.");
+    expect(screen.getByText("The word of the Lord came")).toBeInTheDocument();
+  });
+
   it("anUnreadableReferenceSaysSoWithTheExample", async () => {
     getPassage.mockResolvedValue({ readable: false, capped: false, rows: [] });
     await page({ mode: "reference", q: "Xyz 9" });

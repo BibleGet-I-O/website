@@ -209,6 +209,7 @@
     "referenceLabel": "Bibelstelle",
     "unreadableReference": "Diese Bibelstelle konnte nicht gelesen werden. Versuchen Sie z. B. {example}.",
     "compareLater": "Nur {edition} wird angezeigt: Die verglichenen Ausgaben werden Vers für Vers zugeordnet, sobald die Verszuordnung fertig ist.",
-    "passageHeading": "{book} {chapter}"
+    "passageHeading": "{book} {chapter}",
+    "partialReference": "Ein Teil dieser Bibelstelle konnte nicht gelesen werden; der Rest steht unten. Versuchen Sie z. B. {example}."
   }
 }

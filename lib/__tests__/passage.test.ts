@@ -35,8 +35,13 @@ describe("getPassage", () => {
   it("readsTheRowsAndTheCap", async () => {
     stub(() => json({ results: [rawRow(39, 1, 1), rawRow(39, 1, 2)], notices: [{ code: "VERSES_CAPPED", version: "DRB" }] }));
     const out = await getPassage({ sigla: "DRB", query: "Jonah 1", access: "visitor" });
-    expect(out).toMatchObject({ readable: true, capped: true });
+    expect(out).toMatchObject({ readable: true, capped: true, partial: false });
     expect(out.rows.map((r) => [r.bookNum, r.chapter, r.verse])).toEqual([[39, 1, 1], [39, 1, 2]]);
+  });
+
+  it("aPartlyReadableReferenceSaysSo", async () => {
+    stub(() => json({ results: [rawRow(39, 1, 1)], errors: ["unknown book Xyz"] }));
+    expect(await getPassage({ sigla: "DRB", query: "Jonah 1:1; Xyz 3:4", access: "visitor" })).toMatchObject({ readable: true, partial: true });
   });
 
   it("aCapOnAnotherEditionIsNotThisOnes", async () => {
@@ -47,7 +52,7 @@ describe("getPassage", () => {
   it("anUnreadableReferenceIsNotAnError", async () => {
     for (const res of [json({ errors: ["unknown book"] }), json({ results: [] }), json({ detail: "bad" }, 422), json({ detail: "bad" }, 400)]) {
       stub(() => res);
-      expect(await getPassage({ sigla: "DRB", query: "Xyz 1", access: "visitor" })).toEqual({ rows: [], capped: false, readable: false });
+      expect(await getPassage({ sigla: "DRB", query: "Xyz 1", access: "visitor" })).toEqual({ rows: [], capped: false, readable: false, partial: false });
       vi.unstubAllGlobals();
     }
   });

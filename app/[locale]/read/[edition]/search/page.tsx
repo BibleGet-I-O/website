@@ -174,6 +174,7 @@ export default async function SearchPage({ params, searchParams }: { params: Pro
     return (
       <>
         {note}
+        {p.partial && <p role="status" className="mb-4">{t("partialReference", { example: t("placeholders.reference") })}</p>}
         {await ReferenceResults({ groups: groupPassage(p.rows), hrefFor, bookName: (n) => books.find((x) => x.bookNum === n)?.name ?? String(n), lang: edition!.language || undefined })}
         {notice && await CappedNotice({ kind: notice, about: "search", redirectTo: searchHref(locale, slug, { mode, q, exact: false, from: cameFrom }) })}
       </>

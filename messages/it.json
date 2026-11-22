@@ -209,6 +209,7 @@
     "referenceLabel": "Riferimento biblico",
     "unreadableReference": "Non è stato possibile leggere il riferimento. Provane uno come {example}.",
     "compareLater": "Viene mostrata solo {edition}: le edizioni a confronto saranno allineate versetto per versetto quando la corrispondenza dei versetti sarà pronta.",
-    "passageHeading": "{book} {chapter}"
+    "passageHeading": "{book} {chapter}",
+    "partialReference": "Una parte del riferimento non è stata letta; il resto è mostrato qui sotto. Provane uno come {example}."
   }
 }

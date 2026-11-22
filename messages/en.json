@@ -209,6 +209,7 @@
     "referenceLabel": "Bible reference",
     "unreadableReference": "That reference could not be read. Try one like {example}.",
     "compareLater": "Only {edition} is shown: the compared editions will be matched verse by verse once the verse mapping is ready.",
-    "passageHeading": "{book} {chapter}"
+    "passageHeading": "{book} {chapter}",
+    "partialReference": "Part of that reference could not be read; the rest is shown below. Try one like {example}."
   }
 }
