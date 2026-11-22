@@ -198,8 +198,8 @@ export default async function ChapterPage({ params, searchParams }: { params: Pr
         })}
         {masoretic && masoretic !== "unavailable" ? (
           <article>
-            <h1 className="mb-6 text-center text-3xl font-semibold">{t("heading", { book: book.name, chapter })}</h1>
             <Spread
+              title={t("heading", { book: book.name, chapter })}
               sides={[
                 { sigla: edition.sigla, name: edition.fullname, lang: edition.language || undefined, rubric: { full: t("septuagint"), short: t("septuagintShort") } },
                 { sigla: `${edition.sigla}-MT`, name: edition.fullname, lang: edition.language || undefined, rubric: { full: t("masoretic"), short: t("masoreticShort") } },

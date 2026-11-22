@@ -157,7 +157,8 @@ export function renderFormatted(text: string): ReactNode {
 const defaultHeadingClass = (j: number) =>
   j === 0 ? "mt-6 mb-2 block text-xl font-semibold" : "mb-2 block text-base font-semibold italic";
 
-const labelClass = "font-sans text-xs text-slate-500 dark:text-slate-400";
+// Verse numbers in rubric red, as the headings and edition names of a printed Bible.
+const labelClass = "font-sans text-xs text-red-700 dark:text-red-400";
 
 /**
  * One verse: its number, its text, and its mid-verse headings.

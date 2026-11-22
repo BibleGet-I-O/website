@@ -2,10 +2,6 @@ import { renderVerse } from "@/lib/formatted";
 import { printedLabel, verseAnchor } from "@/lib/placement";
 import type { VerseRow } from "@/lib/types";
 
-const labelClass = "shrink-0 pt-1 text-right font-sans text-xs text-slate-500 dark:text-slate-400";
-/** The number's margin, and the headings' indent past it: narrower in a compact (three-column) layout on a phone. */
-const margin = (compact: boolean) => (compact ? { label: "w-4 sm:w-8", gap: "gap-1 sm:gap-2", indent: "ml-5 sm:ml-10" } : { label: "w-8", gap: "gap-2", indent: "ml-10" });
-
 const midHeadingClass = (j: number) =>
   j === 0 ? "mt-4 mb-1 block font-semibold" : "mb-1 block text-base font-semibold italic";
 
@@ -14,45 +10,44 @@ export function headingsBefore(row: VerseRow | undefined): string[] {
   return row && row.titlePosition == null ? row.titles : [];
 }
 
-/** Section headings set level with the verse text, past the number's margin. */
-export function Headings({ titles, compact = false }: { titles: string[]; compact?: boolean }) {
-  const { indent } = margin(compact);
+/**
+ * Section headings, level with the verse text. `col` makes them feed that column's running head at the top of
+ * the page (StickyHead).
+ */
+export function Headings({ titles, col }: { titles: string[]; col?: number }) {
   return titles.map((t, j) => (
-    <h2 key={j} className={j === 0 ? `mt-4 mb-1 ${indent} font-semibold` : `mb-1 ${indent} text-base font-semibold italic`}>
+    <h2 key={j} data-head-col={col} className={j === 0 ? "mt-4 mb-1 font-semibold" : "mb-1 text-base font-semibold italic"}>
       {t}
     </h2>
   ));
 }
 
 /**
- * One verse on its own line, its printed number in the margin and its section headings above it (or inside
- * it, at `titlePosition`). Poetic lines keep their relative indents but start level with the number.
+ * One verse on its own line, its printed number (in rubric red) at the start of the text, and its section headings
+ * above it (or inside it, at `titlePosition`): no gutter, so narrow columns keep their width for the text. Poetic
+ * lines keep their relative indents.
  * `headings={false}` leaves the headings before the verse to the caller (the interlinear gives them a row);
- * `compact` narrows the number's margin on a phone (three columns side by side).
+ * `anchor` makes this line the one a link to the verse (#v3.16) lands on (one side of a page only); `headCol`
+ * makes its headings feed that column's running head.
  */
-export function VerseLine({ row, chapter, headings = true, compact = false, anchor = false }: { row: VerseRow; chapter: number; headings?: boolean; compact?: boolean; anchor?: boolean }) {
+export function VerseLine({ row, chapter, headings = true, anchor = false, headCol }: { row: VerseRow; chapter: number; headings?: boolean; anchor?: boolean; headCol?: number }) {
   const mid = row.titlePosition != null;
-  const m = margin(compact);
   return (
     <>
-      {headings && <Headings titles={headingsBefore(row)} compact={compact} />}
-      {/* `anchor`: this line is the one a link to the verse (#v3.16) lands on; one side of a page only. */}
-      <p data-testid="verse-line" id={anchor ? verseAnchor(row) : undefined} className={`flex ${m.gap}${anchor ? " verse-target" : ""}`}>
-        <span className={`${m.label} ${labelClass}`}>{printedLabel(row, chapter)}</span>
-        <span className="bg-text bg-compact min-w-0">
-          {renderVerse({ label: null, text: row.text, titles: mid ? row.titles : [], titlePosition: row.titlePosition, headingClass: midHeadingClass })}
-        </span>
+      {headings && <Headings titles={headingsBefore(row)} col={headCol} />}
+      <p data-testid="verse-line" id={anchor ? verseAnchor(row) : undefined} className={`bg-text bg-compact${anchor ? " verse-target" : ""}`}>
+        {renderVerse({ label: printedLabel(row, chapter), text: row.text, titles: mid ? row.titles : [], titlePosition: row.titlePosition, headingClass: midHeadingClass })}
       </p>
     </>
   );
 }
 
-/** An edition's chapter one verse per line, as the interlinear sets it. */
-export function VerseLines({ rows, chapter, lang }: { rows: VerseRow[]; chapter: number; lang?: string }) {
+/** An edition's chapter one verse per line, as the interlinear sets it; `headCol` feeds a running head. */
+export function VerseLines({ rows, chapter, lang, headCol }: { rows: VerseRow[]; chapter: number; lang?: string; headCol?: number }) {
   return (
     <div lang={lang} className="space-y-1 font-serif text-lg leading-relaxed">
       {rows.map((r, i) => (
-        <VerseLine key={i} row={r} chapter={chapter} />
+        <VerseLine key={i} row={r} chapter={chapter} headCol={headCol} />
       ))}
     </div>
   );

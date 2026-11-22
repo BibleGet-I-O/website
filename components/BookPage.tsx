@@ -1,3 +1,4 @@
+import { StickyHead } from "@/components/StickyHead";
 import { renderVerse } from "@/lib/formatted";
 import { printedLabel, verseAnchor } from "@/lib/placement";
 import type { VerseRow } from "@/lib/types";
@@ -19,11 +20,12 @@ export function BookPage({ heading, chapter, rows, lang }: { heading: string; ch
   }
   return (
     <article lang={lang} className="font-serif text-lg leading-relaxed">
-      <h1 className="mb-6 text-center text-3xl font-semibold">{heading}</h1>
+      {/* The title and the current section stay at the top while the chapter scrolls. */}
+      <StickyHead title={heading} columns={[]} gridClass="" running={1} />
       {sections.map((s, i) => (
         <section key={i}>
           {s.titles.map((t, j) => (
-            <h2 key={j} className={j === 0 ? "mt-6 mb-2 text-xl font-semibold" : "mb-2 text-base font-semibold italic"}>
+            <h2 key={j} data-head-col={0} className={j === 0 ? "mt-6 mb-2 text-xl font-semibold" : "mb-2 text-base font-semibold italic"}>
               {t}
             </h2>
           ))}
