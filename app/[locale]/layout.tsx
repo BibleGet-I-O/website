@@ -31,7 +31,7 @@ export default async function LocaleLayout({ children, params }: { children: Rea
     <html lang={locale} data-theme={theme === "system" ? undefined : theme}>
       <body className="flex min-h-screen flex-col bg-white text-slate-900 dark:bg-slate-950 dark:text-slate-100">
         <NextIntlClientProvider>
-          <SiteHeader auth={<AuthStatus />} theme={theme} />
+          <SiteHeader auth={<AuthStatus />} />
           {children}
           {/* Streamed: a slow endpoint must not hold back the page. */}
           <Suspense fallback={null}>
