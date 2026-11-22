@@ -53,8 +53,8 @@ describe("Spread", () => {
     expect(screen.getAllByTestId("column-name").map((e) => e.textContent)).toEqual([A.name, B.name, C.name]);
     const order = Array.from(spread.querySelectorAll("[data-testid^=cell-]")).map((e) => e.getAttribute("data-testid"));
     expect(order).toEqual(["cell-a", "cell-b", "cell-c"]);
-    // A narrower number margin on a phone, the usual one from sm up.
-    expect(screen.getAllByTestId("verse-line")[0].firstElementChild).toHaveClass("w-4", "sm:w-8");
+    // No number margin at all: the number runs inline, so three columns keep their width for the text.
+    expect(screen.getAllByTestId("verse-line")[0].querySelector("sup")).toHaveTextContent("1");
   });
 
   it("interlinearStacksEachComparedVerseUnderTheMainOneWithItsSigla", () => {
@@ -130,6 +130,12 @@ describe("Spread", () => {
     const r: VerseRow = { ...row(5, 1), titles: ["Mid"], titlePosition: 7, text: "First. Second." };
     render(wrap(<VerseLines rows={[r]} chapter={5} />));
     expect(screen.getByTestId("verse-line")).toHaveTextContent("1First. MidSecond.");
+  });
+
+  it("aMidVerseHeadingInAComparedColumnFeedsThatColumnsRunningHead", () => {
+    const b: VerseRow = { ...row(5, 1), titles: ["Mid"], titlePosition: 7, text: "First. Second." };
+    render(wrap(<Spread sides={[A, B]} rows={buildRows([row(5, 1)], [[b]], 47)} chapter={5} />));
+    expect(screen.getByRole("heading", { level: 2, name: "Mid" })).toHaveAttribute("data-head-col", "1");
   });
 
   it("headingsGetTheirOwnRowSoTheVersesStayLevel", () => {
@@ -217,5 +223,23 @@ describe("Spread", () => {
     expect(container.querySelectorAll("#v5\\.1")).toHaveLength(1);
     expect(container.querySelectorAll("#v5\\.2")).toHaveLength(1);
     expect(screen.getAllByTestId("cell-b")[1].querySelector("#v5\\.2")).not.toBeNull();
+  });
+  it("theVerseNumberRunsInlineWithItsTextNoGutter", () => {
+    render(wrap(<Spread sides={[A, B]} rows={buildRows([row(5, 1)], [[row(5, 1)]], 47)} chapter={5} />));
+    const line = screen.getAllByTestId("verse-line")[0];
+    expect(line).not.toHaveClass("flex");
+    expect(line.querySelector("sup")).toHaveTextContent("1");
+    expect(line.querySelector("sup")).toHaveClass("text-red-700");
+  });
+
+  it("withATitleTheEditionsAndEachColumnsHeadingsFeedTheStickyStrip", () => {
+    const a = [{ ...row(4, 1), titles: ["Cain and Abel"] }];
+    const b = [{ ...row(4, 1), titles: ["Desde Adán", "Caín y Abel"] }];
+    const { container } = render(wrap(<Spread title="Genesis 4" sides={[A, B]} rows={buildRows(a, [b], 1)} chapter={4} />));
+    const head = container.querySelector("[data-sticky-head]")!;
+    expect(head).toContainElement(screen.getByRole("heading", { level: 1, name: "Genesis 4" }));
+    expect(Array.from(head.querySelectorAll("[data-testid=column-name]")).map((e) => e.textContent)).toEqual([A.name, B.name]);
+    expect(screen.getByRole("heading", { level: 2, name: "Cain and Abel" })).toHaveAttribute("data-head-col", "0");
+    expect(screen.getByRole("heading", { level: 2, name: "Caín y Abel" })).toHaveAttribute("data-head-col", "1");
   });
 });
