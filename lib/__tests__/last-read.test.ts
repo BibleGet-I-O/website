@@ -14,12 +14,18 @@ describe("last read", () => {
     expect(resumeHref("NVBSE")).toBe("/read/nvbse?book=50&chapter=3");
   });
 
+  it("remembersSirachsPrologue", () => {
+    // Chapter 0 is Sirach's prologue: the shelf reopens it.
+    saveLastRead("NABRE", { bookNum: 28, chapter: 0 });
+    expect(resumeHref("NABRE")).toBe("/read/nabre?book=28&chapter=0");
+  });
+
   it("badStorageFallsBackToGenesisOne", () => {
     localStorage.setItem("bibleget.lastRead.DRB", "{oops");
     expect(resumeHref("DRB")).toBe("/read/drb?book=1&chapter=1");
     localStorage.setItem("bibleget.lastRead.DRB", JSON.stringify({ bookNum: 80, chapter: 2 }));
     expect(resumeHref("DRB")).toBe("/read/drb?book=1&chapter=1");
-    localStorage.setItem("bibleget.lastRead.DRB", JSON.stringify({ bookNum: 3, chapter: 0 }));
+    localStorage.setItem("bibleget.lastRead.DRB", JSON.stringify({ bookNum: 3, chapter: -1 }));
     expect(resumeHref("DRB")).toBe("/read/drb?book=1&chapter=1");
     vi.spyOn(Storage.prototype, "getItem").mockImplementation(() => {
       throw new Error("denied");

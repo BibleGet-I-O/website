@@ -3,7 +3,10 @@ import { editionSlug } from "@/lib/slug";
 export type ReadAt = { bookNum: number; chapter: number };
 
 const key = (sigla: string) => `bibleget.lastRead.${sigla}`;
-const positive = (n: unknown): n is number => typeof n === "number" && Number.isInteger(n) && n > 0;
+const atLeast = (min: number) => (n: unknown): n is number => typeof n === "number" && Number.isInteger(n) && n >= min;
+const positive = atLeast(1);
+/** Chapter 0 is Sirach's prologue. */
+const chapterNumber = atLeast(0);
 
 /** The chapter last read in an edition, from this browser; null when none is stored or storage cannot be read. */
 export function loadLastRead(sigla: string): ReadAt | null {
@@ -11,7 +14,7 @@ export function loadLastRead(sigla: string): ReadAt | null {
     const v: unknown = JSON.parse(localStorage.getItem(key(sigla)) ?? "null");
     if (typeof v !== "object" || v === null) return null;
     const { bookNum, chapter } = v as Record<string, unknown>;
-    return positive(bookNum) && bookNum <= 73 && positive(chapter) ? { bookNum, chapter } : null;
+    return positive(bookNum) && bookNum <= 73 && chapterNumber(chapter) ? { bookNum, chapter } : null;
   } catch {
     return null;
   }
