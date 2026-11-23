@@ -60,6 +60,14 @@ describe("NoteMarker", () => {
     expect(document.getElementById(button.getAttribute("popovertarget")!)).toHaveAttribute("popover", "auto");
   });
 
+  it("aPassageInAnotherEditionShowsABookAndItsName", () => {
+    const nv = { ...cross, refs: [{ ...cross.refs[0], href: "/it/read/nvbse/ecclesiasticus/24#v24.1b", edition: "NVBSE", editionName: "Nova Vulgata" }] };
+    render(wrap(<NoteMarker note={nv} id="m-5" />));
+    const link = screen.getByRole("link", { name: /^Jn 1:1-3 ?\(in Nova Vulgata\)$/, hidden: true });
+    expect(link.querySelector("svg.bg-other-edition")).not.toBeNull();
+    expect(link).toHaveAttribute("title", "In Nova Vulgata");
+  });
+
   it("aWholeVerseNoteWrapsTheVerseNumber", () => {
     render(wrap(<NoteMarker note={{ ...foot, marker: null }} id="m-3">12</NoteMarker>));
     const a = screen.getByRole("link", { name: "Note on verse 12" });

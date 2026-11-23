@@ -143,6 +143,8 @@
   .bg-note-num {
     @variant dark { background-color: rgb(127 29 29 / 0.45); }
   }
+  /* A citation into another edition (CEI 2008's Nova Vulgata verses): a small book after the link text. */
+  .bg-other-edition { display: inline-block; width: 0.8em; height: 0.8em; margin-left: 0.15em; vertical-align: -0.05em; }
   /* A marker the reader came back to from its note. */
   .bg-note:target, .bg-note-num:target { outline: 2px solid var(--color-red-600); outline-offset: 1px; }
   .bg-note-pop {

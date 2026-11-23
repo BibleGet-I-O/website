@@ -282,6 +282,8 @@
     "count": "{count, plural, one {# Anmerkung} other {# Anmerkungen}}",
     "resize": "Größe der Anmerkungen ändern",
     "backToText": "Zurück zum Text",
-    "visitorHint": "Angemeldete Leser sehen auch die Anmerkungen dieser Ausgabe."
+    "visitorHint": "Angemeldete Leser sehen auch die Anmerkungen dieser Ausgabe.",
+    "inEdition": "In {edition}",
+    "inEditionShort": "in {edition}"
   }
 }

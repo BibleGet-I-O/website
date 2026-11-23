@@ -39,8 +39,12 @@ export type NoteRef = {
   end: { book: number; chapter: number; verse: number } | null;
   /** The code points of `body` that print the citation: [start, end). */
   span: [number, number];
-  /** The link to the passage in the same edition, set by the page (`withNoteLinks`). */
+  /** Another edition the passage is in, at that edition's numbers (CEI 2008's notes cite the Nova Vulgata); absent: the note's own. */
+  edition?: string;
+  /** The link to the passage, set by the page (`withNoteLinks`). */
   href?: string;
+  /** That other edition's name, set with the link, for the book icon's label. */
+  editionName?: string;
 };
 
 /** A footnote or cross-reference as the edition prints it (signed-in readers only). */

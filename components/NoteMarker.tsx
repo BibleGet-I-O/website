@@ -2,6 +2,7 @@
 
 import { useId, type MouseEvent, type ReactNode } from "react";
 import { useTranslations } from "next-intl";
+import { OtherEditionLink } from "@/components/OtherEdition";
 import { noteDomId, noteRuns } from "@/lib/notes";
 import type { Note } from "@/lib/types";
 
@@ -72,7 +73,9 @@ function CrossReference({ note, id, children }: { note: Note; id: string; childr
         </span>
         <span className="flex flex-wrap gap-x-3 gap-y-1">
           {note.refs.map((r, i) =>
-            r.href ? (
+            r.href && r.editionName ? (
+              <OtherEditionLink key={i} href={r.href} name={r.editionName} className="text-red-700 underline-offset-2 hover:underline dark:text-red-400">{label(i)}</OtherEditionLink>
+            ) : r.href ? (
               <a key={i} href={r.href} className="text-red-700 underline-offset-2 hover:underline dark:text-red-400">{label(i)}</a>
             ) : (
               <span key={i}>{label(i)}</span>
