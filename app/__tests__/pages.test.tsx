@@ -512,8 +512,8 @@ describe("chapter", () => {
       byText([verse(10, 1)], [verse(10, 1)]);
       await expect(ChapterPage(params("nabre", "esther", "11"))).rejects.toThrow("NEXT_NOT_FOUND");
       render(wrap(await ChapterPage(params("nabre", "esther", "10"))));
-      const chapters = screen.getByLabelText("Chapter") as HTMLSelectElement;
-      expect(Array.from(chapters.options).map((o) => o.value)).toEqual(["1", "2", "3", "4", "5", "6", "7", "8", "9", "10"]);
+      fireEvent.click(screen.getByRole("button", { name: /Go to another book or chapter/ }));
+      expect(screen.getAllByRole("link", { name: /^\d+$/ }).map((a) => a.textContent)).toEqual(["1", "2", "3", "4", "5", "6", "7", "8", "9", "10"]);
       expect(screen.getByRole("link", { name: /Next chapter/ })).toHaveAttribute("href", "/en/read/nabre/1-maccabees/1");
       // The previous chapter's last verse is counted in each text.
       expect(getVerses).toHaveBeenCalledWith(expect.objectContaining({ chapter: 9, verse: 12, tradition: "GREEK" }));
@@ -656,7 +656,8 @@ describe("chapter", () => {
       routerPush.mockClear();
       getChapter.mockResolvedValue({ rows: [verse(1, 1)], truncated: false, expectedVerses: 1 });
       render(wrap(await ChapterPage(params("drb", "esther", "1", { view: "interlinear" }))));
-      fireEvent.change(screen.getByLabelText("Chapter"), { target: { value: "2" } });
+      fireEvent.click(screen.getByRole("button", { name: /Go to another book or chapter/ }));
+      fireEvent.click(screen.getByRole("link", { name: "2" }));
       expect(routerPush).toHaveBeenLastCalledWith("/en/read/drb/esther/2");
       fireEvent.click(screen.getByRole("button", { name: "Reading settings" }));
       fireEvent.click(screen.getByRole("button", { name: /Compare with another edition/ }));

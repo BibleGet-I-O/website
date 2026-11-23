@@ -181,7 +181,7 @@ export default async function ChapterPage({ params, searchParams }: { params: Pr
         locale={locale}
         edition={edition.sigla}
         editions={editions.map((e) => ({ sigla: e.sigla, fullname: e.fullname }))}
-        books={index.books.map((b) => ({ slug: slugFor(b, index.books), name: b.name, chapters: b.chapters }))}
+        books={index.books.map((b) => ({ slug: slugFor(b, index.books), name: b.name, chapters: b.chapters, bookNum: b.bookNum }))}
         book={slugFor(book, index.books)}
         bookNum={book.bookNum}
         chapter={chapter}

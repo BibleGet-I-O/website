@@ -59,10 +59,17 @@ describe("GoToPanel", () => {
   it("modifiedClickIsLeftToTheBrowser", () => {
     render(wrap());
     const link = screen.getByRole("link", { name: "7" });
-    const ev = createEvent.click(link, { ctrlKey: true });
-    fireEvent(link, ev);
+    // What the panel left to the browser, seen before jsdom (which cannot open a new tab) is stopped from navigating.
+    let leftToBrowser: boolean | undefined;
+    const stop = (e: Event) => {
+      leftToBrowser = !e.defaultPrevented;
+      e.preventDefault();
+    };
+    window.addEventListener("click", stop);
+    fireEvent(link, createEvent.click(link, { ctrlKey: true }));
+    window.removeEventListener("click", stop);
     expect(onPick).not.toHaveBeenCalled();
-    expect(ev.defaultPrevented).toBe(false);
+    expect(leftToBrowser).toBe(true);
   });
 
   it("backClimbsChaptersBooksBible", () => {
