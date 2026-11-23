@@ -71,6 +71,15 @@ describe("ReaderBar", () => {
     expect(push).toHaveBeenLastCalledWith("/en/read/nabre/esther/1?with=DRB,VGCL&view=interlinear");
   });
 
+  it("thePanelClosesWhenTheReaderMovesOn", () => {
+    const { rerender } = render(wrap(<ReaderBar {...props} />));
+    openGoTo();
+    expect(screen.getByRole("dialog", { name: "Tobit" })).toBeInTheDocument();
+    // Browser Back (or any navigation not made from the panel) brings new props: the panel does not stay open over them.
+    rerender(wrap(<ReaderBar {...props} chapter={4} />));
+    expect(screen.queryAllByRole("link", { name: /^\d+$/ })).toHaveLength(0);
+  });
+
   it("panelKeepsEstherTraditionOnlyWithinEsther", () => {
     render(wrap(<ReaderBar {...props} book="esther" bookNum={19} chapter={1} esther tradition="HEBREW" withSiglas={["DRB"]} />));
     openGoTo();

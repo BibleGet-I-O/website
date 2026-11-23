@@ -148,4 +148,42 @@ describe("GoToPanel", () => {
     rerender(wrap({ open: true }));
     expect(title()).toHaveTextContent("Genesis");
   });
+
+  it("eachLevelOpensAtItsTop", () => {
+    render(wrap());
+    back();
+    const body = screen.getByRole("dialog").querySelector<HTMLElement>("[data-goto-body]")!;
+    body.scrollTop = 500;
+    fireEvent.click(screen.getByRole("link", { name: "Psalms" }));
+    expect(body.scrollTop).toBe(0);
+    body.scrollTop = 400;
+    fireEvent.click(crumbs().getByRole("button", { name: "Old Testament" }));
+    expect(body.scrollTop).toBe(0);
+  });
+
+  it("aSectionOpenedFromTheBibleIsBrieflyHighlighted", () => {
+    render(wrap());
+    back();
+    back();
+    fireEvent.click(screen.getByRole("button", { name: /Gospels/ }));
+    const gospels = screen.getByRole("heading", { name: "Gospels" }).closest("section")!;
+    expect(gospels).toHaveAttribute("data-highlighted", "true");
+    expect(screen.getByRole("heading", { name: "Gospels" }).closest("section")).toBeInTheDocument();
+  });
+
+  it("focusMovesToTheTitleOnEachLevelChange", () => {
+    render(wrap());
+    back();
+    expect(document.activeElement).toBe(title());
+    back();
+    expect(document.activeElement).toBe(title());
+  });
+
+  it("clickingTheBackdropCloses", () => {
+    render(wrap());
+    fireEvent.click(screen.getByRole("dialog"));
+    expect(onClose).toHaveBeenCalledTimes(1);
+    fireEvent.click(title());
+    expect(onClose).toHaveBeenCalledTimes(1);
+  });
 });

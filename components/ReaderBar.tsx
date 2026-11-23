@@ -45,7 +45,10 @@ export function ReaderBar(p: ReaderBarProps) {
     pending.current = { from: routeKey };
   }, [routeKey]);
 
-  const [goToOpen, setGoToOpen] = useState(false);
+  // The page the go-to panel was opened on: it is open only while the reader stays there (Back, or a navigation
+  // made elsewhere, closes it).
+  const [goToOpenOn, setGoToOpenOn] = useState<string | null>(null);
+  const goToOpen = goToOpenOn === routeKey;
 
   // The URL a change leads to, and what it asks for: go() pushes it, the go-to panel renders it as each link's href.
   const plan = (o: SettingsChange & { book?: string; chapter?: number }) => {
@@ -127,7 +130,7 @@ export function ReaderBar(p: ReaderBarProps) {
           aria-haspopup="dialog"
           aria-expanded={goToOpen}
           aria-label={`${tg("button")}: ${current?.name ?? p.book} ${p.chapter}`}
-          onClick={() => setGoToOpen(true)}
+          onClick={() => setGoToOpenOn(routeKey)}
           className={`${selectClass} inline-flex min-w-0 items-center justify-between gap-2 font-semibold max-sm:flex-1`}
         >
           <span className="truncate">{`${current?.name ?? p.book} ${p.chapter}`}</span>
@@ -135,7 +138,7 @@ export function ReaderBar(p: ReaderBarProps) {
         </button>
         <GoToPanel
           open={goToOpen}
-          onClose={() => setGoToOpen(false)}
+          onClose={() => setGoToOpenOn(null)}
           editionName={p.editions.find((e) => e.sigla === p.edition)?.fullname ?? p.edition}
           indexHref={`/${p.locale}/read/${editionSlug(p.edition)}`}
           books={p.books}
