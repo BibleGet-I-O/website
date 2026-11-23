@@ -231,6 +231,13 @@ describe("notes", () => {
     expect(two.notes).toBeUndefined();
   });
 
+  it("aCitationIntoAnotherEditionSaysWhich", async () => {
+    const nv = { ...cross, refs: [{ ...cross.refs[0], edition: "NVBSE" }] };
+    mockFetch(() => json({ ...withNotes(), notes: { ...withNotes().notes, "DRB:x-1": nv } }));
+    const m = (await getChapter({ ...base, access: "reader" })).rows[0].notes!.find((x) => x.note.id === "DRB:x-1")!;
+    expect(m.note.refs[0].edition).toBe("NVBSE");
+  });
+
   it("aMarkerWhoseNoteIsMissingIsDropped", async () => {
     mockFetch(() => json({ ...withNotes(), notes: {} }));
     expect((await getChapter({ ...base, access: "reader" })).rows[0].notes).toBeUndefined();

@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState, useSyncExternalStore, type PointerEvent, type ReactNode } from "react";
 import { useTranslations } from "next-intl";
 import { NOTE_EVENT } from "@/components/NoteMarker";
+import { OtherEditionLink } from "@/components/OtherEdition";
 import { DEFAULT_SIZE, loadPanelSize, nextSize, savePanelSize, snapSize, subscribePanelSize, type PanelSize } from "@/lib/note-panel";
 import { noteDomId, noteRuns } from "@/lib/notes";
 import type { Note } from "@/lib/types";
@@ -31,8 +32,10 @@ function Body({ note }: { note: Note }): ReactNode {
     let j = i;
     while (j < runs.length && runs[j].ref === ref) j++;
     const parts = runs.slice(i, j).map((r, k) => styled(r, i + k));
-    const href = ref === undefined ? undefined : note.refs[ref]?.href;
-    out.push(href ? <a key={i} href={href} className="text-red-700 underline-offset-2 hover:underline dark:text-red-400">{parts}</a> : parts);
+    const r = ref === undefined ? undefined : note.refs[ref];
+    const linkClass = "text-red-700 underline-offset-2 hover:underline dark:text-red-400";
+    if (r?.href && r.editionName) out.push(<OtherEditionLink key={i} href={r.href} name={r.editionName} className={linkClass}>{parts}</OtherEditionLink>);
+    else out.push(r?.href ? <a key={i} href={r.href} className={linkClass}>{parts}</a> : parts);
     i = j;
   }
   return out;

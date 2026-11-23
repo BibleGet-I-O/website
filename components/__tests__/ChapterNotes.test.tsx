@@ -39,6 +39,14 @@ describe("ChapterNotes", () => {
     expect(link.querySelector("i")).toHaveTextContent("Jn");
   });
 
+  it("aCitationIntoAnotherEditionShowsABook", () => {
+    const n = note(1, { body: "NVg (24,1b)", refs: [{ start: { book: 28, chapter: 24, verse: 1, segment: "b", printedChapter: null }, end: null, span: [5, 10], href: "/it/read/nvbse/x/24#v24.1b", edition: "NVBSE", editionName: "Nova Vulgata" }] });
+    render(wrap(<ChapterNotes groups={[group([n])]} />));
+    const link = screen.getAllByRole("link").find((a) => a.getAttribute("href") === "/it/read/nvbse/x/24#v24.1b")!;
+    expect(link.querySelector("svg.bg-other-edition")).not.toBeNull();
+    expect(link).toHaveAttribute("title", "In Nova Vulgata");
+  });
+
   it("groupsByEditionWhenComparing", () => {
     render(wrap(<ChapterNotes groups={[group([note(1)]), { ...group([note(3)], "Bibbia CEI"), edition: "CEI2008" }]} />));
     expect(screen.getByRole("heading", { name: "New American Bible" })).toBeInTheDocument();

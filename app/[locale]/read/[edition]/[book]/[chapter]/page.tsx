@@ -13,7 +13,7 @@ import { PageTurn } from "@/components/PageTurn";
 import { getAccess } from "@/lib/access";
 import { ApiUnavailable, bookBySlug, getChapter, getEditions, getIndex, getVerses, NotFound, slugFor } from "@/lib/api";
 import { ESTHER, estherTradition, hasBothEstherTexts, type Tradition } from "@/lib/esther";
-import { compareQuery, parseView, parseWith } from "@/lib/compare";
+import { compareQuery, comparisonFor, parseView, parseWith } from "@/lib/compare";
 import { hasChapter, PROLOGUE } from "@/lib/chapters";
 import { loadSecond } from "@/lib/interlinear";
 import { buildRows } from "@/lib/parallel";
@@ -21,7 +21,7 @@ import { placeAsPrinted } from "@/lib/placement";
 import { Spread } from "@/components/Spread";
 import { ChapterNotes, type NoteGroup } from "@/components/ChapterNotes";
 import { chapterFootnotes, NOTE_EDITIONS } from "@/lib/notes";
-import { withNoteLinks } from "@/lib/note-links";
+import { editionsCited, withNoteLinks } from "@/lib/note-links";
 import { TraditionSwitch } from "@/components/TraditionSwitch";
 import type { Chapter, EditionIndex, VerseRow } from "@/lib/types";
 
@@ -157,11 +157,26 @@ export default async function ChapterPage({ params, searchParams }: { params: Pr
   // Signed-in readers' notes: each citation links into its own edition, keeping the comparison (not Esther's
   // text). From a compared edition's note, that edition leads and the others, this one included, are compared.
   const reader = info.access === "reader";
-  const noteQuery = (sigla: string) => compareQuery({ with: [edition.sigla, ...withSiglas].filter((s) => s !== sigla), view });
-  const linked = (rs: VerseRow[], idx: EditionIndex, sigla: string) =>
-    reader ? withNoteLinks(rs, idx, `/${locale}/read/${editionSlug(sigla)}`, noteQuery(sigla)) : rs;
-  const rows = linked(main.rows, index, edition.sigla);
-  const masoreticRows = masoretic && masoretic !== "unavailable" ? linked(masoretic.rows, index, edition.sigla) : [];
+  const noteQuery = (target: string, own: string) => compareQuery({ with: comparisonFor(target, own, [edition.sigla, ...withSiglas]), view });
+  // Each edition's index once, for the notes' links: the page's own editions, and any a note cites (CEI 2008's
+  // notes cite the Nova Vulgata). One that cannot be loaded leaves its citations unlinked.
+  const indexes = new Map<string, Promise<EditionIndex | null>>([[edition.sigla, Promise.resolve(index)]]);
+  const indexOf = (sigla: string) => {
+    if (!indexes.has(sigla)) indexes.set(sigla, getIndex(sigla).catch(() => null));
+    return indexes.get(sigla)!;
+  };
+  const linked = async (rs: VerseRow[], sigla: string): Promise<VerseRow[]> => {
+    if (!reader) return rs;
+    const found = new Map(await Promise.all([sigla, ...editionsCited(rs, sigla)].map(async (s) => [s, await indexOf(s)] as const)));
+    return withNoteLinks(rs, sigla, (s) => {
+      const idx = found.get(s);
+      if (!idx) return undefined;
+      const name = s === sigla ? undefined : (editions.find((e) => e.sigla === s)?.fullname ?? s);
+      return { index: idx, base: `/${locale}/read/${editionSlug(s)}`, query: noteQuery(s, sigla), ...(name && { name }) };
+    });
+  };
+  const rows = await linked(main.rows, edition.sigla);
+  const masoreticRows = masoretic && masoretic !== "unavailable" ? await linked(masoretic.rows, edition.sigla) : [];
   const compared = withSiglas.map((sigla) => editions.find((e) => e.sigla === sigla)!);
   // The compared editions read with the main one's access; one that cannot be reached degrades to a note
   // (it does not show the error page).
@@ -172,7 +187,7 @@ export default async function ChapterPage({ params, searchParams }: { params: Pr
         mainRows: rows, withSigla: e.sigla, access: info.access, tradition: shown,
       });
       if (!reader || (second.mode !== "aligned" && second.mode !== "whole-chapter") || !second.rows.some((r) => r.notes)) return second;
-      return { ...second, rows: linked(second.rows, await getIndex(e.sigla), e.sigla) };
+      return { ...second, rows: await linked(second.rows, e.sigla) };
     }),
   );
   // The footnotes under the chapter (a panel on phones), each edition's apart.

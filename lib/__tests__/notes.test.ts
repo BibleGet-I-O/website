@@ -46,6 +46,24 @@ describe("notes", () => {
     ]);
   });
 
+  it("aCitationIntoAnotherEditionLinksThereWithItsName", () => {
+    const cei = { sigla: "CEI2008", books: [{ bookNum: 28, name: "Siracide", abbrev: "Sir", chapters: 51, versesPerChapter: [] }] };
+    const nv = { sigla: "NVBSE", books: [{ bookNum: 28, name: "Ecclesiasticus", abbrev: "Sir", chapters: 51, versesPerChapter: [] }] };
+    const cites = note("CEI2008:52098", { refs: [
+      { start: { book: 28, chapter: 24, verse: 1, segment: "b", printedChapter: null }, end: null, span: [0, 5], edition: "NVBSE" },
+      { start: { book: 28, chapter: 24, verse: 3, segment: null, printedChapter: null }, end: null, span: [6, 9] },
+    ] });
+    const editions = {
+      CEI2008: { index: cei, base: "/it/read/cei2008", query: "?with=NVBSE" },
+      NVBSE: { index: nv, base: "/it/read/nvbse", query: "?with=CEI2008", name: "Nova Vulgata" },
+    };
+    const [r] = withNoteLinks([row(24, 1, [cites])], "CEI2008", (s) => editions[s as keyof typeof editions]);
+    expect(r.notes![0].note.refs.map((x) => [x.href, x.editionName])).toEqual([
+      ["/it/read/nvbse/ecclesiasticus/24?with=CEI2008#v24.1b", "Nova Vulgata"],
+      ["/it/read/cei2008/siracide/24?with=NVBSE#v24.3", undefined],
+    ]);
+  });
+
   it("citationLinksToThePrintedChapter", () => {
     const index = { sigla: "NABRE", books: [{ bookNum: 27, name: "Wisdom", abbrev: "Wis", chapters: 19, versesPerChapter: [] }] };
     const cites = note("NABRE:9", { kind: "crossref", refs: [
@@ -53,7 +71,7 @@ describe("notes", () => {
       { start: { book: 27, chapter: 3, verse: null, segment: null, printedChapter: null }, end: null, span: [5, 8] },
       { start: { book: 99, chapter: 1, verse: 1, segment: null, printedChapter: null }, end: null, span: [9, 12] },
     ] });
-    const [r] = withNoteLinks([row(1, 1, [cites])], index, "/en/read/nabre", "?with=VGCL");
+    const [r] = withNoteLinks([row(1, 1, [cites])], "NABRE", () => ({ index, base: "/en/read/nabre", query: "?with=VGCL" }));
     expect(r.notes![0].note.refs.map((x) => x.href)).toEqual([
       "/en/read/nabre/wisdom/11?with=VGCL#v12.1",
       "/en/read/nabre/wisdom/3?with=VGCL",

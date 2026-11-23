@@ -282,6 +282,8 @@
     "count": "{count, plural, one {# nota} other {# notas}}",
     "resize": "Cambiar el tamaño de las notas",
     "backToText": "Volver al texto",
-    "visitorHint": "Quien inicia sesión ve también las notas de esta edición."
+    "visitorHint": "Quien inicia sesión ve también las notas de esta edición.",
+    "inEdition": "En {edition}",
+    "inEditionShort": "en {edition}"
   }
 }

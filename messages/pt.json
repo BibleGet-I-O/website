@@ -282,6 +282,8 @@
     "count": "{count, plural, one {# nota} other {# notas}}",
     "resize": "Redimensionar as notas",
     "backToText": "Voltar ao texto",
-    "visitorHint": "Quem entra na conta vê também as notas desta edição."
+    "visitorHint": "Quem entra na conta vê também as notas desta edição.",
+    "inEdition": "Em {edition}",
+    "inEditionShort": "em {edition}"
   }
 }

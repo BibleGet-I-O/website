@@ -256,6 +256,7 @@ type RawRef = {
   start: { book: number; chapter: number; verse: number | null; segment: string | null; printed_chapter: number | null };
   end: { book: number; chapter: number; verse: number } | null;
   span: [number, number];
+  edition?: string;
 };
 type RawNote = { kind: string; marker: string | null; label: string | null; title: string | null; body: string; refs: RawRef[] };
 type RawNotes = Record<string, RawNote>;
@@ -274,6 +275,7 @@ function toNote(id: string, n: RawNote): Note {
       start: { book: r.start.book, chapter: r.start.chapter, verse: r.start.verse, segment: r.start.segment, printedChapter: r.start.printed_chapter },
       end: r.end,
       span: r.span,
+      ...(r.edition && { edition: r.edition }),
     })),
   };
 }
