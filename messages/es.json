@@ -253,5 +253,19 @@
       "catholic": "Cartas católicas",
       "revelation": "Apocalipsis"
     }
+  },
+  "Speakers": {
+    "certain": "{who}",
+    "uncertain": "probablemente {who} (la atribución es incierta)",
+    "who": {
+      "woman": "la mujer",
+      "man": "el hombre",
+      "daughters": "las hijas de Jerusalén",
+      "bride": "la esposa",
+      "bridegroom": "el esposo",
+      "chorus": "el coro",
+      "brothers": "el coro de los hermanos",
+      "maidens": "el coro de las doncellas"
+    }
   }
 }

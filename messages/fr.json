@@ -253,5 +253,19 @@
       "catholic": "Lettres catholiques",
       "revelation": "Apocalypse"
     }
+  },
+  "Speakers": {
+    "certain": "{who}",
+    "uncertain": "probablement {who} (l'attribution est incertaine)",
+    "who": {
+      "woman": "la femme",
+      "man": "l'homme",
+      "daughters": "les filles de Jérusalem",
+      "bride": "l'épouse",
+      "bridegroom": "l'époux",
+      "chorus": "le chœur",
+      "brothers": "le chœur des frères",
+      "maidens": "le chœur des jeunes filles"
+    }
   }
 }

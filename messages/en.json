@@ -253,5 +253,19 @@
       "catholic": "Catholic Letters",
       "revelation": "Revelation"
     }
+  },
+  "Speakers": {
+    "certain": "{who}",
+    "uncertain": "probably {who} (the attribution is uncertain)",
+    "who": {
+      "woman": "the woman",
+      "man": "the man",
+      "daughters": "the Daughters of Jerusalem",
+      "bride": "the bride",
+      "bridegroom": "the bridegroom",
+      "chorus": "the chorus",
+      "brothers": "the chorus of the brothers",
+      "maidens": "the chorus of the maidens"
+    }
   }
 }

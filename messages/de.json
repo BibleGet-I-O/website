@@ -253,5 +253,19 @@
       "catholic": "Katholische Briefe",
       "revelation": "Offenbarung"
     }
+  },
+  "Speakers": {
+    "certain": "{who}",
+    "uncertain": "wahrscheinlich {who} (die Zuordnung ist unsicher)",
+    "who": {
+      "woman": "die Frau",
+      "man": "der Mann",
+      "daughters": "die Töchter Jerusalems",
+      "bride": "die Braut",
+      "bridegroom": "der Bräutigam",
+      "chorus": "der Chor",
+      "brothers": "der Chor der Brüder",
+      "maidens": "der Chor der Mädchen"
+    }
   }
 }

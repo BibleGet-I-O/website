@@ -1,5 +1,7 @@
 import { describe, it, expect } from "vitest";
-import { render } from "@testing-library/react";
+import { render, screen } from "@testing-library/react";
+import { NextIntlClientProvider } from "next-intl";
+import en from "@/messages/en.json";
 import { renderFormatted, renderVerse } from "@/lib/formatted";
 
 // Synthetic or public-domain (KJV, Douay-Rheims) text only.
@@ -74,8 +76,9 @@ describe("renderFormatted", () => {
   });
 
   it("marksALineThatOpensWithASpeaker", () => {
-    const root = html(renderFormatted("<pof><speaker>W</speaker> Let him kiss me</pof>"));
+    const root = render(<NextIntlClientProvider locale="en" messages={en}><div>{renderFormatted("<pof><speaker>W</speaker> Let him kiss me</pof>")}</div></NextIntlClientProvider>).container;
     expect(root.querySelector(".bg-pof")).toHaveClass("bg-has-speaker");
+    expect(screen.getByRole("button", { name: "W: the woman" })).toHaveTextContent("W");
   });
 });
 

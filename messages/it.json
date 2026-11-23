@@ -253,5 +253,19 @@
       "catholic": "Lettere cattoliche",
       "revelation": "Apocalisse"
     }
+  },
+  "Speakers": {
+    "certain": "{who}",
+    "uncertain": "probabilmente {who} (l'attribuzione è incerta)",
+    "who": {
+      "woman": "la donna",
+      "man": "l'uomo",
+      "daughters": "le figlie di Gerusalemme",
+      "bride": "la sposa",
+      "bridegroom": "lo sposo",
+      "chorus": "il coro",
+      "brothers": "il coro dei fratelli",
+      "maidens": "il coro delle fanciulle"
+    }
   }
 }

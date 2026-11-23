@@ -79,6 +79,25 @@
   .bg-speaker {
     @variant dark { background-color: var(--color-slate-800); color: var(--color-slate-300); }
   }
+  /* A known speaker tag is a button (it explains itself): no button chrome beyond the tag's own look. */
+  button.bg-speaker { border: 0; cursor: help; }
+  button.bg-speaker:focus-visible { outline: 2px solid var(--color-red-700); outline-offset: 1px; }
+  /* Its explanation: the browser's popover, as a small card near the top of the screen. */
+  .bg-speaker-pop {
+    margin: 4.5rem auto auto;
+    max-width: min(22rem, calc(100vw - 2rem));
+    padding: 0.5rem 0.75rem;
+    border: 1px solid var(--color-slate-300);
+    border-radius: 0.5rem;
+    background: white;
+    color: var(--color-slate-900);
+    font-family: var(--font-sans);
+    font-size: 0.875rem;
+    box-shadow: 0 8px 24px rgb(0 0 0 / 0.15);
+  }
+  .bg-speaker-pop {
+    @variant dark { border-color: var(--color-slate-700); background: var(--color-slate-900); color: var(--color-slate-100); }
+  }
 
   /*
    * One verse per line (interlinear): the number has its own margin column, so lines start level with it

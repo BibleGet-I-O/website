@@ -1,4 +1,5 @@
 import { Fragment, type ReactNode } from "react";
+import { SpeakerTag } from "@/components/SpeakerTag";
 
 /**
  * Renders a verse's formatted `text` as React elements, a port of the endpoint's
@@ -118,6 +119,10 @@ function renderNodes(nodes: Node[], opts: Opts, key: string, lead?: ReactNode): 
     }
     if (n.tag === "i") return <i key={k}>{children}</i>;
     if (n.tag === "sup") return <sup key={k}>{children}</sup>;
+    // A speaker tag explains itself (who speaks; "?" = uncertain): its text is the label, as printed.
+    if (n.tag === "speaker" && n.children.every((c) => c.k === "text")) {
+      return <SpeakerTag key={k} tag={n.children.map((c) => (c.k === "text" ? c.s : "")).join("").trim()} />;
+    }
     return (
       <span key={k} className={`bg-${n.tag}`}>
         {children}
