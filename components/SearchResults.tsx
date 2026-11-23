@@ -59,7 +59,7 @@ export function reference(h: SearchHit): string {
 }
 
 /** The words of a keyword search, for marking them in the results. */
-export const queryWords = (q: string) => q.match(/[\p{L}\p{N}]+/gu) ?? [];
+export const queryWords = (q: string) => q.match(/[\p{L}\p{N}][\p{L}\p{N}\p{M}]*/gu) ?? [];
 
 /**
  * The hits of a search, each with its reference (linking to the verse on its chapter's page, as the edition prints

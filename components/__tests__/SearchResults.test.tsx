@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest";
 import { render } from "@testing-library/react";
-import { markPhrase, markWords } from "@/components/SearchResults";
+import { markPhrase, markWords, queryWords } from "@/components/SearchResults";
 
 const marks = (text: string, phrase: string) =>
   Array.from(render(<p>{markPhrase(text, phrase)}</p>).container.querySelectorAll("mark")).map((m) => m.textContent);
@@ -41,5 +41,11 @@ describe("markWords", () => {
   it("keepsDecomposedAccentsInsideTheWord", () => {
     const marked = Array.from(render(<p>{markWords("el Sen\u0303or es mi pastor", ["señor"])}</p>).container.querySelectorAll("mark")).map((m) => m.textContent);
     expect(marked).toEqual(["Sen\u0303or"]);
+  });
+});
+
+describe("queryWords", () => {
+  it("keeps a decomposed accent inside its word", () => {
+    expect(queryWords("Señor mío")).toEqual(["Señor", "mío"]);
   });
 });
