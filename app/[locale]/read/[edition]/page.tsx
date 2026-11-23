@@ -7,6 +7,7 @@ import { SearchLens, SearchPanel, SearchPanelProvider } from "@/components/Searc
 import { editionSlug } from "@/lib/slug";
 import { getEditions, getIndex, NotFound, slugFor } from "@/lib/api";
 import type { Book } from "@/lib/types";
+import { groupBySection } from "@/lib/sections";
 
 /** Catholic canon numbering: books 1-46 are the Old Testament, 47-73 the New. */
 const LAST_OT_BOOK = 46;
@@ -65,6 +66,7 @@ export default async function BooksPage({ params, searchParams }: { params: Prom
   const query = passOn(search);
 
   const t = await getTranslations("Books");
+  const tg = await getTranslations("GoTo");
   const groups = [
     { key: "ot", title: t("ot"), books: books.filter((b) => b.bookNum <= LAST_OT_BOOK) },
     { key: "nt", title: t("nt"), books: books.filter((b) => b.bookNum > LAST_OT_BOOK) },
@@ -89,25 +91,36 @@ export default async function BooksPage({ params, searchParams }: { params: Prom
       {groups.map((g) => (
         <section key={g.key} className="mt-8">
           <h2 className="mb-3 text-xl font-semibold">{g.title}</h2>
-          <ul className="space-y-4">
-            {g.books.map((b) => (
-              <li key={b.bookNum}>
-                <h3 className="font-medium">{b.name}</h3>
-                <ul className="mt-1 flex flex-wrap gap-1" aria-label={t("chapters", { book: b.name })}>
-                  {Array.from({ length: b.chapters }, (_, i) => i + 1).map((n) => (
-                    <li key={n}>
-                      <Link
-                        href={`${base}/${slugFor(b, books)}/${n}${query}`}
-                        className="block min-w-9 rounded border border-slate-200 px-2 py-1 text-center text-sm hover:border-slate-400 dark:border-slate-800 dark:hover:border-slate-600"
-                      >
-                        {n}
-                      </Link>
-                    </li>
-                  ))}
-                </ul>
-              </li>
-            ))}
-          </ul>
+          {/* By section, each book folded: short on a phone, and every chapter still a link in the page. */}
+          {groupBySection(g.books).map((s) => (
+            <div key={s.key} className="mb-5">
+              <h3 className="mb-2 text-xs font-bold uppercase tracking-wider text-red-700 dark:text-red-400">{tg(`sections.${s.key}`)}</h3>
+              <ul className="divide-y divide-slate-200 rounded border border-slate-200 dark:divide-slate-800 dark:border-slate-800">
+                {s.books.map((b) => (
+                  <li key={b.bookNum}>
+                    <details className="group">
+                      <summary className="flex cursor-pointer list-none items-center justify-between gap-3 px-3 py-2 font-medium">
+                        <span>{b.name}</span>
+                        <span className="text-sm font-normal text-slate-500 dark:text-slate-400">{b.chapters}</span>
+                      </summary>
+                      <ul className="flex flex-wrap gap-1 px-3 pb-3" aria-label={t("chapters", { book: b.name })}>
+                        {Array.from({ length: b.chapters }, (_, i) => i + 1).map((n) => (
+                          <li key={n}>
+                            <Link
+                              href={`${base}/${slugFor(b, books)}/${n}${query}`}
+                              className="block min-w-9 rounded border border-slate-200 px-2 py-1 text-center text-sm hover:border-slate-400 dark:border-slate-800 dark:hover:border-slate-600"
+                            >
+                              {n}
+                            </Link>
+                          </li>
+                        ))}
+                      </ul>
+                    </details>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          ))}
         </section>
       ))}
     </main>

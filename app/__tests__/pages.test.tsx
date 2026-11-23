@@ -272,6 +272,30 @@ describe("books", () => {
     searchParams: Promise.resolve(search),
   });
 
+  describe("the index, by section", () => {
+    beforeEach(() => {
+      getEditions.mockResolvedValue([ed("LUZZI", "it")]);
+      getIndex.mockResolvedValue({ sigla: "LUZZI", books: [book(1, "Genesi", "Gen", 50), book(23, "Salmi", "Sal", 150), book(47, "Matteo", "Mt", 28)] });
+    });
+
+    it("groupsBooksUnderSectionHeadings", async () => {
+      render(wrap(await BooksPage(params("luzzi"))));
+      expect(screen.getAllByRole("heading", { level: 3 }).map((h) => h.textContent)).toEqual(["Pentateuch", "Wisdom Books", "Gospels"]);
+      // Each book folds its chapters under its name and their number.
+      const salmi = screen.getByText("Salmi").closest("details")!;
+      expect(salmi).not.toHaveAttribute("open");
+      expect(salmi.querySelector("summary")).toHaveTextContent("Salmi");
+      expect(salmi.querySelector("summary")).toHaveTextContent("150");
+    });
+
+    it("keepsEveryChapterAsALink", async () => {
+      const { container } = render(wrap(await BooksPage(params("luzzi"))));
+      const chapters = Array.from(container.querySelectorAll("a")).filter((a) => /\/read\/luzzi\/[^/]+\/\d+$/.test(a.getAttribute("href") ?? ""));
+      expect(chapters).toHaveLength(228);
+      expect(chapters.at(-1)).toHaveAttribute("href", "/en/read/luzzi/matteo/28");
+    });
+  });
+
   describe("switching edition from a chapter", () => {
     beforeEach(() => {
       getEditions.mockResolvedValue([ed("LUZZI", "it"), ed("DRB", "en")]);
