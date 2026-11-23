@@ -13,7 +13,7 @@ import { PageTurn } from "@/components/PageTurn";
 import { getAccess } from "@/lib/access";
 import { ApiUnavailable, bookBySlug, getChapter, getEditions, getIndex, getVerses, NotFound, slugFor } from "@/lib/api";
 import { ESTHER, estherTradition, hasBothEstherTexts, type Tradition } from "@/lib/esther";
-import { compareQuery, parseView, parseWith } from "@/lib/compare";
+import { compareQuery, comparisonFor, parseView, parseWith } from "@/lib/compare";
 import { hasChapter, PROLOGUE } from "@/lib/chapters";
 import { loadSecond } from "@/lib/interlinear";
 import { buildRows } from "@/lib/parallel";
@@ -157,7 +157,7 @@ export default async function ChapterPage({ params, searchParams }: { params: Pr
   // Signed-in readers' notes: each citation links into its own edition, keeping the comparison (not Esther's
   // text). From a compared edition's note, that edition leads and the others, this one included, are compared.
   const reader = info.access === "reader";
-  const noteQuery = (sigla: string) => compareQuery({ with: [edition.sigla, ...withSiglas].filter((s) => s !== sigla), view });
+  const noteQuery = (target: string, own: string) => compareQuery({ with: comparisonFor(target, own, [edition.sigla, ...withSiglas]), view });
   // Each edition's index once, for the notes' links: the page's own editions, and any a note cites (CEI 2008's
   // notes cite the Nova Vulgata). One that cannot be loaded leaves its citations unlinked.
   const indexes = new Map<string, Promise<EditionIndex | null>>([[edition.sigla, Promise.resolve(index)]]);
@@ -172,7 +172,7 @@ export default async function ChapterPage({ params, searchParams }: { params: Pr
       const idx = found.get(s);
       if (!idx) return undefined;
       const name = s === sigla ? undefined : (editions.find((e) => e.sigla === s)?.fullname ?? s);
-      return { index: idx, base: `/${locale}/read/${editionSlug(s)}`, query: noteQuery(s), ...(name && { name }) };
+      return { index: idx, base: `/${locale}/read/${editionSlug(s)}`, query: noteQuery(s, sigla), ...(name && { name }) };
     });
   };
   const rows = await linked(main.rows, edition.sigla);

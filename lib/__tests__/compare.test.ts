@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { compareQuery, MAX_COMPARED, parseView, parseWith } from "../compare";
+import { compareQuery, comparisonFor, MAX_COMPARED, parseView, parseWith } from "../compare";
 
 const known = ["NABRE", "CEI2008", "VGCL", "DRB"];
 
@@ -40,5 +40,17 @@ describe("compare address", () => {
     expect(compareQuery({ with: [], view: "interlinear", twoTexts: true })).toBe("?view=interlinear");
     expect(compareQuery({ with: [], view: "side-by-side", tradition: "HEBREW", twoTexts: true })).toBe("");
     expect(compareQuery({ with: ["DRB"], view: "side-by-side", tradition: "HEBREW" })).toBe("?with=DRB&tradition=HEBREW");
+  });
+});
+
+describe("comparisonFor", () => {
+  it("theCitedEditionLeadsAndTheNotesOwnComesFirstAmongTheRest", () => {
+    // Reading CEI2008 with VGCL and DRB, a CEI note cites the Nova Vulgata: CEI2008 is kept, the last compared dropped.
+    expect(comparisonFor("NVBSE", "CEI2008", ["CEI2008", "VGCL", "DRB"])).toEqual(["CEI2008", "VGCL"]);
+    // A compared edition's note: that edition comes first.
+    expect(comparisonFor("NVBSE", "DRB", ["CEI2008", "VGCL", "DRB"])).toEqual(["DRB", "CEI2008"]);
+    // Into an edition already on the page: it leads, the others stay.
+    expect(comparisonFor("VGCL", "CEI2008", ["CEI2008", "VGCL"])).toEqual(["CEI2008"]);
+    expect(comparisonFor("NABRE", "NABRE", ["NABRE", "VGCL"])).toEqual(["VGCL"]);
   });
 });

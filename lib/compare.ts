@@ -17,6 +17,14 @@ export function parseWith(raw: string | undefined, main: string, known: string[]
   return out;
 }
 
+/**
+ * The editions compared with `target` when a note's citation leads there from a page showing `onPage` (the main
+ * edition first): the note's `own` edition first, then the page's others, without the target, at most MAX_COMPARED.
+ */
+export function comparisonFor(target: string, own: string, onPage: string[]): string[] {
+  return [own, ...onPage].filter((s, i, all) => s !== target && all.indexOf(s) === i).slice(0, MAX_COMPARED);
+}
+
 export function parseView(raw: string | undefined): View {
   return raw === "interlinear" ? "interlinear" : "side-by-side";
 }
