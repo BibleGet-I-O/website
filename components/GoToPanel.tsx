@@ -28,9 +28,18 @@ type Level =
 /** A plain primary click, which the panel handles itself; any other (new tab, new window) is the browser's. */
 const plain = (e: MouseEvent) => !e.defaultPrevented && e.button === 0 && !e.metaKey && !e.ctrlKey && !e.shiftKey && !e.altKey;
 
-const tile =
-  "rounded-lg border border-slate-200 bg-slate-50 text-slate-900 hover:border-slate-400 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-100 dark:hover:border-slate-600";
-const currentTile = "border-red-700 bg-red-700 text-white hover:border-red-700 dark:border-red-500 dark:bg-red-600 dark:text-white";
+// A tile is either plain or current, never both: two classes for one property are settled by the stylesheet's order,
+// in which the plain colours come last and would win (white text on a pale tile).
+const tileBase = "rounded-lg border";
+const plainTile =
+  "border-slate-200 bg-slate-50 text-slate-900 hover:border-slate-400 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-100 dark:hover:border-slate-600";
+const currentTile = "border-red-700 bg-red-700 text-white dark:border-red-500 dark:bg-red-600 dark:text-white";
+const tile = (current: boolean) => `${tileBase} ${current ? currentTile : plainTile}`;
+/** A section box: the plain tile, outlined in red when it holds the current book. */
+const sectionTile = (current: boolean) =>
+  `${tileBase} bg-slate-50 text-slate-900 dark:bg-slate-900 dark:text-slate-100 ${
+    current ? "border-red-700 dark:border-red-500" : "border-slate-200 hover:border-slate-400 dark:border-slate-800 dark:hover:border-slate-600"
+  }`;
 
 function HomeIcon() {
   return (
@@ -167,7 +176,7 @@ export function GoToPanel(p: GoToPanelProps) {
                           p.onPick(book.slug, n);
                           p.onClose();
                         }}
-                        className={`grid aspect-square place-items-center font-semibold ${tile} ${here ? currentTile : ""}`}
+                        className={`grid aspect-square place-items-center font-semibold ${tile(here)}`}
                       >
                         {n}
                       </a>
@@ -201,7 +210,7 @@ export function GoToPanel(p: GoToPanelProps) {
                                 e.preventDefault();
                                 move({ level: "chapters", slug: b.slug });
                               }}
-                              className={`flex min-h-12 items-center justify-center px-1 py-2 text-center text-sm ${tile} ${here ? currentTile : ""}`}
+                              className={`flex min-h-12 items-center justify-center px-1 py-2 text-center text-sm ${tile(here)}`}
                             >
                               {b.name}
                             </a>
@@ -234,7 +243,7 @@ export function GoToPanel(p: GoToPanelProps) {
                               setHighlighted(g.key);
                               move({ level: "books", testament: x, section: g.key });
                             }}
-                            className={`mb-2 block w-full p-3 text-left ${tile} ${g.key === currentSection ? "border-red-700 dark:border-red-500" : ""}`}
+                            className={`mb-2 block w-full p-3 text-left ${sectionTile(g.key === currentSection)}`}
                           >
                             <span className="block font-semibold">{t(`sections.${g.key}`)}</span>
                             <span className="text-sm text-slate-500 dark:text-slate-400">{t("bookCount", { count: g.books.length })}</span>
