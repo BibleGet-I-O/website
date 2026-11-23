@@ -7,6 +7,7 @@ import { CappedNotice, noticeFor } from "@/components/CappedNotice";
 import { ChapterNav, chapterTargets } from "@/components/ChapterNav";
 import { editionSlug } from "@/lib/slug";
 import { ReaderBar } from "@/components/ReaderBar";
+import { RememberChapter } from "@/components/RememberChapter";
 import { Interlinear } from "@/components/Interlinear";
 import { PageTurn } from "@/components/PageTurn";
 import { getAccess } from "@/lib/access";
@@ -177,6 +178,7 @@ export default async function ChapterPage({ params, searchParams }: { params: Pr
 
   return (
     <main className={`mx-auto w-full ${width} p-4 sm:p-6`}>
+      <RememberChapter sigla={edition.sigla} bookNum={book.bookNum} chapter={chapter} />
       <ReaderBar
         locale={locale}
         edition={edition.sigla}

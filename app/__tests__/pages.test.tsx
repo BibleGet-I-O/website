@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach } from "vitest";
+import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { fireEvent, render, screen, within } from "@testing-library/react";
 import { NextIntlClientProvider } from "next-intl";
 import en from "@/messages/en.json";
@@ -105,6 +105,46 @@ describe("home", () => {
       expect(section.tagName).toBe("SECTION");
       expect(within(section as HTMLElement).getByRole("heading", { level: 2 })).toHaveTextContent(name);
     }
+  });
+
+  describe("the shelf opens the reader", () => {
+    afterEach(() => localStorage.clear());
+    const luzzi = () => screen.getAllByRole("link").find((a) => a.getAttribute("href") === "/en/read/luzzi")!;
+
+    it("shelfClickOpensTheLastChapterRead", async () => {
+      getEditions.mockResolvedValue(shelf());
+      routerPush.mockClear();
+      localStorage.setItem("bibleget.lastRead.LUZZI", JSON.stringify({ bookNum: 50, chapter: 3 }));
+      await home();
+      fireEvent.click(luzzi());
+      expect(routerPush).toHaveBeenLastCalledWith("/en/read/luzzi?book=50&chapter=3");
+    });
+
+    it("shelfClickWithNothingStoredOpensGenesisOne", async () => {
+      getEditions.mockResolvedValue(shelf());
+      routerPush.mockClear();
+      await home();
+      fireEvent.click(luzzi());
+      expect(routerPush).toHaveBeenLastCalledWith("/en/read/luzzi?book=1&chapter=1");
+    });
+
+    it("modifiedShelfClickFollowsTheLink", async () => {
+      getEditions.mockResolvedValue(shelf());
+      routerPush.mockClear();
+      await home();
+      const link = luzzi();
+      let leftToBrowser: boolean | undefined;
+      const stop = (e: Event) => {
+        leftToBrowser = !e.defaultPrevented;
+        e.preventDefault();
+      };
+      window.addEventListener("click", stop);
+      fireEvent.click(link, { ctrlKey: true });
+      window.removeEventListener("click", stop);
+      expect(leftToBrowser).toBe(true);
+      expect(routerPush).not.toHaveBeenCalled();
+      expect(link).toHaveAttribute("href", "/en/read/luzzi");
+    });
   });
 
   it("eachBookLinksToItsEditionNewestFirst", async () => {
@@ -323,6 +363,15 @@ describe("chapter", () => {
 
   beforeEach(() => {
     getEditions.mockResolvedValue([ed("DRB", "en", "Douay-Rheims"), ed("NABRE", "en"), ed("LUZZI", "it")]);
+  });
+
+  it("chapterPageRemembersItself", async () => {
+    localStorage.clear();
+    getIndex.mockResolvedValue(drbIndex);
+    getChapter.mockResolvedValue({ rows: [verse(2, 1)], truncated: false, expectedVerses: 1 });
+    getVerses.mockResolvedValue([]);
+    render(wrap(await ChapterPage(params("drb", "tobias", "2"))));
+    expect(JSON.parse(localStorage.getItem("bibleget.lastRead.DRB")!)).toEqual({ bookNum: 17, chapter: 2 });
   });
 
   it("bookTheEditionLacksIs404", async () => {
