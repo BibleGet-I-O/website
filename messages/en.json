@@ -52,10 +52,12 @@
     "previous": "Previous chapter",
     "next": "Next chapter",
     "heading": "{book} {chapter}",
+    "prologueHeading": "{book}: Prologue",
     "gapAbsent": "Not in {edition}",
     "dividedDifferently": "{main} and {second} divide the chapters of this book differently: {second}'s chapter {chapter} is shown whole below.",
     "secondMissing": "{second} does not have {book} {chapter}.",
     "secondNoBook": "{second} does not have {book}.",
+    "secondNoPrologue": "{second} does not have the prologue of {book}.",
     "dividedNoChapter": "{main} and {second} divide the chapters of this book differently: {second} has no chapter {chapter}.",
     "estherAdditions": "{second} prints the text of these chapters as additions within chapters 1–10 of Esther.",
     "secondUnavailable": "{second} could not be loaded. Try again later.",
@@ -252,7 +254,9 @@
       "paul": "Letters of Paul",
       "catholic": "Catholic Letters",
       "revelation": "Revelation"
-    }
+    },
+    "prologue": "Prologue",
+    "prologueShort": "Prol."
   },
   "Speakers": {
     "certain": "{who}",

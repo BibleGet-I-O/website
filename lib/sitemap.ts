@@ -1,4 +1,5 @@
 import { LOCALES } from "@/i18n/routing";
+import { chapterNumbers } from "@/lib/chapters";
 
 /**
  * The production origin sitemaps are built from (`SITE_CANONICAL_ORIGIN`), read per request. Null on staging
@@ -21,12 +22,12 @@ export function sitemapIndexXml(origin: string, editionSlugs: string[]): string 
 }
 
 /** An edition's sitemap: its index page and every chapter, in every interface language. */
-export function editionSitemapXml(origin: string, editionSlug: string, books: { slug: string; chapters: number }[]): string {
+export function editionSitemapXml(origin: string, editionSlug: string, books: { slug: string; chapters: number; prologue?: number }[]): string {
   const urls: string[] = [];
   for (const locale of LOCALES) {
     const base = `${origin}/${locale}/read/${editionSlug}`;
     urls.push(base);
-    for (const b of books) for (let n = 1; n <= b.chapters; n++) urls.push(`${base}/${b.slug}/${n}`);
+    for (const b of books) for (const n of chapterNumbers(b)) urls.push(`${base}/${b.slug}/${n}`);
   }
   return `${XML_HEAD}\n<urlset xmlns="${NS}">\n${urls.map((u) => `<url><loc>${esc(u)}</loc></url>`).join("\n")}\n</urlset>\n`;
 }

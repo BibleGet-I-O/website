@@ -52,10 +52,12 @@
     "previous": "Capitolo precedente",
     "next": "Capitolo successivo",
     "heading": "{book} {chapter}",
+    "prologueHeading": "{book}: Prologo",
     "gapAbsent": "Assente in {edition}",
     "dividedDifferently": "{main} e {second} dividono diversamente i capitoli di questo libro: il capitolo {chapter} di {second} è riportato per intero qui sotto.",
     "secondMissing": "{book} {chapter} non è presente in {second}.",
     "secondNoBook": "{book} non è presente in {second}.",
+    "secondNoPrologue": "Il prologo di {book} non è presente in {second}.",
     "dividedNoChapter": "{main} e {second} dividono diversamente i capitoli di questo libro: {second} non ha il capitolo {chapter}.",
     "estherAdditions": "{second} riporta il testo di questi capitoli come aggiunte all'interno dei capitoli 1–10 di Ester.",
     "secondUnavailable": "Non è stato possibile caricare {second}. Riprova più tardi.",
@@ -252,7 +254,9 @@
       "paul": "Lettere di Paolo",
       "catholic": "Lettere cattoliche",
       "revelation": "Apocalisse"
-    }
+    },
+    "prologue": "Prologo",
+    "prologueShort": "Prol."
   },
   "Speakers": {
     "certain": "{who}",

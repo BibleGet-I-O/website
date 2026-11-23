@@ -81,6 +81,13 @@ describe("alignment", () => {
     expect(pairingMode(nabre, vgcl, 32, 1)).toBe("aligned");
   });
 
+  it("thePrologueAlignsOnlyWhereBothEditionsPrintIt", () => {
+    const sir = (prologue: number) => ({ ...book(28, "Sir", [30, 18]), prologue });
+    const nabre = idx("NABRE", [sir(1)]);
+    expect(pairingMode(nabre, idx("CEI2008", [sir(1)]), 28, 0)).toBe("aligned");
+    expect(pairingMode(nabre, idx("DRB", [sir(0)]), 28, 0)).toBe("whole-chapter");
+  });
+
   it("equalCountsAlign", () => {
     const drb = idx("DRB", [book(47, "Matt", [25, 23, 17, 25, 48])]);
     const vgcl = idx("VGCL", [book(47, "Mt", [25, 23, 17, 25, 48])]);
@@ -129,6 +136,14 @@ describe("loadSecond", () => {
     process.env.BIBLEGET_READ_KEY = "read-key";
   });
   afterEach(() => vi.unstubAllGlobals());
+
+  it("anEditionWithoutThePrologueSaysSo", async () => {
+    const quotes = mockFetch({ DRB: [{ abbrev: "Sir", bookNum: 28, verses: [30, 18] }] }, () => []);
+    const nabre = idx("NABRE", [{ ...book(28, "Sir", [30, 18]), prologue: 1 }]);
+    const second = await loadSecond({ ...main("NABRE", "Sir", nabre), bookNum: 28, chapter: 0, mainRows: [row(0, 1)], withSigla: "DRB" });
+    expect(second).toEqual({ mode: "missing", reason: "prologue" });
+    expect(quotes()).toHaveLength(0);
+  });
 
   it("vulgateMainEditionFetchesBothHebrewPsalms", async () => {
     const quotes = mockFetch({ NABRE: psalmsOf("Ps"), VGCL: psalmsOf("Psal") }, (v, q) => {

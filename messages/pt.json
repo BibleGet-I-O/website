@@ -52,10 +52,12 @@
     "previous": "Capítulo anterior",
     "next": "Próximo capítulo",
     "heading": "{book} {chapter}",
+    "prologueHeading": "{book}: Prólogo",
     "gapAbsent": "Ausente em {edition}",
     "dividedDifferently": "{main} e {second} dividem os capítulos deste livro de forma diferente: o capítulo {chapter} de {second} é mostrado inteiro abaixo.",
     "secondMissing": "{second} não tem {book} {chapter}.",
     "secondNoBook": "{second} não tem {book}.",
+    "secondNoPrologue": "{second} não tem o prólogo de {book}.",
     "dividedNoChapter": "{main} e {second} dividem os capítulos deste livro de forma diferente: {second} não tem o capítulo {chapter}.",
     "estherAdditions": "{second} imprime o texto destes capítulos como acréscimos dentro dos capítulos 1–10 de Ester.",
     "secondUnavailable": "Não foi possível carregar {second}. Tente novamente mais tarde.",
@@ -252,7 +254,9 @@
       "paul": "Cartas de Paulo",
       "catholic": "Cartas católicas",
       "revelation": "Apocalipse"
-    }
+    },
+    "prologue": "Prólogo",
+    "prologueShort": "Pról."
   },
   "Speakers": {
     "certain": "{who}",

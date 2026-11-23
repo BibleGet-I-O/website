@@ -195,6 +195,43 @@ describe("Esther with both texts", () => {
   });
 });
 
+describe("Sirach's prologue", () => {
+  const sirIndex = {
+    indexes: {
+      NABRE: {
+        abbreviations: ["Wis", "Sir"], biblebooks: ["Wisdom", "Sirach"], chapter_limit: [19, 51],
+        verse_limit: [Array(19).fill(20), Array(51).fill(30)], book_num: [27, 28], prologue: [0, 1],
+      },
+    },
+  };
+  const stub = (results: () => object[]) => {
+    const fn = vi.fn(async (url: string | URL | Request) =>
+      String(url).includes("/metadata/versionindex") ? json(sirIndex) : json(quote(results())));
+    vi.stubGlobal("fetch", fn);
+    return fn;
+  };
+
+  it("readsEachBooksPrologue", async () => {
+    stub(() => []);
+    const [wis, sir] = (await getIndex("NABRE")).books;
+    expect(wis.prologue).toBe(0);
+    expect(sir.prologue).toBe(1);
+  });
+
+  it("anIndexWithoutProloguesHasNone", async () => {
+    mockFetch(() => json(quote([])));
+    expect((await getIndex("DRB")).books[0].prologue).toBe(0);
+  });
+
+  it("fetchesThePrologueAsChapterZero", async () => {
+    const fn = stub(() => [raw(1, { chapter: 0, title1: "Foreword" })]);
+    const ch = await getChapter({ sigla: "NABRE", bookAbbrev: "Sir", chapter: 0, access: "reader" });
+    expect(new URL(String(quoteCall(fn as never)[0])).searchParams.get("query")).toBe("Sir0");
+    expect(ch).toMatchObject({ truncated: false, expectedVerses: 1 });
+    expect(ch.rows[0]).toMatchObject({ chapter: 0, verse: 1, titles: ["Foreword"] });
+  });
+});
+
 describe("getVerses", () => {
   it("requestsOneVerseInTheEditionsNumberingWithoutAnIndexLookup", async () => {
     const fn = mockFetch(() => json(quote([raw(1, { chapter: 12, printed_chapter: 11, verse_label: "12:1" })])));

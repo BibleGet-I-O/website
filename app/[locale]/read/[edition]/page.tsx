@@ -8,6 +8,7 @@ import { editionSlug } from "@/lib/slug";
 import { getEditions, getIndex, NotFound, slugFor } from "@/lib/api";
 import type { Book } from "@/lib/types";
 import { groupBySection } from "@/lib/sections";
+import { chapterNumbers, hasChapter, PROLOGUE } from "@/lib/chapters";
 
 /** Catholic canon numbering: books 1-46 are the Old Testament, 47-73 the New. */
 const LAST_OT_BOOK = 46;
@@ -15,7 +16,7 @@ const LAST_OT_BOOK = 46;
 type Search = { book?: string | string[]; chapter?: string | string[]; with?: string | string[]; view?: string | string[]; tradition?: string | string[] };
 
 const one = (v: string | string[] | undefined) => (Array.isArray(v) ? v[0] : v);
-const positive = (v: string | undefined) => (v !== undefined && /^[1-9]\d*$/.test(v) ? Number(v) : undefined);
+const whole = (v: string | undefined) => (v !== undefined && /^(0|[1-9]\d*)$/.test(v) ? Number(v) : undefined);
 
 /**
  * The reader's `with`, `view` and `tradition`, passed on as they came (the chapter page checks them), the
@@ -36,10 +37,13 @@ function passOn(search: Search): string {
  * book (a deuterocanonical book in a Protestant canon) or the chapter.
  */
 function sameChapter(base: string, books: Book[], search: Search): string | null {
-  const bookNum = positive(one(search.book));
-  const chapter = positive(one(search.chapter));
+  const bookNum = whole(one(search.book));
+  const asked = whole(one(search.chapter));
   const b = bookNum === undefined ? undefined : books.find((x) => x.bookNum === bookNum);
-  if (!b || chapter === undefined || chapter > b.chapters) return null;
+  if (!b || asked === undefined) return null;
+  // Sirach's prologue in an edition that does not print it: its chapter 1, which follows it.
+  const chapter = asked === PROLOGUE && !hasChapter(b, PROLOGUE) ? 1 : asked;
+  if (!hasChapter(b, chapter)) return null;
   return `${base}/${slugFor(b, books)}/${chapter}${passOn(search)}`;
 }
 
@@ -104,13 +108,14 @@ export default async function BooksPage({ params, searchParams }: { params: Prom
                         <span className="text-sm font-normal text-slate-500 dark:text-slate-400">{b.chapters}</span>
                       </summary>
                       <ul className="flex flex-wrap gap-1 px-3 pb-3" aria-label={t("chapters", { book: b.name })}>
-                        {Array.from({ length: b.chapters }, (_, i) => i + 1).map((n) => (
+                        {chapterNumbers(b).map((n) => (
                           <li key={n}>
                             <Link
                               href={`${base}/${slugFor(b, books)}/${n}${query}`}
+                              aria-label={n === PROLOGUE ? tg("prologue") : undefined}
                               className="block min-w-9 rounded border border-slate-200 px-2 py-1 text-center text-sm hover:border-slate-400 dark:border-slate-800 dark:hover:border-slate-600"
                             >
-                              {n}
+                              {n === PROLOGUE ? tg("prologueShort") : n}
                             </Link>
                           </li>
                         ))}

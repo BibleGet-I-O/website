@@ -19,6 +19,15 @@ describe("neighbours", () => {
     expect(neighbours(index, 73, 22)).toEqual({ prev: { slug: "apocalypse", chapter: 21 } });
   });
 
+  it("thePrologueSitsBetweenTheBooksAndChapterOne", () => {
+    const sir = { ...book(28, "Sirach", 51), prologue: 1 };
+    const idx = { sigla: "NABRE", books: [book(27, "Wisdom", 19), sir, book(29, "Isaiah", 66)] };
+    expect(neighbours(idx, 27, 19).next).toEqual({ slug: "sirach", chapter: 0 });
+    expect(neighbours(idx, 28, 0)).toEqual({ prev: { slug: "wisdom", chapter: 19 }, next: { slug: "sirach", chapter: 1 } });
+    expect(neighbours(idx, 28, 1).prev).toEqual({ slug: "sirach", chapter: 0 });
+    expect(neighbours(idx, 29, 1).prev).toEqual({ slug: "sirach", chapter: 51 });
+  });
+
   it("targetsAreTheLinksHrefs", () => {
     expect(chapterTargets({ index, bookNum: 47, chapter: 28, base: "/read/drb", query: "?view=interlinear", leavingQuery: "" })).toEqual({
       prev: "/read/drb/matthew/27?view=interlinear", next: "/read/drb/mark/1",

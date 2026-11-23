@@ -15,6 +15,6 @@ export async function GET(_req: Request, { params }: { params: Promise<{ file: s
   const edition = (await getEditions()).find((e) => editionSlug(e.sigla) === m[1]);
   if (!edition) return notFound();
   const { books } = await getIndex(edition.sigla);
-  const xml = editionSitemapXml(origin, m[1], books.map((b) => ({ slug: slugFor(b, books), chapters: b.chapters })));
+  const xml = editionSitemapXml(origin, m[1], books.map((b) => ({ slug: slugFor(b, books), chapters: b.chapters, prologue: b.prologue })));
   return new Response(xml, { headers: { "Content-Type": "application/xml; charset=utf-8" } });
 }

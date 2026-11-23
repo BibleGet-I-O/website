@@ -34,6 +34,11 @@ describe("placeAsPrinted", () => {
     expect(printedLabel(next[0], 9)).toBe("10:1");
   });
 
+  it("thePrologueShowsNoVerseNumber", () => {
+    // Sirach's prologue is one block (chapter 0, verse 1): no edition prints a number on it.
+    expect(printedLabel(row(0, 1), 0)).toBe("");
+  });
+
   it("putsAVersePrintedInTheNextChapterAtItsStart", () => {
     // NABRE John 7:53 is printed at the start of John 8 (chapter 7, verse 53, label "7:53", printed_chapter 8).
     const lastOfSeven = [row(7, 53, { printedChapter: 8, label: "7:53" })];

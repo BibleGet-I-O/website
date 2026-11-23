@@ -1,4 +1,5 @@
 import "server-only";
+import { hasChapter, PROLOGUE } from "@/lib/chapters";
 import { ApiUnavailable, getChapter, getIndex, getVerses, NotFound } from "./api";
 import { hasBothEstherTexts } from "./esther";
 import { hebrewRef, pairingMode, psalmChapters, PSALMS } from "./parallel";
@@ -10,7 +11,7 @@ export type Second =
   /** The editions divide the book's chapters differently: the second's chapter whole, below (none: no such chapter). */
   | { mode: "whole-chapter"; rows: VerseRow[]; truncated: boolean; book: Book }
   /** No such book or chapter; or Esther 11-16 of a Vulgate-numbered main edition, which the second prints as additions. */
-  | { mode: "missing"; reason: "book" | "chapter" | "esther-additions" }
+  | { mode: "missing"; reason: "book" | "chapter" | "prologue" | "esther-additions" }
   /** The endpoint could not be reached for the second edition. */
   | { mode: "unavailable" };
 
@@ -98,6 +99,7 @@ async function load(p: SecondParams): Promise<Second> {
     return { mode: "aligned", rows, truncated: parts.some((x) => x.truncated), book };
   }
 
+  if (p.chapter === PROLOGUE && !hasChapter(book, PROLOGUE)) return { mode: "missing", reason: "prologue" };
   if (p.chapter > book.chapters) {
     // VGCL/DRB Esther 11-16 are the Greek additions an edition with both texts prints within chapters 1-10.
     if (hasBothEstherTexts(book)) return { mode: "missing", reason: "esther-additions" };

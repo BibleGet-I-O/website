@@ -2,9 +2,11 @@
 
 import { useEffect, useRef, useState, type MouseEvent } from "react";
 import { useTranslations } from "next-intl";
+import { chapterNumbers, PROLOGUE } from "@/lib/chapters";
 import { groupBySection, sectionOf, type SectionKey, type Testament } from "@/lib/sections";
 
-export type PanelBook = { slug: string; name: string; chapters: number; bookNum: number };
+/** `prologue`: the book's prologue verses (Sirach's foreword, chapter 0), shown as a "Prol." tile before chapter 1. */
+export type PanelBook = { slug: string; name: string; chapters: number; bookNum: number; prologue?: number };
 
 export type GoToPanelProps = {
   open: boolean;
@@ -163,13 +165,14 @@ export function GoToPanel(p: GoToPanelProps) {
           <div ref={bodyRef} data-goto-body className="flex-1 overflow-y-auto p-3">
             {view.level === "chapters" && book && (
               <ul className="grid grid-cols-5 gap-2 sm:grid-cols-10">
-                {Array.from({ length: book.chapters }, (_, i) => i + 1).map((n) => {
+                {chapterNumbers(book).map((n) => {
                   const here = book.slug === p.current.slug && n === p.current.chapter;
                   return (
                     <li key={n}>
                       <a
                         href={p.hrefFor(book.slug, n)}
                         aria-current={here ? "true" : undefined}
+                        aria-label={n === PROLOGUE ? t("prologue") : undefined}
                         onClick={(e) => {
                           if (!plain(e)) return;
                           e.preventDefault();
@@ -178,7 +181,7 @@ export function GoToPanel(p: GoToPanelProps) {
                         }}
                         className={`grid aspect-square place-items-center font-semibold ${tile(here)}`}
                       >
-                        {n}
+                        {n === PROLOGUE ? t("prologueShort") : n}
                       </a>
                     </li>
                   );

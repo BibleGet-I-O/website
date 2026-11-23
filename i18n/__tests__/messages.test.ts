@@ -19,10 +19,10 @@ const SAME_EVERYWHERE = new Set(["Metadata.siteName", "Home.title", "Home.bookNa
 
 /** Words that some languages share with English (a cognate, not an untranslated string). */
 const SHARED: Record<string, string[]> = {
-  it: [],
+  it: ["GoTo.prologueShort"],
   es: [],
-  fr: ["Home.notes", "Footer.siteVersion", "Search.suggestions", "Copyright.source"],
-  de: ["Reader.interlinear", "Footer.repos.website", "Reader.masoreticShort", "Search.modes.hybrid", "GoTo.sections.pentateuch"],
+  fr: ["GoTo.prologue", "GoTo.prologueShort", "Home.notes", "Footer.siteVersion", "Search.suggestions", "Copyright.source"],
+  de: ["GoTo.prologueShort", "Reader.interlinear", "Footer.repos.website", "Reader.masoreticShort", "Search.modes.hybrid", "GoTo.sections.pentateuch"],
   pt: ["Reader.interlinear", "Footer.siteVersion"],
 };
 

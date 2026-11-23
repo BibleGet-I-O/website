@@ -52,10 +52,12 @@
     "previous": "Vorheriges Kapitel",
     "next": "Nächstes Kapitel",
     "heading": "{book} {chapter}",
+    "prologueHeading": "{book}: Prolog",
     "gapAbsent": "Nicht in {edition}",
     "dividedDifferently": "{main} und {second} teilen die Kapitel dieses Buches unterschiedlich ein: Kapitel {chapter} von {second} wird unten vollständig angezeigt.",
     "secondMissing": "{second} enthält {book} {chapter} nicht.",
     "secondNoBook": "{second} enthält {book} nicht.",
+    "secondNoPrologue": "{second} enthält den Prolog von {book} nicht.",
     "dividedNoChapter": "{main} und {second} teilen die Kapitel dieses Buches unterschiedlich ein: {second} hat kein Kapitel {chapter}.",
     "estherAdditions": "{second} druckt den Text dieser Kapitel als Zusätze innerhalb der Kapitel 1–10 von Esther.",
     "secondUnavailable": "{second} konnte nicht geladen werden. Versuchen Sie es später erneut.",
@@ -252,7 +254,9 @@
       "paul": "Paulusbriefe",
       "catholic": "Katholische Briefe",
       "revelation": "Offenbarung"
-    }
+    },
+    "prologue": "Prolog",
+    "prologueShort": "Prol."
   },
   "Speakers": {
     "certain": "{who}",
