@@ -5,6 +5,20 @@ import { markPhrase, markWords, queryWords } from "@/components/SearchResults";
 const marks = (text: string, phrase: string) =>
   Array.from(render(<p>{markPhrase(text, phrase)}</p>).container.querySelectorAll("mark")).map((m) => m.textContent);
 
+describe("ligatures", () => {
+  const words = (text: string, w: string) =>
+    Array.from(render(<p>{markWords(text, [w])}</p>).container.querySelectorAll("mark")).map((m) => m.textContent);
+
+  it("markEitherSpellingAsTheSearchFindsIt", () => {
+    expect(words("arcam fœderis et cælum", "foederis")).toEqual(["fœderis"]);
+    expect(words("Œconomus", "oeconomus")).toEqual(["Œconomus"]);
+    expect(words("arcam foederis", "fœderis")).toEqual(["foederis"]);
+    expect(words("cælum et terram", "caelum")).toEqual(["cælum"]);
+    expect(words("Straße", "strasse")).toEqual(["Straße"]);
+    expect(marks("arcam fœderis Domini", "arcam foederis")).toEqual(["arcam fœderis"]);
+  });
+});
+
 describe("markPhrase", () => {
   it("marksOnlyThePhraseNotItsWordsElsewhere", () => {
     // BLPD: "pastor de ovejas" — the other "de" in the verse is not part of the phrase.

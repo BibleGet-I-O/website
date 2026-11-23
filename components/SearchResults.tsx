@@ -1,8 +1,13 @@
 import { Fragment, type ReactNode } from "react";
 import type { SearchHit } from "@/lib/search";
 
-/** Lowercased and without accents, so "Israël" and "israel" compare equal. */
-const fold = (s: string) => s.normalize("NFD").replace(/\p{M}+/gu, "").toLowerCase();
+const LIGATURES: Record<string, string> = { œ: "oe", æ: "ae", ß: "ss" };
+
+/**
+ * Lowercased, without accents and with ligatures spelled out, as the endpoint's search folds them (unaccent):
+ * "Israël" and "israel", "fœderis" and "foederis" compare equal.
+ */
+const fold = (s: string) => s.normalize("NFD").replace(/\p{M}+/gu, "").toLowerCase().replace(/[œæß]/g, (c) => LIGATURES[c]);
 
 /**
  * A word: letters and digits, with the combining marks attached to them, so an accent stored decomposed
