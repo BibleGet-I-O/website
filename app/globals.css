@@ -100,6 +100,68 @@
   }
 
   /*
+   * Note markers (signed-in readers), set apart from the text and from speaker tags (which are filled, with no
+   * border): footnotes in rubric red, cross-references in slate, each a small bordered chip; a note on a verse
+   * as a whole (CEI 2008) puts a pale disc behind the verse number.
+   */
+  .bg-note {
+    display: inline-block;
+    margin: 0 0.1em;
+    min-width: 1.35em;
+    padding: 0 0.25em;
+    border: 1px solid;
+    border-radius: 0.3rem;
+    font-family: var(--font-sans);
+    font-size: 0.68em;
+    font-weight: 600;
+    line-height: 1.45;
+    text-align: center;
+    vertical-align: 0.45em;
+    text-decoration: none;
+    cursor: pointer;
+  }
+  .bg-note-foot { border-color: var(--color-red-300); background-color: var(--color-red-50); color: var(--color-red-800); }
+  .bg-note-foot {
+    @variant dark { border-color: var(--color-red-800); background-color: rgb(127 29 29 / 0.35); color: var(--color-red-200); }
+  }
+  .bg-note-cross { border-color: var(--color-slate-300); background-color: white; color: var(--color-slate-600); }
+  .bg-note-cross {
+    @variant dark { border-color: var(--color-slate-600); background-color: var(--color-slate-900); color: var(--color-slate-300); }
+  }
+  .bg-note:hover { filter: brightness(0.95); }
+  .bg-note:focus-visible, .bg-note-num:focus-visible { outline: 2px solid var(--color-red-700); outline-offset: 1px; }
+  .bg-note-num {
+    display: inline-block;
+    min-width: 1.6em;
+    padding: 0.1em 0.3em;
+    border-radius: 999px;
+    background-color: var(--color-red-100);
+    color: inherit;
+    text-align: center;
+    text-decoration: none;
+  }
+  .bg-note-num {
+    @variant dark { background-color: rgb(127 29 29 / 0.45); }
+  }
+  /* A marker the reader came back to from its note. */
+  .bg-note:target, .bg-note-num:target { outline: 2px solid var(--color-red-600); outline-offset: 1px; }
+  .bg-note-pop {
+    margin: 4.5rem auto auto;
+    max-width: min(26rem, calc(100vw - 2rem));
+    padding: 0.6rem 0.8rem;
+    border: 1px solid var(--color-slate-300);
+    border-radius: 0.5rem;
+    background: white;
+    color: var(--color-slate-900);
+    font-family: var(--font-sans);
+    font-size: 0.9rem;
+    box-shadow: 0 8px 24px rgb(0 0 0 / 0.15);
+  }
+  .bg-note-pop {
+    @variant dark { border-color: var(--color-slate-700); background: var(--color-slate-900); color: var(--color-slate-100); }
+  }
+
+  /*
    * One verse per line (interlinear): the number has its own margin column, so lines start level with it
    * and keep only their relative indent; stanza spacing stays between lines of the same verse.
    */

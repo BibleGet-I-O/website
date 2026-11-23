@@ -271,5 +271,16 @@
       "brothers": "der Chor der Brüder",
       "maidens": "der Chor der Mädchen"
     }
+  },
+  "Notes": {
+    "footnote": "Fußnote {marker}",
+    "crossref": "Querverweise {marker}",
+    "crossrefTitle": "Querverweise, {label}",
+    "verse": "Anmerkung zu Vers {verse}",
+    "heading": "Anmerkungen",
+    "count": "{count, plural, one {# Anmerkung} other {# Anmerkungen}}",
+    "resize": "Größe der Anmerkungen ändern",
+    "backToText": "Zurück zum Text",
+    "visitorHint": "Angemeldete Leser sehen auch die Anmerkungen dieser Ausgabe."
   }
 }
