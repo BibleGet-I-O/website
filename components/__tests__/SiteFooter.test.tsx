@@ -9,6 +9,7 @@ vi.mock("next-intl/server", async () => {
   const { createTranslator } = await import("next-intl");
   return {
     getTranslations: async (namespace: string) => createTranslator({ locale: "en", messages: en, namespace: namespace as "Footer" }),
+    getLocale: async () => "en",
   };
 });
 vi.mock("@/lib/release", () => ({ RELEASE: "12345-1", COMMIT: "0123456789abcdef0123456789abcdef01234567" }));
@@ -26,6 +27,12 @@ async function footer(version: string | null) {
 }
 
 describe("SiteFooter", () => {
+  it("linksTheEditionsRightsToTheCopyrightPage", async () => {
+    const { el } = await footer(null);
+    expect(screen.getByRole("link", { name: "copyright and permissions" })).toHaveAttribute("href", "/en/copyright");
+    expect(el).toHaveTextContent("The texts of each edition belong to their rights holders: see copyright and permissions.");
+  });
+
   it("linksAReleaseTagToItsGitHubRelease", async () => {
     const { el } = await footer("v4.0.0");
     const a = screen.getByRole("link", { name: "API v4.0.0" });
@@ -79,6 +86,5 @@ describe("SiteFooter", () => {
       "href",
       "https://catholicdigitalcommons.org",
     );
-    expect(el).toHaveTextContent("The texts of each edition belong to their rights holders, named on the back of each book.");
   });
 });

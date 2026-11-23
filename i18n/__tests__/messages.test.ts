@@ -21,7 +21,7 @@ const SAME_EVERYWHERE = new Set(["Metadata.siteName", "Home.title", "Home.bookNa
 const SHARED: Record<string, string[]> = {
   it: [],
   es: [],
-  fr: ["Home.notes", "Footer.siteVersion", "Search.suggestions"],
+  fr: ["Home.notes", "Footer.siteVersion", "Search.suggestions", "Copyright.source"],
   de: ["Reader.interlinear", "Footer.repos.website", "Reader.masoreticShort", "Search.modes.hybrid"],
   pt: ["Reader.interlinear", "Footer.siteVersion"],
 };

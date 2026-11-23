@@ -107,7 +107,7 @@
   },
   "Footer": {
     "copyright": "© {year} <link>Catholic Digital Commons Foundation</link>. Tous droits réservés.",
-    "rights": "Les textes de chaque édition appartiennent à leurs ayants droit, nommés au dos de chaque livre.",
+    "rights": "Les textes de chaque édition appartiennent à leurs titulaires de droits : voir <link>droits d'auteur et autorisations</link>.",
     "apiVersion": "API {version}",
     "siteVersion": "Site {version}",
     "sourceCode": "Code source :",
@@ -218,5 +218,19 @@
       "reference": "Affiche exactement les versets d'une référence biblique, comme Jonas 1,1-2,2; 3,2, avec les noms des livres et la notation de votre langue."
     },
     "close": "Fermer la recherche"
+  },
+  "Copyright": {
+    "title": "Droits d'auteur et autorisations",
+    "intro": "BibleGet est un projet de la Catholic Digital Commons Foundation. Les éditions ci-dessous sont citées avec l'autorisation de leurs titulaires de droits ; chacune porte la mention demandée par son autorisation, telle que l'accord la formule.",
+    "holder": "Titulaire des droits",
+    "permission": "Autorisation",
+    "source": "Source",
+    "notice": "Mention",
+    "permissions": {
+      "nabre": "Contrat de licence avec la Confraternity of Christian Doctrine, Inc. (2015).",
+      "cei2008": "Autorisation du titulaire des droits.",
+      "blpd": "Accord avec la Fundación Palabra de Vida et l'Editorial Verbo Divino (Buenos Aires, 28 octobre 2020).",
+      "nvbse": "L'édition publiée sur le site du Saint-Siège."
+    }
   }
 }

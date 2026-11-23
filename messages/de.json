@@ -107,7 +107,7 @@
   },
   "Footer": {
     "copyright": "© {year} <link>Catholic Digital Commons Foundation</link>. Alle Rechte vorbehalten.",
-    "rights": "Die Texte jeder Ausgabe gehören ihren Rechteinhabern, die auf der Rückseite jedes Buches genannt sind.",
+    "rights": "Die Texte jeder Ausgabe gehören ihren Rechteinhabern: siehe <link>Urheberrecht und Genehmigungen</link>.",
     "apiVersion": "API {version}",
     "siteVersion": "Website {version}",
     "sourceCode": "Quellcode:",
@@ -218,5 +218,19 @@
       "reference": "Zeigt genau die Verse einer Bibelstelle, z. B. Jona 1,1-2,2; 3,2, mit den Buchnamen und der Schreibweise Ihrer Sprache."
     },
     "close": "Suche schließen"
+  },
+  "Copyright": {
+    "title": "Urheberrecht und Genehmigungen",
+    "intro": "BibleGet ist ein Projekt der Catholic Digital Commons Foundation. Die folgenden Ausgaben werden mit Genehmigung ihrer Rechteinhaber zitiert; jede trägt den Vermerk, den ihre Genehmigung verlangt, so wie die Vereinbarung ihn festlegt.",
+    "holder": "Rechteinhaber",
+    "permission": "Genehmigung",
+    "source": "Quelle",
+    "notice": "Vermerk",
+    "permissions": {
+      "nabre": "Lizenzvertrag mit der Confraternity of Christian Doctrine, Inc. (2015).",
+      "cei2008": "Genehmigung des Rechteinhabers.",
+      "blpd": "Vereinbarung mit der Fundación Palabra de Vida und dem Editorial Verbo Divino (Buenos Aires, 28. Oktober 2020).",
+      "nvbse": "Die auf der Website des Heiligen Stuhls veröffentlichte Ausgabe."
+    }
   }
 }
