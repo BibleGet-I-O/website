@@ -4,7 +4,7 @@ import { useTranslations } from "next-intl";
 import { useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { ReaderSettings, type SettingsChange } from "@/components/ReaderSettings";
-import { SearchLens } from "@/components/SearchForm";
+import { SearchLens, SearchPanel, SearchPanelProvider } from "@/components/SearchForm";
 import { compareQuery, type View } from "@/lib/compare";
 import { editionSlug } from "@/lib/slug";
 import { ESTHER, type Tradition } from "@/lib/esther";
@@ -74,65 +74,71 @@ export function ReaderBar(p: ReaderBarProps) {
     router.push(`/${p.locale}/read/${editionSlug(sigla)}?book=${p.bookNum}&chapter=${p.chapter}${rest.replace("?", "&")}`);
   };
 
+  // Search the edition on screen; comparing, the first one. The lens sits in the toolbar, its panel opens below it.
+  const searchForm = {
+    locale: p.locale,
+    edition: p.edition,
+    editionName: p.editions.find((e) => e.sigla === p.edition)?.fullname ?? p.edition,
+    from: `/${p.locale}/read/${editionSlug(p.edition)}/${p.book}/${p.chapter}${compareQuery({
+      with: p.withSiglas,
+      view: p.view,
+      tradition: p.esther || p.tradition !== undefined ? p.tradition : undefined,
+      twoTexts: p.esther && p.withSiglas.length === 0,
+    })}`,
+  };
+
   return (
-    <div role="toolbar" aria-label={t("toolbar")} className="mb-6 flex flex-nowrap items-center gap-1.5 text-sm sm:flex-wrap sm:gap-2">
-      <label className="sr-only" htmlFor="rb-edition">{t("edition")}</label>
-      {/* Below sm the edition shows as its sigla, so book and chapter fit beside it: the select lies
-          transparent over it and still opens the picker of full names. */}
-      <span className="relative inline-flex shrink-0">
-        <span data-testid="edition-sigla" aria-hidden="true" className={`${selectClass} inline-flex items-center gap-1 sm:hidden`}>
-          {p.edition}
-          <svg viewBox="0 0 12 12" width="10" height="10" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M2 4l4 4 4-4" /></svg>
+    <SearchPanelProvider {...searchForm}>
+      <div role="toolbar" aria-label={t("toolbar")} className="mb-6 flex flex-nowrap items-center gap-1.5 text-sm sm:flex-wrap sm:gap-2">
+        <label className="sr-only" htmlFor="rb-edition">{t("edition")}</label>
+        {/* Below sm the edition shows as its sigla, so book and chapter fit beside it: the select lies
+            transparent over it and still opens the picker of full names. */}
+        <span className="relative inline-flex shrink-0">
+          <span data-testid="edition-sigla" aria-hidden="true" className={`${selectClass} inline-flex items-center gap-1 sm:hidden`}>
+            {p.edition}
+            <svg viewBox="0 0 12 12" width="10" height="10" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M2 4l4 4 4-4" /></svg>
+          </span>
+          <select
+            id="rb-edition"
+            className={`${selectClass} min-w-0 max-w-full max-sm:absolute max-sm:inset-0 max-sm:w-full max-sm:opacity-0`}
+            value={p.edition}
+            onChange={(e) => switchEdition(e.target.value)}
+          >
+            {p.editions.map((e) => (
+              <option key={e.sigla} value={e.sigla}>{e.fullname}</option>
+            ))}
+          </select>
         </span>
-        <select
-          id="rb-edition"
-          className={`${selectClass} min-w-0 max-w-full max-sm:absolute max-sm:inset-0 max-sm:w-full max-sm:opacity-0`}
-          value={p.edition}
-          onChange={(e) => switchEdition(e.target.value)}
-        >
-          {p.editions.map((e) => (
-            <option key={e.sigla} value={e.sigla}>{e.fullname}</option>
+
+        <label className="sr-only" htmlFor="rb-book">{t("book")}</label>
+        <select id="rb-book" className={`${selectClass} min-w-0 max-sm:flex-1`} value={p.book} onChange={(e) => go({ book: e.target.value, chapter: 1 })}>
+          {p.books.map((b) => (
+            <option key={b.slug} value={b.slug}>{b.name}</option>
           ))}
         </select>
-      </span>
 
-      <label className="sr-only" htmlFor="rb-book">{t("book")}</label>
-      <select id="rb-book" className={`${selectClass} min-w-0 max-sm:flex-1`} value={p.book} onChange={(e) => go({ book: e.target.value, chapter: 1 })}>
-        {p.books.map((b) => (
-          <option key={b.slug} value={b.slug}>{b.name}</option>
-        ))}
-      </select>
+        <label className="sr-only" htmlFor="rb-chapter">{t("chapter")}</label>
+        <select id="rb-chapter" className={`${selectClass} shrink-0`} value={p.chapter} onChange={(e) => go({ chapter: Number(e.target.value) })}>
+          {Array.from({ length: current?.chapters ?? p.chapter }, (_, i) => i + 1).map((n) => (
+            <option key={n} value={n}>{n}</option>
+          ))}
+        </select>
 
-      <label className="sr-only" htmlFor="rb-chapter">{t("chapter")}</label>
-      <select id="rb-chapter" className={`${selectClass} shrink-0`} value={p.chapter} onChange={(e) => go({ chapter: Number(e.target.value) })}>
-        {Array.from({ length: current?.chapters ?? p.chapter }, (_, i) => i + 1).map((n) => (
-          <option key={n} value={n}>{n}</option>
-        ))}
-      </select>
-
-      <span className="ml-auto flex shrink-0 items-center">
-        {/* Search the edition on screen; comparing, the first one. */}
-        <SearchLens
-          locale={p.locale}
-          edition={p.edition}
-          editionName={p.editions.find((e) => e.sigla === p.edition)?.fullname ?? p.edition}
-          from={`/${p.locale}/read/${editionSlug(p.edition)}/${p.book}/${p.chapter}${compareQuery({
-            with: p.withSiglas,
-            view: p.view,
-            tradition: p.esther || p.tradition !== undefined ? p.tradition : undefined,
-            twoTexts: p.esther && p.withSiglas.length === 0,
-          })}`}
-        />
-        <ReaderSettings
-          editions={p.editions}
-          main={p.edition}
-          withSiglas={p.withSiglas}
-          view={p.view}
-          esther={p.esther}
-          routeKey={routeKey}
-          onChange={go}
-        />
-      </span>
-    </div>
+        <span className="ml-auto flex shrink-0 items-center">
+          <SearchLens />
+          <ReaderSettings
+            editions={p.editions}
+            main={p.edition}
+            withSiglas={p.withSiglas}
+            view={p.view}
+            esther={p.esther}
+            routeKey={routeKey}
+            onChange={go}
+          />
+        </span>
+      </div>
+      {/* Open, it sits between the toolbar and the text: closed, the toolbar keeps its spacing. */}
+      <SearchPanel className="-mt-3 mb-6" />
+    </SearchPanelProvider>
   );
 }
