@@ -141,7 +141,7 @@ export default async function SearchPage({ params, searchParams }: { params: Pro
               ? t("range", { from: start, to: end, total })
               : t("results", { count: total })}
         </p>
-        <SearchResults hits={hits} start={start} hrefFor={hrefFor} bookName={(h) => bookOf(h)?.name ?? h.book} mark={mode === "keyword" ? queryWords(q) : []} />
+        <SearchResults hits={hits} start={start} hrefFor={hrefFor} bookName={(h) => bookOf(h)?.name ?? h.book} mark={mode === "keyword" && !exact ? queryWords(q) : []} phrase={exact ? q : undefined} />
         {pages > 1 && (
           <nav aria-label={t("pages")} className="mt-6 flex justify-between text-sm">
             {page > 1 ? <Link href={searchHref(locale, slug, { mode, q, exact, page: page - 1, from: cameFrom })} className="hover:underline">{t("previous")}</Link> : <span />}
