@@ -186,4 +186,23 @@ describe("GoToPanel", () => {
     fireEvent.click(title());
     expect(onClose).toHaveBeenCalledTimes(1);
   });
+
+  // The stylesheet's order decides between two classes for the same property: the plain tile's colours must not be
+  // on the current one, or they win and its number turns white on white.
+  it("theCurrentChapterBookAndSectionCarryOnlyTheSelectedColours", () => {
+    const plainColours = ["bg-slate-50", "text-slate-900", "border-slate-200", "dark:bg-slate-900", "dark:text-slate-100", "dark:border-slate-800"];
+    render(wrap());
+    const three = screen.getByRole("link", { name: "3" });
+    expect(three).toHaveClass("bg-red-700", "text-white");
+    for (const c of plainColours) expect(three).not.toHaveClass(c);
+    expect(screen.getByRole("link", { name: "4" })).toHaveClass("bg-slate-50", "text-slate-900");
+    back();
+    const genesis = screen.getByRole("link", { name: "Genesis" });
+    expect(genesis).toHaveClass("bg-red-700", "text-white");
+    for (const c of plainColours) expect(genesis).not.toHaveClass(c);
+    back();
+    const pentateuch = screen.getByRole("button", { name: /Pentateuch/ });
+    expect(pentateuch).toHaveClass("border-red-700");
+    expect(pentateuch).not.toHaveClass("border-slate-200");
+  });
 });
