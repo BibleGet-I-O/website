@@ -1,6 +1,7 @@
 "use client";
 
 import { useTranslations } from "next-intl";
+import { PROLOGUE } from "@/lib/chapters";
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { GoToPanel, type PanelBook } from "@/components/GoToPanel";
@@ -129,11 +130,11 @@ export function ReaderBar(p: ReaderBarProps) {
           type="button"
           aria-haspopup="dialog"
           aria-expanded={goToOpen}
-          aria-label={`${tg("button")}: ${current?.name ?? p.book} ${p.chapter}`}
+          aria-label={`${tg("button")}: ${current?.name ?? p.book} ${p.chapter === PROLOGUE ? tg("prologueShort") : p.chapter}`}
           onClick={() => setGoToOpenOn(routeKey)}
           className={`${selectClass} inline-flex min-w-0 items-center justify-between gap-2 font-semibold max-sm:flex-1`}
         >
-          <span className="truncate">{`${current?.name ?? p.book} ${p.chapter}`}</span>
+          <span className="truncate">{`${current?.name ?? p.book} ${p.chapter === PROLOGUE ? tg("prologueShort") : p.chapter}`}</span>
           <svg viewBox="0 0 12 12" width="10" height="10" fill="none" stroke="currentColor" strokeWidth="1.5" aria-hidden="true" className="shrink-0"><path d="M2 4l4 4 4-4" /></svg>
         </button>
         <GoToPanel

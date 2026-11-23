@@ -27,6 +27,8 @@ export type Book = {
    * Greek); `chapters` is 10, `versesPerChapter` the Hebrew counts and this the Greek ones.
    */
   greekVersesPerChapter?: number[];
+  /** The prologue's verses (Sirach's foreword, read as chapter 0); absent or 0 when the edition prints none. */
+  prologue?: number;
 };
 
 export type EditionIndex = { sigla: string; books: Book[] };

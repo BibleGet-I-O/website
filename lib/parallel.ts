@@ -1,4 +1,5 @@
 import type { EditionIndex, VerseRow } from "./types";
+import { versesIn } from "@/lib/chapters";
 
 /** The Psalms in the Catholic canon numbering of the endpoint's index. */
 export const PSALMS = 23;
@@ -62,11 +63,10 @@ export function hebrewRef(r: VerseRow): [number, number] | null {
   return m ? [Number(m[1]), Number(m[2])] : null;
 }
 
-function counts(index: EditionIndex, book: number, tradition?: string): number[] | undefined {
+/** The chapter's verse count in the edition (Esther with both texts: the Greek unless the Hebrew is asked for). */
+function verses(index: EditionIndex, book: number, chapter: number, tradition?: string): number | undefined {
   const b = index.books.find((x) => x.bookNum === book);
-  if (!b) return undefined;
-  // Esther with both texts: the Greek unless the Hebrew is asked for (the API's default).
-  return b.greekVersesPerChapter && tradition !== "HEBREW" ? b.greekVersesPerChapter : b.versesPerChapter;
+  return b && versesIn(b, chapter, tradition);
 }
 
 /**
@@ -76,7 +76,7 @@ function counts(index: EditionIndex, book: number, tradition?: string): number[]
  */
 export function pairingMode(aIndex: EditionIndex, bIndex: EditionIndex, book: number, chapter: number, tradition?: string): "aligned" | "whole-chapter" {
   if (book === PSALMS) return "aligned";
-  const a = counts(aIndex, book, tradition)?.[chapter - 1];
-  const b = counts(bIndex, book, tradition)?.[chapter - 1];
+  const a = verses(aIndex, book, chapter, tradition);
+  const b = verses(bIndex, book, chapter, tradition);
   return a !== undefined && a === b ? "aligned" : "whole-chapter";
 }

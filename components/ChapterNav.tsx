@@ -1,20 +1,21 @@
 import { getTranslations } from "next-intl/server";
 import { TurnLink } from "@/components/PageTurn";
 import { slugFor } from "@/lib/api";
+import { firstChapter } from "@/lib/chapters";
 import type { EditionIndex } from "@/lib/types";
 
 export type ChapterRef = { slug: string; chapter: number };
 
-/** The previous and next chapters in the edition's book order, crossing books (Matthew 28 → Mark 1). */
+/** The previous and next chapters in the edition's book order, crossing books (Matthew 28 → Mark 1), Sirach's prologue (chapter 0) before its chapter 1. */
 export function neighbours(index: EditionIndex, bookNum: number, chapter: number): { prev?: ChapterRef; next?: ChapterRef } {
   const i = index.books.findIndex((b) => b.bookNum === bookNum);
   if (i < 0) return {};
   const book = index.books[i];
   const out: { prev?: ChapterRef; next?: ChapterRef } = {};
-  if (chapter > 1) out.prev = { slug: slugFor(book, index.books), chapter: chapter - 1 };
+  if (chapter > firstChapter(book)) out.prev = { slug: slugFor(book, index.books), chapter: chapter - 1 };
   else if (i > 0) out.prev = { slug: slugFor(index.books[i - 1], index.books), chapter: index.books[i - 1].chapters };
   if (chapter < book.chapters) out.next = { slug: slugFor(book, index.books), chapter: chapter + 1 };
-  else if (i < index.books.length - 1) out.next = { slug: slugFor(index.books[i + 1], index.books), chapter: 1 };
+  else if (i < index.books.length - 1) out.next = { slug: slugFor(index.books[i + 1], index.books), chapter: firstChapter(index.books[i + 1]) };
   return out;
 }
 

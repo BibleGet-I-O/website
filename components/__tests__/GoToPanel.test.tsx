@@ -49,6 +49,20 @@ describe("GoToPanel", () => {
     expect(three).toHaveAttribute("href", "/en/read/x/genesis/3");
   });
 
+  it("thePrologueTileComesBeforeChapterOne", () => {
+    const sirach = { slug: "sirach", name: "Sirach", chapters: 51, bookNum: 28, prologue: 1 };
+    render(wrap({ books: [...books, sirach], current: { slug: "sirach", chapter: 0 } }));
+    const prol = screen.getByRole("link", { name: "Prologue" });
+    expect(prol).toHaveTextContent("Prol.");
+    expect(prol).toHaveAttribute("href", "/en/read/x/sirach/0");
+    expect(prol).toHaveAttribute("aria-current", "true");
+    const tiles = within(screen.getByRole("dialog")).getAllByRole("link").filter((a) => a.closest("ul"));
+    expect(tiles[0]).toBe(prol);
+    expect(tiles[1]).toHaveTextContent("1");
+    fireEvent.click(prol);
+    expect(onPick).toHaveBeenCalledWith("sirach", 0);
+  });
+
   it("chapterClickPicksAndCloses", () => {
     render(wrap());
     fireEvent.click(screen.getByRole("link", { name: "7" }));

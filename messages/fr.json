@@ -52,10 +52,12 @@
     "previous": "Chapitre précédent",
     "next": "Chapitre suivant",
     "heading": "{book} {chapter}",
+    "prologueHeading": "{book} : Prologue",
     "gapAbsent": "Absent de {edition}",
     "dividedDifferently": "{main} et {second} découpent différemment les chapitres de ce livre : le chapitre {chapter} de {second} est affiché en entier ci-dessous.",
     "secondMissing": "{second} ne contient pas {book} {chapter}.",
     "secondNoBook": "{second} ne contient pas {book}.",
+    "secondNoPrologue": "{second} ne contient pas le prologue de {book}.",
     "dividedNoChapter": "{main} et {second} découpent différemment les chapitres de ce livre : {second} n'a pas de chapitre {chapter}.",
     "estherAdditions": "{second} imprime le texte de ces chapitres comme des ajouts à l'intérieur des chapitres 1–10 d'Esther.",
     "secondUnavailable": "{second} n'a pas pu être chargée. Réessayez plus tard.",
@@ -252,7 +254,9 @@
       "paul": "Lettres de Paul",
       "catholic": "Lettres catholiques",
       "revelation": "Apocalypse"
-    }
+    },
+    "prologue": "Prologue",
+    "prologueShort": "Prol."
   },
   "Speakers": {
     "certain": "{who}",

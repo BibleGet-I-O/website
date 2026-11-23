@@ -65,7 +65,7 @@ export async function Interlinear(p: InterlinearProps) {
     if (s.mode === "aligned") continue;
     if (s.mode === "unavailable") below.push(note(k, t("secondUnavailable", names(o))));
     else if (s.mode === "missing") {
-      const key = { book: "secondNoBook", chapter: "secondMissing", "esther-additions": "estherAdditions" } as const;
+      const key = { book: "secondNoBook", chapter: "secondMissing", prologue: "secondNoPrologue", "esther-additions": "estherAdditions" } as const;
       below.push(note(k, t(key[s.reason], names(o))));
     } else if (s.rows.length === 0) below.push(note(k, t("dividedNoChapter", names(o))));
     else {

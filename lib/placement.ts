@@ -1,4 +1,5 @@
 import type { VerseRow } from "./types";
+import { PROLOGUE } from "@/lib/chapters";
 
 /** The chapter a row is printed in: its own unless the edition prints it under another one. */
 const printedIn = (r: VerseRow) => r.printedChapter ?? r.chapter;
@@ -18,7 +19,8 @@ export function placeAsPrinted(prevLast: VerseRow[], current: VerseRow[], nextFi
  * An empty label (the rest of a verse whose first words are printed in the chapter before) prints nothing.
  */
 export function printedLabel(r: VerseRow, chapter: number): string {
-  if (r.label === "") return "";
+  // Sirach's prologue (chapter 0) is one block: no edition prints a number on it.
+  if (r.label === "" || r.chapter === PROLOGUE) return "";
   const label = r.label ?? `${r.verse}${r.segment ?? ""}`;
   return r.chapter !== chapter && !label.includes(":") ? `${r.chapter}:${label}` : label;
 }

@@ -25,6 +25,12 @@ describe("sitemap", () => {
     expect(xml).toContain("<loc>https://www.bibleget.io/it/read/nvbse/genesis/2</loc>");
   });
 
+  it("listsThePrologueAsChapterZero", () => {
+    const xml = editionSitemapXml("https://www.bibleget.io", "nabre", [{ slug: "sirach", chapters: 1, prologue: 1 }]);
+    expect(xml).toContain("<loc>https://www.bibleget.io/en/read/nabre/sirach/0</loc>");
+    expect(xml.match(/<loc>/g)).toHaveLength(18);
+  });
+
   it("escapesWhatXmlReserves", () => {
     expect(editionSitemapXml("https://x.org", "a&b", [])).toContain("<loc>https://x.org/en/read/a&amp;b</loc>");
   });

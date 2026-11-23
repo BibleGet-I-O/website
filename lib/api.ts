@@ -1,4 +1,5 @@
 import "server-only";
+import { versesIn } from "@/lib/chapters";
 import { ESTHER } from "./esther";
 import type { Access, Book, Chapter, Edition, EditionIndex, VerseRow } from "./types";
 
@@ -150,6 +151,8 @@ type RawIndex = {
   chapter_limit: number[];
   verse_limit: number[][];
   book_num: number[];
+  /** Each book's prologue verses (endpoint migration 065); absent from an older endpoint. */
+  prologue?: number[];
 };
 
 const ESTHER_CHAPTERS = 10;
@@ -175,6 +178,7 @@ export async function getIndex(sigla: string): Promise<EditionIndex> {
       abbrev: raw.abbreviations[i],
       chapters: raw.chapter_limit[i],
       versesPerChapter: raw.verse_limit[i],
+      prologue: raw.prologue?.[i] ?? 0,
     };
     // An edition with both Esther texts reports 20 chapters: the Hebrew 1-10, then the Greek 1-10.
     if (book.bookNum === ESTHER && book.chapters === 2 * ESTHER_CHAPTERS) {
@@ -321,8 +325,7 @@ export async function getChapter(p: ChapterParams): Promise<Chapter> {
   if (!index) return { rows, truncated: false, expectedVerses: rows.length };
   const book = index.books.find((b) => b.abbrev === p.bookAbbrev);
   // Esther with both texts: count the verses of the text requested (Greek, the API's default, unless HEBREW).
-  const counts = book?.greekVersesPerChapter && p.tradition !== "HEBREW" ? book.greekVersesPerChapter : book?.versesPerChapter;
-  const expectedVerses = counts?.[p.chapter - 1];
+  const expectedVerses = book && versesIn(book, p.chapter, p.tradition);
   if (expectedVerses === undefined) throw new NotFound(`${p.bookAbbrev} ${p.chapter} is not in ${p.sigla}`);
   return { rows, truncated: rows[rows.length - 1].verse < expectedVerses, expectedVerses };
 }
