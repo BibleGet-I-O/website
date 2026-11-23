@@ -23,5 +23,6 @@ npm run sync-messages   # copy missing English strings into it/es/fr/de/pt
 - API keys (`BIBLEGET_READ_KEY`, `BIBLEGET_READER_KEY`) and the Zitadel access token are server-only: use `import "server-only"`, never pass them to a client component, the Session object or a response body. The access token lives only in the encrypted next-auth JWT cookie.
 - The site never decides copyright: visitors use the read key, signed-in users with a verified email the reader key.
 - Staging sets `SITE_NOINDEX=1`: robots disallows all and `X-Robots-Tag: noindex, nofollow` is sent by `proxy.ts` at request time (so setting it on the running app is enough).
+- Sitemaps (`/sitemap.xml`, `/sitemaps/{edition}.xml`, `lib/sitemap.ts`) are built from `SITE_CANONICAL_ORIGIN` (production's origin), never from the request host; with it unset, or with `SITE_NOINDEX=1`, they answer 404 and `robots.txt` names none.
 - Locales: en, it, es, fr, de, pt. English is complete; add strings to `messages/en.json` then run `npm run sync-messages`.
 - Never commit `.env*` (except `.env.example`), `node_modules` or `.next`. Stage files by name.
