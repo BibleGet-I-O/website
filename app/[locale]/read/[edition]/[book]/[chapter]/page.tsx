@@ -19,6 +19,9 @@ import { loadSecond } from "@/lib/interlinear";
 import { buildRows } from "@/lib/parallel";
 import { placeAsPrinted } from "@/lib/placement";
 import { Spread } from "@/components/Spread";
+import { ChapterNotes, type NoteGroup } from "@/components/ChapterNotes";
+import { chapterFootnotes, NOTE_EDITIONS } from "@/lib/notes";
+import { withNoteLinks } from "@/lib/note-links";
 import { TraditionSwitch } from "@/components/TraditionSwitch";
 import type { Chapter, EditionIndex, VerseRow } from "@/lib/types";
 
@@ -151,18 +154,38 @@ export default async function ChapterPage({ params, searchParams }: { params: Pr
     printed(twoTexts ? "GREEK" : tradition),
     twoTexts ? masoreticText(printed) : Promise.resolve(null),
   ]);
-  const rows = main.rows;
+  // Signed-in readers' notes: each citation links into its own edition, keeping the comparison (not Esther's text).
+  const reader = info.access === "reader";
+  const noteQuery = compareQuery({ with: withSiglas, view });
+  const linked = (rs: VerseRow[], idx: EditionIndex, sigla: string) =>
+    reader ? withNoteLinks(rs, idx, `/${locale}/read/${editionSlug(sigla)}`, noteQuery) : rs;
+  const rows = linked(main.rows, index, edition.sigla);
+  const masoreticRows = masoretic && masoretic !== "unavailable" ? linked(masoretic.rows, index, edition.sigla) : [];
   const compared = withSiglas.map((sigla) => editions.find((e) => e.sigla === sigla)!);
   // The compared editions read with the main one's access; one that cannot be reached degrades to a note
   // (it does not show the error page).
   const seconds = await Promise.all(
-    compared.map((e) =>
-      loadSecond({
+    compared.map(async (e) => {
+      const second = await loadSecond({
         mainSigla: edition.sigla, mainBookAbbrev: book.abbrev, mainIndex: index, bookNum: book.bookNum, chapter,
         mainRows: rows, withSigla: e.sigla, access: info.access, tradition: shown,
-      }),
-    ),
+      });
+      if (!reader || (second.mode !== "aligned" && second.mode !== "whole-chapter") || !second.rows.some((r) => r.notes)) return second;
+      return { ...second, rows: linked(second.rows, await getIndex(e.sigla), e.sigla) };
+    }),
   );
+  // The footnotes under the chapter (a panel on phones), each edition's apart.
+  const noteGroups: NoteGroup[] = reader
+    ? [
+        { edition: edition.sigla, name: edition.fullname, notes: chapterFootnotes([...rows, ...masoreticRows]) },
+        ...compared.map((e, i) => {
+          const s = seconds[i];
+          return { edition: e.sigla, name: e.fullname, notes: s.mode === "aligned" || s.mode === "whole-chapter" ? chapterFootnotes(s.rows) : [] };
+        }),
+      ]
+    : [];
+  // Visitors are told the notes exist where an edition on the page has them.
+  const notesHint = !reader && [edition.sigla, ...withSiglas].some((s) => NOTE_EDITIONS.has(s));
 
   const qs = compareQuery({ with: withSiglas, view, tradition: shown, twoTexts });
   const base = `/read/${editionSlug(edition.sigla)}`;
@@ -171,6 +194,7 @@ export default async function ChapterPage({ params, searchParams }: { params: Pr
   const notice = noticeFor(capped, info, edition.copyright);
   const redirectTo = `/${locale}${base}/${slugFor(book, index.books)}/${chapter}${qs}`;
   const t = await getTranslations("Reader");
+  const tn = await getTranslations("Notes");
   const heading = chapter === PROLOGUE ? t("prologueHeading", { book: book.name }) : t("heading", { book: book.name, chapter });
   // Columns need room (one per edition in the spread; the others go below); interlinear reads at a single
   // edition's width.
@@ -210,7 +234,7 @@ export default async function ChapterPage({ params, searchParams }: { params: Pr
                 { sigla: edition.sigla, name: edition.fullname, lang: edition.language || undefined, rubric: { full: t("septuagint"), short: t("septuagintShort") } },
                 { sigla: `${edition.sigla}-MT`, name: edition.fullname, lang: edition.language || undefined, rubric: { full: t("masoretic"), short: t("masoreticShort") } },
               ]}
-              rows={buildRows(rows, [masoretic.rows], book.bookNum)}
+              rows={buildRows(rows, [masoreticRows], book.bookNum)}
               chapter={chapter}
               truncated={[main.truncated, masoretic.truncated]}
               view={view}
@@ -249,8 +273,13 @@ export default async function ChapterPage({ params, searchParams }: { params: Pr
           <BookPage heading={heading} chapter={chapter} rows={rows} lang={edition.language || undefined} />
         )}
         {notice && await CappedNotice({ kind: notice, redirectTo, ...(compared.length > 0 && { edition: edition.fullname }) })}
+        {notesHint && (
+          <p className="mt-6 text-center font-sans text-sm text-slate-500 dark:text-slate-400">{tn("visitorHint")}</p>
+        )}
         {await ChapterNav(nav)}
       </PageTurn>
+      {/* Outside the page turn, whose clip would cut the fixed panel on phones. */}
+      <ChapterNotes groups={noteGroups} />
     </main>
   );
 }
