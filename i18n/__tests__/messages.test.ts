@@ -45,3 +45,16 @@ describe("messages", () => {
     for (const [k, v] of leaves(ALL[l])) expect([k, marks(v)]).toEqual([k, marks(english.get(k) ?? "")]);
   });
 });
+
+describe("search copy", () => {
+  // Questions are for the natural-language search still being planned (the reranker); Meaning must not promise them.
+  // Whole words only: German "Suchanfragen" (search requests) is not a question.
+  const QUESTION = { en: /\bquestion/i, it: /\bdomand/i, es: /\bpregunt/i, fr: /\bquestion/i, de: /\bfrage/i, pt: /\bpergunt/i } as const;
+  it.each(Object.keys(QUESTION) as (keyof typeof QUESTION)[])("%sSearchCopyDoesNotPromiseQuestions", async (l) => {
+    const m = (await import(`@/messages/${l}.json`)).default as { Search: object };
+    const strings: string[] = [];
+    const walk = (o: unknown) => (typeof o === "string" ? strings.push(o) : o && typeof o === "object" && Object.values(o).forEach(walk));
+    walk(m.Search);
+    expect(strings.filter((s) => QUESTION[l].test(s))).toEqual([]);
+  });
+});

@@ -188,19 +188,19 @@
     "tryKeyword": "Stattdessen nach diesen Wörtern suchen",
     "tooMany": "Zu viele Suchanfragen; bitte in einer Minute erneut versuchen.",
     "noResults": "Keine Treffer für „{q}“.",
-    "empty": "Geben Sie ein Wort oder eine Frage ein, um in dieser Ausgabe zu suchen.",
+    "empty": "Geben Sie ein Wort, ein Thema oder eine Bibelstelle ein, um in dieser Ausgabe zu suchen.",
     "back": "Zurück zum Lesen",
     "open": "Suchen",
     "searching": "Suche in {edition}",
     "kind": "Art der Suche",
     "keywordLabel": "Gesuchte Wörter",
-    "questionLabel": "Ihre Frage",
+    "questionLabel": "Thema oder Gedanke",
     "exact": "Genaue Wortfolge",
     "submit": "Suchen",
     "suggestions": "Vorschläge",
     "noMore": "Keine weiteren Treffer.",
     "firstPage": "Erste Seite",
-    "refusedQuestion": "Versuchen Sie, Ihre Frage anders zu formulieren.",
+    "refusedQuestion": "Versuchen Sie andere Wörter für dieses Thema oder diesen Gedanken.",
     "placeholders": {
       "keyword": "Wörter im Vers, z. B. Hirte",
       "semantic": "Ein Thema oder Gedanke, z. B. Vertrauen auf Gott",
@@ -214,7 +214,7 @@
     "about": "Über die Arten der Suche",
     "help": {
       "keyword": "Findet die Verse, die die eingegebenen Wörter enthalten, in der Sprache der Ausgabe. Wählen Sie „Genaue Wortfolge“, um diese Wörter zusammen und genau so zu finden, wie sie geschrieben sind.",
-      "semantic": "Findet Verse zu einem Thema oder Gedanken, auch wenn sie ihn mit anderen Worten ausdrücken: Synonyme, Umschreibungen und Fragen funktionieren gut, ebenso ein Wort oder eine Frage in einer anderen Sprache („enemy“ findet „Feind“ in einer deutschen Ausgabe).",
+      "semantic": "Findet Verse zu einem Thema oder Gedanken, auch wenn sie ihn mit anderen Worten ausdrücken: Synonyme und Umschreibungen funktionieren gut, ebenso ein Wort in einer anderen Sprache („enemy“ findet „Feind“ in einer deutschen Ausgabe).",
       "reference": "Zeigt genau die Verse einer Bibelstelle, z. B. Jona 1,1-2,2; 3,2, mit den Buchnamen und der Schreibweise Ihrer Sprache."
     },
     "close": "Suche schließen"

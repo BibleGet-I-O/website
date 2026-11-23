@@ -223,7 +223,7 @@ describe("search page", () => {
   it("emptyQueryAsksForSomethingWithoutSearching", async () => {
     await page({ mode: "keyword", q: "  " });
     expect(searchEdition).not.toHaveBeenCalled();
-    expect(screen.getByText("Type a word or a question to search this edition.")).toBeInTheDocument();
+    expect(screen.getByText("Type a word, a theme or a reference to search this edition.")).toBeInTheDocument();
   });
 
   it("anUnknownEditionIsNotFound", async () => {
@@ -274,7 +274,7 @@ describe("search page", () => {
   it("aRefusedQuestionAsksToRephrase", async () => {
     searchEdition.mockResolvedValue({ kind: "refused" });
     await page({ mode: "semantic", q: "?" });
-    expect(screen.getByText("Try rephrasing your question.")).toBeInTheDocument();
+    expect(screen.getByText("Try other words for that theme or idea.")).toBeInTheDocument();
   });
 
   it("goesBackOnlyToAReaderPage", async () => {

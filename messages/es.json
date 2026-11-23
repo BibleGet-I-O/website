@@ -188,19 +188,19 @@
     "tryKeyword": "Buscar estas palabras en su lugar",
     "tooMany": "Demasiadas búsquedas; vuelve a intentarlo en un minuto.",
     "noResults": "No hay resultados para «{q}».",
-    "empty": "Escribe una palabra o una pregunta para buscar en esta edición.",
+    "empty": "Escribe una palabra, un tema o una referencia para buscar en esta edición.",
     "back": "Volver a la lectura",
     "open": "Buscar",
     "searching": "Buscando en {edition}",
     "kind": "Tipo de búsqueda",
     "keywordLabel": "Palabras que buscar",
-    "questionLabel": "Tu pregunta",
+    "questionLabel": "Tema o idea",
     "exact": "Frase exacta",
     "submit": "Buscar",
     "suggestions": "Sugerencias",
     "noMore": "No hay más resultados.",
     "firstPage": "Primera página",
-    "refusedQuestion": "Prueba a formular la pregunta de otra manera.",
+    "refusedQuestion": "Prueba con otras palabras para ese tema o idea.",
     "placeholders": {
       "keyword": "Palabras del versículo, p. ej. pastor",
       "semantic": "Un tema o una idea, p. ej. confianza en Dios",
@@ -214,7 +214,7 @@
     "about": "Acerca de los tipos de búsqueda",
     "help": {
       "keyword": "Encuentra los versículos que contienen las palabras que escribes, en el idioma de la edición. Marca «Frase exacta» para encontrar esas palabras juntas, tal como están escritas.",
-      "semantic": "Encuentra versículos sobre un tema o una idea aunque lo digan con otras palabras: funcionan bien los sinónimos, las paráfrasis y las preguntas, y también una palabra o pregunta en otro idioma («enemy» encuentra «enemigo» en una edición española).",
+      "semantic": "Encuentra versículos sobre un tema o una idea aunque lo digan con otras palabras: funcionan bien los sinónimos y las paráfrasis, y también una palabra en otro idioma («enemy» encuentra «enemigo» en una edición española).",
       "reference": "Muestra exactamente los versículos de una referencia bíblica, como Jonás 1,1-2,2; 3,2, con los nombres de los libros y la notación de tu idioma."
     },
     "close": "Cerrar la búsqueda"

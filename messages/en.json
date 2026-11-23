@@ -188,19 +188,19 @@
     "tryKeyword": "Search these words instead",
     "tooMany": "Too many searches; try again in a minute.",
     "noResults": "No results for “{q}”.",
-    "empty": "Type a word or a question to search this edition.",
+    "empty": "Type a word, a theme or a reference to search this edition.",
     "back": "Back to the reading",
     "open": "Search",
     "searching": "Searching {edition}",
     "kind": "Kind of search",
     "keywordLabel": "Words to find",
-    "questionLabel": "Your question",
+    "questionLabel": "Theme or idea",
     "exact": "Exact phrase",
     "submit": "Search",
     "suggestions": "Suggestions",
     "noMore": "No more results.",
     "firstPage": "First page",
-    "refusedQuestion": "Try rephrasing your question.",
+    "refusedQuestion": "Try other words for that theme or idea.",
     "placeholders": {
       "keyword": "Words in the verse, e.g. shepherd",
       "semantic": "A theme or idea, e.g. trust in God",
@@ -214,7 +214,7 @@
     "about": "About the kinds of search",
     "help": {
       "keyword": "Finds the verses that contain the words you type, in the edition's own language. Tick “Exact phrase” to find those words together, exactly as written.",
-      "semantic": "Finds verses about a theme or idea even when they say it in other words: synonyms, paraphrases and questions work well, and so does a word or question in another language (“nemico” finds “enemy” in an English edition).",
+      "semantic": "Finds verses about a theme or idea even when they say it in other words: synonyms and paraphrases work well, and so does a word in another language (“nemico” finds “enemy” in an English edition).",
       "reference": "Shows exactly the verses of a Bible reference, such as Jonah 1:1-2:2; 3:2, using the book names and notation of your language."
     },
     "close": "Close search"

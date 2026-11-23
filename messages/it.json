@@ -188,19 +188,19 @@
     "tryKeyword": "Cerca invece queste parole",
     "tooMany": "Troppe ricerche; riprova tra un minuto.",
     "noResults": "Nessun risultato per «{q}».",
-    "empty": "Scrivi una parola o una domanda per cercare in questa edizione.",
+    "empty": "Scrivi una parola, un tema o un riferimento per cercare in questa edizione.",
     "back": "Torna alla lettura",
     "open": "Cerca",
     "searching": "Ricerca in {edition}",
     "kind": "Tipo di ricerca",
     "keywordLabel": "Parole da trovare",
-    "questionLabel": "La tua domanda",
+    "questionLabel": "Tema o idea",
     "exact": "Frase esatta",
     "submit": "Cerca",
     "suggestions": "Suggerimenti",
     "noMore": "Non ci sono altri risultati.",
     "firstPage": "Prima pagina",
-    "refusedQuestion": "Prova a riformulare la domanda.",
+    "refusedQuestion": "Prova con altre parole per quel tema o idea.",
     "placeholders": {
       "keyword": "Parole del versetto, es. pastore",
       "semantic": "Un tema o un'idea, es. fiducia in Dio",
@@ -214,7 +214,7 @@
     "about": "Informazioni sui tipi di ricerca",
     "help": {
       "keyword": "Trova i versetti che contengono le parole digitate, nella lingua dell'edizione. Spunta «Frase esatta» per trovare quelle parole insieme, esattamente come scritte.",
-      "semantic": "Trova i versetti su un tema o un'idea anche quando la esprimono con altre parole: funzionano bene sinonimi, parafrasi e domande, e anche una parola o una domanda in un'altra lingua («enemy» trova «nemico» in un'edizione italiana).",
+      "semantic": "Trova i versetti su un tema o un'idea anche quando la esprimono con altre parole: funzionano bene sinonimi e parafrasi, e anche una parola in un'altra lingua («enemy» trova «nemico» in un'edizione italiana).",
       "reference": "Mostra esattamente i versetti di un riferimento biblico, come Giona 1,1-2,2; 3,2, con i nomi dei libri e la notazione della tua lingua."
     },
     "close": "Chiudi la ricerca"
