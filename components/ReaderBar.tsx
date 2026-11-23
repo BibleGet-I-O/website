@@ -2,8 +2,9 @@
 
 import { useTranslations } from "next-intl";
 import { PROLOGUE } from "@/lib/chapters";
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
+import { LoadingOverlay } from "@/components/LoadingOverlay";
 import { GoToPanel, type PanelBook } from "@/components/GoToPanel";
 import { ReaderSettings, type SettingsChange } from "@/components/ReaderSettings";
 import { SearchLens, SearchPanel, SearchPanelProvider } from "@/components/SearchForm";
@@ -46,6 +47,27 @@ export function ReaderBar(p: ReaderBarProps) {
     pending.current = { from: routeKey };
   }, [routeKey]);
 
+  // The page a navigation to another chapter or edition left from: covered until the new page's props arrive.
+  const [leaving, setLeaving] = useState<string | null>(null);
+  if (leaving !== null && leaving !== routeKey) setLeaving(null);
+  const stay = useCallback(() => setLeaving(null), []);
+
+  // A note's citation (`a[data-nav]`), clicked plainly, navigates in place under the same cover; one within this
+  // chapter is the browser's own jump.
+  useEffect(() => {
+    const onClick = (e: MouseEvent) => {
+      if (e.defaultPrevented || e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
+      const a = (e.target as Element | null)?.closest?.("a[data-nav]");
+      if (!(a instanceof HTMLAnchorElement)) return;
+      if (a.pathname === location.pathname && a.search === location.search) return;
+      e.preventDefault();
+      setLeaving(routeKey);
+      router.push(a.pathname + a.search + a.hash);
+    };
+    document.addEventListener("click", onClick);
+    return () => document.removeEventListener("click", onClick);
+  }, [router, routeKey]);
+
   // The page the go-to panel was opened on: it is open only while the reader stays there (Back, or a navigation
   // made elsewhere, closes it).
   const [goToOpenOn, setGoToOpenOn] = useState<string | null>(null);
@@ -71,6 +93,7 @@ export function ReaderBar(p: ReaderBarProps) {
   const go = (o: SettingsChange & { book?: string; chapter?: number }) => {
     const { href, asked } = plan(o);
     pending.current = asked;
+    if ((o.book ?? p.book) !== p.book || (o.chapter ?? p.chapter) !== p.chapter) setLeaving(routeKey);
     router.push(href);
   };
 
@@ -86,6 +109,7 @@ export function ReaderBar(p: ReaderBarProps) {
       // Esther read alone keeps the view: the chapter page drops it unless the new edition has both texts.
       twoTexts: p.bookNum === ESTHER && remaining.length === 0,
     });
+    setLeaving(routeKey);
     router.push(`/${p.locale}/read/${editionSlug(sigla)}?book=${p.bookNum}&chapter=${p.chapter}${rest.replace("?", "&")}`);
   };
 
@@ -104,6 +128,7 @@ export function ReaderBar(p: ReaderBarProps) {
 
   return (
     <SearchPanelProvider {...searchForm}>
+      {leaving === routeKey && <LoadingOverlay onDismiss={stay} />}
       <div role="toolbar" aria-label={t("toolbar")} className="mb-6 flex flex-nowrap items-center gap-1.5 text-sm sm:flex-wrap sm:gap-2">
         <label className="sr-only" htmlFor="rb-edition">{t("edition")}</label>
         {/* Below sm the edition shows as its sigla, so book and chapter fit beside it: the select lies

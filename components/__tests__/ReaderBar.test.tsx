@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { render, screen, fireEvent, within } from "@testing-library/react";
+import { act, render, screen, fireEvent, within } from "@testing-library/react";
 import { NextIntlClientProvider } from "next-intl";
 import en from "@/messages/en.json";
 
@@ -40,6 +40,70 @@ const offered = () =>
   Array.from((within(screen.getByRole("dialog")).getByRole("combobox") as HTMLSelectElement).options).map((o) => o.value).filter(Boolean);
 
 beforeEach(() => push.mockReset());
+
+describe("loading overlay", () => {
+  const loading = () => screen.queryByRole("status", { name: "Loading" });
+  const goToFour = () => {
+    openGoTo();
+    fireEvent.click(screen.getByRole("link", { name: "4" }));
+  };
+
+  it("coversTheReaderUntilTheNewChapterArrives", () => {
+    const { rerender } = render(wrap(<ReaderBar {...props} />));
+    expect(loading()).toBeNull();
+    goToFour();
+    expect(loading()).not.toBeNull();
+    rerender(wrap(<ReaderBar {...props} chapter={4} />));
+    expect(loading()).toBeNull();
+    // Coming back to the first chapter does not bring it back.
+    rerender(wrap(<ReaderBar {...props} chapter={3} />));
+    expect(loading()).toBeNull();
+  });
+
+  it("switchingEditionShowsIt", () => {
+    render(wrap(<ReaderBar {...props} />));
+    fireEvent.change(screen.getByRole("combobox"), { target: { value: "DRB" } });
+    expect(loading()).not.toBeNull();
+  });
+
+  it("pickingTheChapterOnScreenDoesNotShowIt", () => {
+    render(wrap(<ReaderBar {...props} />));
+    openGoTo();
+    fireEvent.click(screen.getByRole("link", { name: "3" }));
+    expect(loading()).toBeNull();
+  });
+
+  it("escapeATapAndATimeoutDismissIt", () => {
+    vi.useFakeTimers();
+    try {
+      render(wrap(<ReaderBar {...props} />));
+      goToFour();
+      fireEvent.keyDown(document, { key: "Escape" });
+      expect(loading()).toBeNull();
+      goToFour();
+      fireEvent.click(loading()!);
+      expect(loading()).toBeNull();
+      goToFour();
+      act(() => void vi.advanceTimersByTime(15_000));
+      expect(loading()).toBeNull();
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it("aNotesCitationNavigatesInPlaceWithIt", () => {
+    window.history.replaceState(null, "", "/en/read/nabre/tobit/3");
+    const [elsewhere, here] = ["/en/read/nabre/john/1#v1.3", "/en/read/nabre/tobit/3#v3.2"];
+    render(wrap(<><ReaderBar {...props} /><a data-nav="" href={elsewhere}>Jn 1:3</a><a data-nav="" href={here}>3:2</a></>));
+    // Within this chapter: the browser's own jump.
+    expect(fireEvent.click(screen.getByText("3:2"))).toBe(true);
+    expect(loading()).toBeNull();
+    expect(fireEvent.click(screen.getByText("Jn 1:3"), { ctrlKey: true })).toBe(true);
+    expect(fireEvent.click(screen.getByText("Jn 1:3"))).toBe(false);
+    expect(push).toHaveBeenLastCalledWith("/en/read/nabre/john/1#v1.3");
+    expect(loading()).not.toBeNull();
+  });
+});
 
 describe("ReaderBar", () => {
   it("toolbarHasNoInterlinearCheckboxOrSecondSelect", () => {

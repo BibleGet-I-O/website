@@ -9,9 +9,9 @@ export function noteDomId(noteId: string): string {
   return `note-${slug(noteId)}`;
 }
 
-/** The id of a note's marker on a verse: a note printed on two verses has one per verse. */
-export function markerDomId(noteId: string, row: { chapter: number; verse: number; segment?: string | null }): string {
-  return `m-${slug(noteId)}-${verseAnchor(row)}`;
+/** The id of a note's marker on a verse: a note printed on two verses has one per verse, Esther's Hebrew row its own. */
+export function markerDomId(noteId: string, row: { chapter: number; verse: number; segment?: string | null; tradition?: string }): string {
+  return `m-${slug(noteId)}-${verseAnchor(row)}${row.tradition ? `-${row.tradition.toLowerCase()}` : ""}`;
 }
 
 /** The notes marked on these rows, once each, in page order, with their first marker (the list's link back up). */

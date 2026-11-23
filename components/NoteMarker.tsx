@@ -76,7 +76,7 @@ function CrossReference({ note, id, children }: { note: Note; id: string; childr
             r.href && r.editionName ? (
               <OtherEditionLink key={i} href={r.href} name={r.editionName} className="text-red-700 underline-offset-2 hover:underline dark:text-red-400">{label(i)}</OtherEditionLink>
             ) : r.href ? (
-              <a key={i} href={r.href} className="text-red-700 underline-offset-2 hover:underline dark:text-red-400">{label(i)}</a>
+              <a key={i} data-nav="" href={r.href} className="text-red-700 underline-offset-2 hover:underline dark:text-red-400">{label(i)}</a>
             ) : (
               <span key={i}>{label(i)}</span>
             ),

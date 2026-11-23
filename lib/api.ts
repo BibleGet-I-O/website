@@ -248,6 +248,7 @@ type RawRow = {
   title3?: string | null;
   title_position?: number | null;
   psalm_hebrew?: string | null;
+  text_tradition?: string | null;
   notes?: RawMarker[];
 };
 
@@ -314,6 +315,7 @@ function toRow(r: RawRow, notes?: RawNotes): VerseRow {
     titlePosition: r.title_position ?? null,
   };
   if (r.psalm_hebrew) row.psalmHebrew = r.psalm_hebrew;
+  if (r.text_tradition === "HEBREW") row.tradition = "HEBREW";
   const markers = toMarkers(r, notes);
   if (markers) row.notes = markers;
   return row;

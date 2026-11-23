@@ -90,6 +90,11 @@ describe("getChapter", () => {
     expect(plain.segment).toBeNull();
   });
 
+  it("marksEsthersHebrewRows", async () => {
+    mockFetch(() => json(quote([raw(1, { text_tradition: "HEBREW" }), raw(2, { text_tradition: "GREEK" }), raw(3)])));
+    expect((await getChapter(base)).rows.map((r) => r.tradition)).toEqual(["HEBREW", undefined, undefined]);
+  });
+
   it("mapsTitlePosition", async () => {
     mockFetch(() => json(quote([raw(1, { title1: "Mid", title_position: 12 })])), 1);
     const [r] = (await getChapter(base)).rows;
