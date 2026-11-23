@@ -1,6 +1,6 @@
 # Reader navigation: the go-to panel, the last chapter read, the edition index
 
-**Date:** 2026-11-23 · **Status:** draft for approval (builder check done 2026-11-23) · **Size:** a project (website only; no endpoint change)
+**Date:** 2026-11-23 · **Status:** approved 2026-11-23 (builder check done the same day) · **Size:** a project (website only; no endpoint change)
 
 ## Intent
 
