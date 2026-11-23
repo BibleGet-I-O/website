@@ -33,6 +33,37 @@ export type Book = {
 
 export type EditionIndex = { sigla: string; books: Book[] };
 
+/** A passage a note cites: `book` is the universal number; `verse` null for a whole chapter. */
+export type NoteRef = {
+  start: { book: number; chapter: number; verse: number | null; segment: string | null; printedChapter: number | null };
+  end: { book: number; chapter: number; verse: number } | null;
+  /** The code points of `body` that print the citation: [start, end). */
+  span: [number, number];
+  /** The link to the passage in the same edition, set by the page (`withNoteLinks`). */
+  href?: string;
+};
+
+/** A footnote or cross-reference as the edition prints it (signed-in readers only). */
+export type Note = {
+  /** `{EDITION}:{source id}`, stable across imports. */
+  id: string;
+  edition: string;
+  kind: "footnote" | "crossref";
+  /** The printed marker (`*`, `a`); null where the edition prints none (CEI 2008: the verse number is marked). */
+  marker: string | null;
+  label: string | null;
+  title: string | null;
+  /** Inline tags `<i>`, `<b>`, `<sm>` only. */
+  body: string;
+  refs: NoteRef[];
+};
+
+/**
+ * Where a note's marker is printed on a row: in its text, or in one of its `titles`, at a code-point offset
+ * (tags included, as `titlePosition`); position null marks the verse as a whole (its number).
+ */
+export type NoteMarker = { note: Note; field: "text" | "title"; titleIndex?: number; position: number | null };
+
 export type VerseRow = {
   chapter: number;
   verse: number;
@@ -48,6 +79,8 @@ export type VerseRow = {
    */
   titlePosition?: number | null;
   psalmHebrew?: string;
+  /** The row's note markers, in printed order (signed-in readers only; absent when none). */
+  notes?: NoteMarker[];
 };
 
 export type Chapter = { rows: VerseRow[]; truncated: boolean; expectedVerses: number };

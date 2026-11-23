@@ -195,6 +195,55 @@ describe("Esther with both texts", () => {
   });
 });
 
+describe("notes", () => {
+  const params = (fn: ReturnType<typeof mockFetch>) => new URL(String(quoteCall(fn)[0])).searchParams;
+  const cross = { kind: "crossref", marker: "a", label: "11:1", title: null, body: "Jn 1:3.", refs: [{ start: { book: 50, chapter: 1, verse: 3, segment: null, printed_chapter: null }, end: null, span: [0, 6] }] };
+  const foot = { kind: "footnote", marker: "*", label: "11:1", title: null, body: "On <i>this</i>.", refs: [] };
+  const withNotes = () => ({
+    results: [
+      raw(1, { title1: "", title2: "A heading", notes: [
+        { id: "DRB:x-2", kind: "footnote", marker: "*", field: "title2", position: 2 },
+        { id: "DRB:x-1", kind: "crossref", marker: "a", field: "text", position: 4 },
+        { id: "DRB:x-3", kind: "footnote", marker: null, field: "text", position: null },
+      ] }),
+      raw(2, { notes: [] }),
+    ],
+    errors: [], notices: [], info: {},
+    notes: { "DRB:x-1": cross, "DRB:x-2": foot, "DRB:x-3": { ...foot, marker: null } },
+  });
+
+  it("visitorsAskForNoNotes", async () => {
+    const fn = mockFetch(() => json(quote(rows(48))));
+    await getChapter(base);
+    expect(params(fn).has("footnotes")).toBe(false);
+  });
+
+  it("readersAskForThemAndGetThemOnTheirRows", async () => {
+    const fn = mockFetch(() => json(withNotes()));
+    const ch = await getChapter({ ...base, access: "reader" });
+    expect(params(fn).get("footnotes")).toBe("full");
+    const [one, two] = ch.rows;
+    expect(one.notes).toEqual([
+      { field: "title", titleIndex: 0, position: 2, note: { id: "DRB:x-2", edition: "DRB", ...foot } },
+      { field: "text", position: 4, note: { id: "DRB:x-1", edition: "DRB", ...cross, refs: [{ start: { book: 50, chapter: 1, verse: 3, segment: null, printedChapter: null }, end: null, span: [0, 6] }] } },
+      { field: "text", position: null, note: { id: "DRB:x-3", edition: "DRB", ...foot, marker: null } },
+    ]);
+    expect(two.notes).toBeUndefined();
+  });
+
+  it("aMarkerWhoseNoteIsMissingIsDropped", async () => {
+    mockFetch(() => json({ ...withNotes(), notes: {} }));
+    expect((await getChapter({ ...base, access: "reader" })).rows[0].notes).toBeUndefined();
+  });
+
+  it("neighbourVersesCarryTheirNotesToo", async () => {
+    const fn = mockFetch(() => json(withNotes()));
+    const rowsOut = await getVerses({ ...base, access: "reader", verse: 1 });
+    expect(params(fn).get("footnotes")).toBe("full");
+    expect(rowsOut[0].notes).toHaveLength(3);
+  });
+});
+
 describe("Sirach's prologue", () => {
   const sirIndex = {
     indexes: {

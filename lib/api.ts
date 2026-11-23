@@ -1,7 +1,7 @@
 import "server-only";
 import { versesIn } from "@/lib/chapters";
 import { ESTHER } from "./esther";
-import type { Access, Book, Chapter, Edition, EditionIndex, VerseRow } from "./types";
+import type { Access, Book, Chapter, Edition, EditionIndex, Note, NoteMarker, VerseRow } from "./types";
 
 export class ApiUnavailable extends Error {
   constructor(message = "The BibleGet endpoint is unavailable") {
@@ -248,9 +248,59 @@ type RawRow = {
   title3?: string | null;
   title_position?: number | null;
   psalm_hebrew?: string | null;
+  notes?: RawMarker[];
 };
 
-function toRow(r: RawRow): VerseRow {
+type RawMarker = { id: string; kind: string; marker: string | null; field: string; position: number | null };
+type RawRef = {
+  start: { book: number; chapter: number; verse: number | null; segment: string | null; printed_chapter: number | null };
+  end: { book: number; chapter: number; verse: number } | null;
+  span: [number, number];
+};
+type RawNote = { kind: string; marker: string | null; label: string | null; title: string | null; body: string; refs: RawRef[] };
+type RawNotes = Record<string, RawNote>;
+type QuoteBody = { results?: RawRow[]; errors?: unknown[]; notes?: RawNotes };
+
+function toNote(id: string, n: RawNote): Note {
+  return {
+    id,
+    edition: id.slice(0, id.indexOf(":")),
+    kind: n.kind === "crossref" ? "crossref" : "footnote",
+    marker: n.marker,
+    label: n.label,
+    title: n.title,
+    body: n.body,
+    refs: n.refs.map((r) => ({
+      start: { book: r.start.book, chapter: r.start.chapter, verse: r.start.verse, segment: r.start.segment, printedChapter: r.start.printed_chapter },
+      end: r.end,
+      span: r.span,
+    })),
+  };
+}
+
+/**
+ * A row's markers with their notes' bodies. `title1`-`title3` become the index into the row's `titles` (its
+ * non-empty headings); a chapter-heading marker goes at the start of the text (the reader prints no chapter
+ * heading). A marker whose note the response lacks is dropped.
+ */
+function toMarkers(r: RawRow, notes: RawNotes | undefined): NoteMarker[] | undefined {
+  if (!r.notes?.length || !notes) return undefined;
+  const titled = (["title1", "title2", "title3"] as const).filter((f) => !!r[f]);
+  const out: NoteMarker[] = [];
+  for (const m of r.notes) {
+    const n = notes[m.id];
+    if (!n) continue;
+    const note = toNote(m.id, n);
+    const t = titled.indexOf(m.field as (typeof titled)[number]);
+    if (m.field.startsWith("title")) {
+      if (t >= 0) out.push({ note, field: "title", titleIndex: t, position: m.position });
+    } else if (m.field === "chapter") out.push({ note, field: "text", position: 0 });
+    else out.push({ note, field: "text", position: m.position });
+  }
+  return out.length ? out : undefined;
+}
+
+function toRow(r: RawRow, notes?: RawNotes): VerseRow {
   const row: VerseRow = {
     chapter: r.chapter,
     verse: r.verse,
@@ -262,6 +312,8 @@ function toRow(r: RawRow): VerseRow {
     titlePosition: r.title_position ?? null,
   };
   if (r.psalm_hebrew) row.psalmHebrew = r.psalm_hebrew;
+  const markers = toMarkers(r, notes);
+  if (markers) row.notes = markers;
   return row;
 }
 
@@ -274,13 +326,15 @@ export type ChapterParams = {
   numbering?: "edition" | "hebrew";
 };
 
-function quoteRequest(p: ChapterParams, query: string): Promise<{ results?: RawRow[]; errors?: unknown[] }> {
+function quoteRequest(p: ChapterParams, query: string): Promise<QuoteBody> {
   const qs = new URLSearchParams({ query, version: p.sigla });
   if (p.numbering !== "hebrew") qs.set("numbering", "edition");
   qs.set("return", "json");
   if (p.tradition) qs.set("text_tradition", p.tradition);
+  // Notes are for signed-in readers: the API gives them to the reader key only (403 to any other).
+  if (p.access === "reader") qs.set("footnotes", "full");
   const init: FetchInit = p.access === "reader" ? { cache: "no-store" } : { next: { revalidate: 3600 } };
-  return request(`/quote?${qs}`, p.access, init) as Promise<{ results?: RawRow[]; errors?: unknown[] }>;
+  return request(`/quote?${qs}`, p.access, init) as Promise<QuoteBody>;
 }
 
 /** A verse of a passage, with the book it is in (a reference can span books). */
@@ -321,7 +375,7 @@ export async function getChapter(p: ChapterParams): Promise<Chapter> {
   if (results.length === 0) {
     throw new NotFound((body.errors?.length ?? 0) > 0 ? "the endpoint rejected the query" : "no verses returned");
   }
-  const rows = results.map(toRow);
+  const rows = results.map((r) => toRow(r, body.notes));
   if (!index) return { rows, truncated: false, expectedVerses: rows.length };
   const book = index.books.find((b) => b.abbrev === p.bookAbbrev);
   // Esther with both texts: count the verses of the text requested (Greek, the API's default, unless HEBREW).
@@ -336,5 +390,5 @@ export async function getChapter(p: ChapterParams): Promise<Chapter> {
  */
 export async function getVerses(p: ChapterParams & { verse: number }): Promise<VerseRow[]> {
   const body = await quoteRequest(p, `${p.bookAbbrev}${p.chapter}:${p.verse}`);
-  return (body.results ?? []).map(toRow);
+  return (body.results ?? []).map((r) => toRow(r, body.notes));
 }
