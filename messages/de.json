@@ -232,5 +232,26 @@
       "blpd": "Vereinbarung mit der Fundación Palabra de Vida und dem Editorial Verbo Divino (Buenos Aires, 28. Oktober 2020).",
       "nvbse": "Die auf der Website des Heiligen Stuhls veröffentlichte Ausgabe."
     }
+  },
+  "GoTo": {
+    "button": "Zu einem anderen Buch oder Kapitel",
+    "bible": "Die Bibel",
+    "back": "Zurück",
+    "close": "Schließen",
+    "home": "Die Bibel",
+    "whereYouAre": "Wo Sie sind",
+    "allChapters": "Alle Kapitel",
+    "bookCount": "{count, plural, one {# Buch} other {# Bücher}}",
+    "sections": {
+      "pentateuch": "Pentateuch",
+      "historical": "Geschichtsbücher",
+      "wisdom": "Weisheitsbücher",
+      "prophets": "Propheten",
+      "gospels": "Evangelien",
+      "acts": "Apostelgeschichte",
+      "paul": "Paulusbriefe",
+      "catholic": "Katholische Briefe",
+      "revelation": "Offenbarung"
+    }
   }
 }
