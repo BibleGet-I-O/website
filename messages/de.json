@@ -276,6 +276,7 @@
     "footnote": "Fußnote {marker}",
     "crossref": "Querverweise {marker}",
     "crossrefTitle": "Querverweise, {label}",
+    "crossrefVerse": "Querverweise zu Vers {verse}",
     "verse": "Anmerkung zu Vers {verse}",
     "heading": "Anmerkungen",
     "count": "{count, plural, one {# Anmerkung} other {# Anmerkungen}}",

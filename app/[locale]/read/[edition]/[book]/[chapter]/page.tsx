@@ -154,11 +154,12 @@ export default async function ChapterPage({ params, searchParams }: { params: Pr
     printed(twoTexts ? "GREEK" : tradition),
     twoTexts ? masoreticText(printed) : Promise.resolve(null),
   ]);
-  // Signed-in readers' notes: each citation links into its own edition, keeping the comparison (not Esther's text).
+  // Signed-in readers' notes: each citation links into its own edition, keeping the comparison (not Esther's
+  // text). From a compared edition's note, that edition leads and the others, this one included, are compared.
   const reader = info.access === "reader";
-  const noteQuery = compareQuery({ with: withSiglas, view });
+  const noteQuery = (sigla: string) => compareQuery({ with: [edition.sigla, ...withSiglas].filter((s) => s !== sigla), view });
   const linked = (rs: VerseRow[], idx: EditionIndex, sigla: string) =>
-    reader ? withNoteLinks(rs, idx, `/${locale}/read/${editionSlug(sigla)}`, noteQuery) : rs;
+    reader ? withNoteLinks(rs, idx, `/${locale}/read/${editionSlug(sigla)}`, noteQuery(sigla)) : rs;
   const rows = linked(main.rows, index, edition.sigla);
   const masoreticRows = masoretic && masoretic !== "unavailable" ? linked(masoretic.rows, index, edition.sigla) : [];
   const compared = withSiglas.map((sigla) => editions.find((e) => e.sigla === sigla)!);

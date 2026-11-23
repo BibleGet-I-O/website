@@ -74,6 +74,33 @@ describe("ChapterNotes", () => {
     expect(localStorage.getItem("bibleget.notesPanel")).toBe("bar");
   });
 
+  it("aDragThatSnapsBackKeepsTheHeight", () => {
+    render(wrap(<ChapterNotes groups={[group([note(1)])]} />));
+    const panel = document.querySelector<HTMLElement>("[data-notes-panel]")!;
+    const handle = screen.getByRole("button", { name: /Resize the notes/ });
+    // From a quarter of the screen to just above it: it snaps back to quarter (jsdom has no layout: heights mocked).
+    vi.spyOn(panel, "getBoundingClientRect").mockReturnValue({ height: window.innerHeight * 0.25 } as DOMRect);
+    fireEvent.pointerDown(handle, { clientY: 500, pointerId: 1 });
+    fireEvent.pointerMove(handle, { clientY: 470, pointerId: 1 });
+    vi.spyOn(panel, "getBoundingClientRect").mockReturnValue({ height: window.innerHeight * 0.28 } as DOMRect);
+    fireEvent.pointerUp(handle, { clientY: 470, pointerId: 1 });
+    fireEvent.click(handle);
+    expect(panel).toHaveAttribute("data-size", "quarter");
+    expect(panel.style.getPropertyValue("--notes-h")).toBe("25dvh");
+  });
+
+  it("scrollsTheListToTheNotesOwnOffset", () => {
+    render(wrap(<ChapterNotes groups={[group([note(1), note(2)])]} />));
+    const target = document.getElementById("note-NABRE-01001002-1")!;
+    const list = target.closest("ol")!.parentElement!.parentElement as HTMLElement;
+    Object.defineProperty(target, "offsetTop", { value: 120 });
+    Object.defineProperty(list, "offsetTop", { value: 44 });
+    act(() => {
+      window.dispatchEvent(new CustomEvent(NOTE_EVENT, { detail: "NABRE:01001002-1" }));
+    });
+    expect(list.scrollTop).toBe(120);
+  });
+
   it("opensAtTheRememberedSize", () => {
     localStorage.setItem("bibleget.notesPanel", "half");
     render(wrap(<ChapterNotes groups={[group([note(1)])]} />));

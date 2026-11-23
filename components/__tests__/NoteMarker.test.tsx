@@ -52,6 +52,14 @@ describe("NoteMarker", () => {
     expect(pop).toHaveTextContent("Ps 33:6");
   });
 
+  it("aWholeVerseCrossReferenceOpensItsPassagesFromTheNumber", () => {
+    render(wrap(<NoteMarker note={cross} id="m-4">7</NoteMarker>));
+    const button = screen.getByRole("button", { name: "Cross-references on verse 7" });
+    expect(button).toHaveClass("bg-note-num");
+    expect(button).toHaveTextContent("7");
+    expect(document.getElementById(button.getAttribute("popovertarget")!)).toHaveAttribute("popover", "auto");
+  });
+
   it("aWholeVerseNoteWrapsTheVerseNumber", () => {
     render(wrap(<NoteMarker note={{ ...foot, marker: null }} id="m-3">12</NoteMarker>));
     const a = screen.getByRole("link", { name: "Note on verse 12" });

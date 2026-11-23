@@ -202,6 +202,15 @@ describe("notes in a verse", () => {
     expect(root.firstElementChild).toBe(line);
   });
 
+  it("aMarkerAtTheStartOfARowThatOpensWithALineBreak", () => {
+    // A psalm's chapter-heading note goes at position 0; many stored rows open with "\n" before the first line.
+    const root = verse("\n<pof>Happy</pof>", [{ note: note("1", "footnote", "*"), field: "text", position: 0 }]);
+    const line = root.querySelector(".bg-pof")!;
+    expect(root.firstElementChild).toBe(line);
+    expect(line.querySelector(".bg-note-foot")).not.toBeNull();
+    expect(line.querySelector(".bg-vnum-hang")).not.toBeNull();
+  });
+
   it("countsPositionsInCodePointsWithTags", () => {
     // "L<sm>ORD</sm>" is 13 code points; the marker goes after it, before the space.
     const root = verse("the L<sm>ORD</sm> 𝔊od", [{ note: note("1", "footnote", "*"), field: "text", position: 17 }]);

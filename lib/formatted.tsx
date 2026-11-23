@@ -117,8 +117,16 @@ function withInserts(text: string, at: { pos: number; mark: string; intoLine?: b
   const before = new Map<number, string>();
   for (const { pos, mark, intoLine } of at) {
     let p = Math.min(Math.max(pos, 0), cps.length);
-    // A heading stays between lines; a note marker goes into the line it begins.
-    if (intoLine) for (let m = LINE_OPEN.exec(cps.slice(p, p + 8).join("")); m; m = LINE_OPEN.exec(cps.slice(p, p + 8).join(""))) p += m[0].length;
+    // A heading stays between lines; a note marker goes into the line it begins (past whitespace before it,
+    // which the lines drop: many rows open with "\n").
+    if (intoLine) {
+      let q = p;
+      while (q < cps.length && /\s/.test(cps[q])) q++;
+      for (let m = LINE_OPEN.exec(cps.slice(q, q + 8).join("")); m; m = LINE_OPEN.exec(cps.slice(q, q + 8).join(""))) {
+        q += m[0].length;
+        p = q;
+      }
+    }
     before.set(p, (before.get(p) ?? "") + mark);
   }
   let out = "";

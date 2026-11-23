@@ -23,7 +23,7 @@ function inPanel(): boolean {
  */
 export function NoteMarker({ note, id, children }: { note: Note; id: string; children?: ReactNode }) {
   const t = useTranslations("Notes");
-  if (note.kind === "crossref" && !children) return <CrossReference note={note} id={id} />;
+  if (note.kind === "crossref") return <CrossReference note={note} id={id}>{children}</CrossReference>;
   const onClick = (e: MouseEvent) => {
     if (e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey || !inPanel()) return;
     e.preventDefault();
@@ -43,15 +43,22 @@ export function NoteMarker({ note, id, children }: { note: Note; id: string; chi
   );
 }
 
-function CrossReference({ note, id }: { note: Note; id: string }) {
+/** A cross-reference's marker (or, for one on the verse as a whole, its number) and its popover of passages. */
+function CrossReference({ note, id, children }: { note: Note; id: string; children?: ReactNode }) {
   const t = useTranslations("Notes");
   const pop = useId();
   const runs = noteRuns(note.body, note.refs);
   const label = (i: number) => runs.filter((r) => r.ref === i).map((r) => r.text).join("").trim();
   return (
     <>
-      <button type="button" id={id} className="bg-note bg-note-cross" popoverTarget={pop} aria-label={t("crossref", { marker: note.marker ?? "" })}>
-        {note.marker}
+      <button
+        type="button"
+        id={id}
+        className={children === undefined ? "bg-note bg-note-cross" : "bg-note-num"}
+        popoverTarget={pop}
+        aria-label={children === undefined ? t("crossref", { marker: note.marker ?? "" }) : t("crossrefVerse", { verse: String(children) })}
+      >
+        {children ?? note.marker}
       </button>
       <span popover="auto" id={pop} className="bg-note-pop">
         <span className="mb-1 block text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">

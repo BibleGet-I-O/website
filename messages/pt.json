@@ -276,6 +276,7 @@
     "footnote": "Nota {marker}",
     "crossref": "Referências {marker}",
     "crossrefTitle": "Referências, {label}",
+    "crossrefVerse": "Referências ao versículo {verse}",
     "verse": "Nota ao versículo {verse}",
     "heading": "Notas",
     "count": "{count, plural, one {# nota} other {# notas}}",

@@ -61,7 +61,8 @@ export function ChapterNotes({ groups }: { groups: NoteGroup[] }) {
       const list = listRef.current;
       if (!el || !list) return;
       if (loadPanelSize() === "bar") savePanelSize("quarter");
-      list.scrollTop = el.offsetTop - list.offsetTop;
+      // The list is the notes' offset parent (it is `relative`): their offsetTop is already from its top.
+      list.scrollTop = el.offsetTop;
       setLit(id);
       clearTimeout(timer);
       timer = setTimeout(() => setLit(null), HIGHLIGHT_MS);
@@ -94,8 +95,10 @@ export function ChapterNotes({ groups }: { groups: NoteGroup[] }) {
     if (!d?.moved) return;
     const panel = e.currentTarget.closest("[data-notes-panel]") as HTMLElement | null;
     const h = panel?.getBoundingClientRect().height ?? 0;
-    panel?.style.removeProperty("--notes-h");
-    savePanelSize(snapSize(h / window.innerHeight));
+    const snapped = snapSize(h / window.innerHeight);
+    // Set back, not removed: a drag that snaps to the size it had re-renders nothing, and React would not restore it.
+    panel?.style.setProperty("--notes-h", HEIGHT[snapped]);
+    savePanelSize(snapped);
   };
   const onClick = () => {
     // A drag already chose the size; a tap cycles it.
