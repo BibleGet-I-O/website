@@ -91,6 +91,38 @@ describe("loading overlay", () => {
     }
   });
 
+  it("isAModalDialogWithAFocusedWayOutAndGivesFocusBack", () => {
+    const modal = vi.spyOn(HTMLDialogElement.prototype, "showModal");
+    render(wrap(<ReaderBar {...props} />));
+    const select = screen.getByRole("combobox");
+    select.focus();
+    fireEvent.change(select, { target: { value: "DRB" } });
+    const dialog = loading()!.closest("dialog")!;
+    expect(modal.mock.instances).toContain(dialog);
+    const close = within(dialog).getByRole("button", { name: "Close" });
+    expect(close).toHaveFocus();
+    fireEvent.click(close);
+    expect(loading()).toBeNull();
+    expect(select).toHaveFocus();
+    // Escape on a modal dialog is its cancel event.
+    fireEvent.change(select, { target: { value: "CEI2008" } });
+    fireEvent(loading()!.closest("dialog")!, new Event("cancel", { cancelable: true }));
+    expect(loading()).toBeNull();
+    modal.mockRestore();
+  });
+
+  it("aCitationsPopoverClosesBeforeItNavigates", () => {
+    window.history.replaceState(null, "", "/en/read/nabre/tobit/3");
+    const href = "/en/read/nabre/john/1#v1.3";
+    render(wrap(<><ReaderBar {...props} /><span popover="auto" data-testid="pop"><a data-nav="" href={href}>Jn 1:3</a></span></>));
+    const hide = vi.fn();
+    screen.getByTestId("pop").hidePopover = hide;
+    fireEvent.click(screen.getByText("Jn 1:3"), { ctrlKey: true });
+    expect(hide).not.toHaveBeenCalled();
+    fireEvent.click(screen.getByText("Jn 1:3"));
+    expect(hide).toHaveBeenCalledTimes(1);
+  });
+
   it("aNotesCitationNavigatesInPlaceWithIt", () => {
     window.history.replaceState(null, "", "/en/read/nabre/tobit/3");
     const [elsewhere, here] = ["/en/read/nabre/john/1#v1.3", "/en/read/nabre/tobit/3#v3.2"];

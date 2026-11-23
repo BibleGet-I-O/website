@@ -61,6 +61,8 @@ export function ReaderBar(p: ReaderBarProps) {
       if (!(a instanceof HTMLAnchorElement)) return;
       if (a.pathname === location.pathname && a.search === location.search) return;
       e.preventDefault();
+      // A cross-reference's popover stays open on a click inside it, and would lie on top of the next chapter.
+      (a.closest("[popover]") as HTMLElement | null)?.hidePopover?.();
       setLeaving(routeKey);
       router.push(a.pathname + a.search + a.hash);
     };
