@@ -232,5 +232,26 @@
       "blpd": "Agreement with the Fundación Palabra de Vida and Editorial Verbo Divino (Buenos Aires, 28 October 2020).",
       "nvbse": "The edition published on the website of the Holy See."
     }
+  },
+  "GoTo": {
+    "button": "Go to another book or chapter",
+    "bible": "The Bible",
+    "back": "Back",
+    "close": "Close",
+    "home": "The Bible",
+    "whereYouAre": "Where you are",
+    "allChapters": "All chapters",
+    "bookCount": "{count, plural, one {# book} other {# books}}",
+    "sections": {
+      "pentateuch": "Pentateuch",
+      "historical": "Historical Books",
+      "wisdom": "Wisdom Books",
+      "prophets": "Prophets",
+      "gospels": "Gospels",
+      "acts": "Acts of the Apostles",
+      "paul": "Letters of Paul",
+      "catholic": "Catholic Letters",
+      "revelation": "Revelation"
+    }
   }
 }

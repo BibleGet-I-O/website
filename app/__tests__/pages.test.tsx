@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach } from "vitest";
+import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { fireEvent, render, screen, within } from "@testing-library/react";
 import { NextIntlClientProvider } from "next-intl";
 import en from "@/messages/en.json";
@@ -105,6 +105,46 @@ describe("home", () => {
       expect(section.tagName).toBe("SECTION");
       expect(within(section as HTMLElement).getByRole("heading", { level: 2 })).toHaveTextContent(name);
     }
+  });
+
+  describe("the shelf opens the reader", () => {
+    afterEach(() => localStorage.clear());
+    const luzzi = () => screen.getAllByRole("link").find((a) => a.getAttribute("href") === "/en/read/luzzi")!;
+
+    it("shelfClickOpensTheLastChapterRead", async () => {
+      getEditions.mockResolvedValue(shelf());
+      routerPush.mockClear();
+      localStorage.setItem("bibleget.lastRead.LUZZI", JSON.stringify({ bookNum: 50, chapter: 3 }));
+      await home();
+      fireEvent.click(luzzi());
+      expect(routerPush).toHaveBeenLastCalledWith("/en/read/luzzi?book=50&chapter=3");
+    });
+
+    it("shelfClickWithNothingStoredOpensGenesisOne", async () => {
+      getEditions.mockResolvedValue(shelf());
+      routerPush.mockClear();
+      await home();
+      fireEvent.click(luzzi());
+      expect(routerPush).toHaveBeenLastCalledWith("/en/read/luzzi?book=1&chapter=1");
+    });
+
+    it("modifiedShelfClickFollowsTheLink", async () => {
+      getEditions.mockResolvedValue(shelf());
+      routerPush.mockClear();
+      await home();
+      const link = luzzi();
+      let leftToBrowser: boolean | undefined;
+      const stop = (e: Event) => {
+        leftToBrowser = !e.defaultPrevented;
+        e.preventDefault();
+      };
+      window.addEventListener("click", stop);
+      fireEvent.click(link, { ctrlKey: true });
+      window.removeEventListener("click", stop);
+      expect(leftToBrowser).toBe(true);
+      expect(routerPush).not.toHaveBeenCalled();
+      expect(link).toHaveAttribute("href", "/en/read/luzzi");
+    });
   });
 
   it("eachBookLinksToItsEditionNewestFirst", async () => {
@@ -232,6 +272,30 @@ describe("books", () => {
     searchParams: Promise.resolve(search),
   });
 
+  describe("the index, by section", () => {
+    beforeEach(() => {
+      getEditions.mockResolvedValue([ed("LUZZI", "it")]);
+      getIndex.mockResolvedValue({ sigla: "LUZZI", books: [book(1, "Genesi", "Gen", 50), book(23, "Salmi", "Sal", 150), book(47, "Matteo", "Mt", 28)] });
+    });
+
+    it("groupsBooksUnderSectionHeadings", async () => {
+      render(wrap(await BooksPage(params("luzzi"))));
+      expect(screen.getAllByRole("heading", { level: 3 }).map((h) => h.textContent)).toEqual(["Pentateuch", "Wisdom Books", "Gospels"]);
+      // Each book folds its chapters under its name and their number.
+      const salmi = screen.getByText("Salmi").closest("details")!;
+      expect(salmi).not.toHaveAttribute("open");
+      expect(salmi.querySelector("summary")).toHaveTextContent("Salmi");
+      expect(salmi.querySelector("summary")).toHaveTextContent("150");
+    });
+
+    it("keepsEveryChapterAsALink", async () => {
+      const { container } = render(wrap(await BooksPage(params("luzzi"))));
+      const chapters = Array.from(container.querySelectorAll("a")).filter((a) => /\/read\/luzzi\/[^/]+\/\d+$/.test(a.getAttribute("href") ?? ""));
+      expect(chapters).toHaveLength(228);
+      expect(chapters.at(-1)).toHaveAttribute("href", "/en/read/luzzi/matteo/28");
+    });
+  });
+
   describe("switching edition from a chapter", () => {
     beforeEach(() => {
       getEditions.mockResolvedValue([ed("LUZZI", "it"), ed("DRB", "en")]);
@@ -323,6 +387,15 @@ describe("chapter", () => {
 
   beforeEach(() => {
     getEditions.mockResolvedValue([ed("DRB", "en", "Douay-Rheims"), ed("NABRE", "en"), ed("LUZZI", "it")]);
+  });
+
+  it("chapterPageRemembersItself", async () => {
+    localStorage.clear();
+    getIndex.mockResolvedValue(drbIndex);
+    getChapter.mockResolvedValue({ rows: [verse(2, 1)], truncated: false, expectedVerses: 1 });
+    getVerses.mockResolvedValue([]);
+    render(wrap(await ChapterPage(params("drb", "tobias", "2"))));
+    expect(JSON.parse(localStorage.getItem("bibleget.lastRead.DRB")!)).toEqual({ bookNum: 17, chapter: 2 });
   });
 
   it("bookTheEditionLacksIs404", async () => {
@@ -512,8 +585,8 @@ describe("chapter", () => {
       byText([verse(10, 1)], [verse(10, 1)]);
       await expect(ChapterPage(params("nabre", "esther", "11"))).rejects.toThrow("NEXT_NOT_FOUND");
       render(wrap(await ChapterPage(params("nabre", "esther", "10"))));
-      const chapters = screen.getByLabelText("Chapter") as HTMLSelectElement;
-      expect(Array.from(chapters.options).map((o) => o.value)).toEqual(["1", "2", "3", "4", "5", "6", "7", "8", "9", "10"]);
+      fireEvent.click(screen.getByRole("button", { name: /Go to another book or chapter/ }));
+      expect(screen.getAllByRole("link", { name: /^\d+$/ }).map((a) => a.textContent)).toEqual(["1", "2", "3", "4", "5", "6", "7", "8", "9", "10"]);
       expect(screen.getByRole("link", { name: /Next chapter/ })).toHaveAttribute("href", "/en/read/nabre/1-maccabees/1");
       // The previous chapter's last verse is counted in each text.
       expect(getVerses).toHaveBeenCalledWith(expect.objectContaining({ chapter: 9, verse: 12, tradition: "GREEK" }));
@@ -656,7 +729,8 @@ describe("chapter", () => {
       routerPush.mockClear();
       getChapter.mockResolvedValue({ rows: [verse(1, 1)], truncated: false, expectedVerses: 1 });
       render(wrap(await ChapterPage(params("drb", "esther", "1", { view: "interlinear" }))));
-      fireEvent.change(screen.getByLabelText("Chapter"), { target: { value: "2" } });
+      fireEvent.click(screen.getByRole("button", { name: /Go to another book or chapter/ }));
+      fireEvent.click(screen.getByRole("link", { name: "2" }));
       expect(routerPush).toHaveBeenLastCalledWith("/en/read/drb/esther/2");
       fireEvent.click(screen.getByRole("button", { name: "Reading settings" }));
       fireEvent.click(screen.getByRole("button", { name: /Compare with another edition/ }));

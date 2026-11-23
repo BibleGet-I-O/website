@@ -22,13 +22,14 @@ const editions = [
   { sigla: "VGCL", fullname: "Vulgata Clementina" },
 ];
 const books = [
-  { slug: "tobit", name: "Tobit", chapters: 14 },
-  { slug: "esther", name: "Esther", chapters: 10 },
+  { slug: "tobit", name: "Tobit", chapters: 14, bookNum: 17 },
+  { slug: "esther", name: "Esther", chapters: 10, bookNum: 19 },
 ];
 const props = {
   locale: "en", edition: "NABRE", editions, books, book: "tobit", bookNum: 17, chapter: 3,
   withSiglas: [] as string[], view: "side-by-side" as const, esther: false,
 };
+const openGoTo = () => fireEvent.click(screen.getByRole("button", { name: /Go to another book or chapter/ }));
 const openMenu = () => fireEvent.click(screen.getByRole("button", { name: "Reading settings" }));
 const item = (name: string | RegExp) => screen.getByRole("button", { name });
 const pick = (value: string) => {
@@ -45,15 +46,50 @@ describe("ReaderBar", () => {
     render(wrap(<ReaderBar {...props} withSiglas={["DRB"]} />));
     expect(screen.queryByLabelText("Interlinear")).toBeNull();
     expect(screen.queryByLabelText("Second edition")).toBeNull();
-    expect(screen.getAllByRole("combobox").map((c) => c.id)).toEqual(["rb-edition", "rb-book", "rb-chapter"]);
   });
 
-  it("navigatesByBookAndChapterAndKeepsTheComparedEditionsAndView", () => {
+  it("toolbarHasTheEditionSelectAndTheGoToButton", () => {
+    render(wrap(<ReaderBar {...props} />));
+    expect(screen.getAllByRole("combobox").map((c) => c.id)).toEqual(["rb-edition"]);
+    const go = screen.getByRole("button", { name: /Go to another book or chapter/ });
+    expect(go).toHaveTextContent("Tobit 3");
+    expect(go).toHaveAttribute("aria-haspopup", "dialog");
+  });
+
+  it("panelJumpsKeepTheComparedEditionsAndView", () => {
     render(wrap(<ReaderBar {...props} withSiglas={["DRB", "VGCL"]} view="interlinear" />));
-    fireEvent.change(screen.getByLabelText("Chapter"), { target: { value: "4" } });
+    openGoTo();
+    const four = screen.getByRole("link", { name: "4" });
+    expect(four).toHaveAttribute("href", "/en/read/nabre/tobit/4?with=DRB,VGCL&view=interlinear");
+    fireEvent.click(four);
     expect(push).toHaveBeenLastCalledWith("/en/read/nabre/tobit/4?with=DRB,VGCL&view=interlinear");
-    fireEvent.change(screen.getByLabelText("Book"), { target: { value: "esther" } });
+    openGoTo();
+    fireEvent.click(screen.getByRole("button", { name: "Back" }));
+    fireEvent.click(screen.getByRole("link", { name: "Esther" }));
+    expect(screen.getByRole("link", { name: "1" })).toHaveAttribute("href", "/en/read/nabre/esther/1?with=DRB,VGCL&view=interlinear");
+    fireEvent.click(screen.getByRole("link", { name: "1" }));
     expect(push).toHaveBeenLastCalledWith("/en/read/nabre/esther/1?with=DRB,VGCL&view=interlinear");
+  });
+
+  it("thePanelClosesWhenTheReaderMovesOn", () => {
+    const { rerender } = render(wrap(<ReaderBar {...props} />));
+    openGoTo();
+    expect(screen.getByRole("dialog", { name: "Tobit" })).toBeInTheDocument();
+    // Browser Back (or any navigation not made from the panel) brings new props: the panel does not stay open over them.
+    rerender(wrap(<ReaderBar {...props} chapter={4} />));
+    expect(screen.queryAllByRole("link", { name: /^\d+$/ })).toHaveLength(0);
+  });
+
+  it("panelKeepsEstherTraditionOnlyWithinEsther", () => {
+    render(wrap(<ReaderBar {...props} book="esther" bookNum={19} chapter={1} esther tradition="HEBREW" withSiglas={["DRB"]} />));
+    openGoTo();
+    fireEvent.click(screen.getByRole("link", { name: "2" }));
+    expect(push).toHaveBeenLastCalledWith("/en/read/nabre/esther/2?with=DRB&tradition=HEBREW");
+    openGoTo();
+    fireEvent.click(screen.getByRole("button", { name: "Back" }));
+    fireEvent.click(screen.getByRole("link", { name: "Tobit" }));
+    fireEvent.click(screen.getByRole("link", { name: "1" }));
+    expect(push).toHaveBeenLastCalledWith("/en/read/nabre/tobit/1?with=DRB");
   });
 
   it("anotherEditionOpensOnTheSameBookAndChapterByNumber", () => {
@@ -266,9 +302,9 @@ describe("ReaderBar", () => {
     expect(short).toHaveTextContent("NABRE");
     expect(short).toHaveAttribute("aria-hidden", "true");
     expect(short).toHaveClass("sm:hidden");
-    // One line below sm: the book's name gives way (shrinks) before anything wraps.
+    // One line below sm: the go-to button gives way (shrinks) before anything wraps.
     expect(screen.getByRole("toolbar")).toHaveClass("flex-nowrap", "sm:flex-wrap");
-    expect(screen.getByLabelText("Book")).toHaveClass("min-w-0", "max-sm:flex-1");
+    expect(screen.getByRole("button", { name: /Go to another book or chapter/ })).toHaveClass("min-w-0", "max-sm:flex-1");
   });
 
   it("aSecondActionBeforeTheNewPageArrivesKeepsTheFirstOnesChange", () => {

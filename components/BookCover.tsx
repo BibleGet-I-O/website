@@ -2,7 +2,8 @@
 
 import { useId, useState } from "react";
 import { useTranslations } from "next-intl";
-import { Link } from "@/i18n/navigation";
+import { Link, useRouter } from "@/i18n/navigation";
+import { resumeHref } from "@/lib/last-read";
 import styles from "@/components/book.module.css";
 import { editionSlug } from "@/lib/slug";
 import type { Edition } from "@/lib/types";
@@ -58,6 +59,7 @@ function BackCover({ edition, name }: { edition: Edition; name: string }) {
 export default function BookCover({ edition }: { edition: Edition }) {
   const t = useTranslations("Home");
   const [turned, setTurned] = useState(false);
+  const router = useRouter();
   const backId = useId();
   const name = edition.year ? t("bookName", { name: edition.fullname, year: edition.year }) : edition.fullname;
   const tone = edition.copyright ? "dark" : "bright";
@@ -80,7 +82,17 @@ export default function BookCover({ edition }: { edition: Edition }) {
       </span>
       <div className={`${styles.turner} ${turned ? styles.turned : ""}`}>
         <div className={styles.front} inert={turned}>
-          <Link href={`/read/${editionSlug(edition.sigla)}`} className={`${styles.book} ${styles[tone]}`} data-tone={tone}>
+          <Link
+            href={`/read/${editionSlug(edition.sigla)}`}
+            className={`${styles.book} ${styles[tone]}`}
+            data-tone={tone}
+            onClick={(e) => {
+              // The link names the edition's index (crawlers, new tabs); a plain click opens the reader where it was left.
+              if (e.defaultPrevented || e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
+              e.preventDefault();
+              router.push(resumeHref(edition.sigla));
+            }}
+          >
             <span className={styles.frame} aria-hidden />
             <span className={styles.sigla} aria-hidden>
               {edition.sigla}
