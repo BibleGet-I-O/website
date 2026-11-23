@@ -2,7 +2,8 @@ import { describe, it, expect } from "vitest";
 import { render, screen } from "@testing-library/react";
 import { NextIntlClientProvider } from "next-intl";
 import en from "@/messages/en.json";
-import { renderFormatted, renderVerse } from "@/lib/formatted";
+import { renderFormatted, renderTitle, renderVerse } from "@/lib/formatted";
+import type { Note, NoteMarker } from "@/lib/types";
 
 // Synthetic or public-domain (KJV, Douay-Rheims) text only.
 const html = (node: React.ReactNode) => render(<div>{node}</div>).container.firstElementChild as HTMLElement;
@@ -157,5 +158,77 @@ describe("renderVerse", () => {
   it("ignoresTitlesWithoutTitlePosition", () => {
     const root = html(renderVerse({ label: "1", text: "x", titles: ["Before"], titlePosition: null }));
     expect(root.querySelector("[role=heading]")).toBeNull();
+  });
+});
+
+describe("notes in a verse", () => {
+  const note = (id: string, kind: "footnote" | "crossref", marker: string | null): Note => ({
+    id: `DRB:${id}`, edition: "DRB", kind, marker, label: "1:1", title: null, body: "A note.", refs: [],
+  });
+  const at = { chapter: 1, verse: 1 };
+  const verse = (text: string, notes: NoteMarker[], label = "1") =>
+    render(<NextIntlClientProvider locale="en" messages={en}><div>{renderVerse({ label, text, notes, at })}</div></NextIntlClientProvider>)
+      .container.firstElementChild as HTMLElement;
+  /** The text as read: a cross-reference's popover (closed) is left out. */
+  const read = (root: HTMLElement) => {
+    const copy = root.cloneNode(true) as HTMLElement;
+    copy.querySelectorAll("[popover]").forEach((p) => p.remove());
+    return copy.textContent;
+  };
+
+  it("putsEachMarkerWhereItIsPrinted", () => {
+    const text = "In the beginning God created heaven, and earth.";
+    const root = verse(text, [
+      { note: note("1", "footnote", "*"), field: "text", position: 16 },
+      { note: note("2", "crossref", "a"), field: "text", position: text.length },
+    ]);
+    expect(read(root)).toBe("1In the beginning* God created heaven, and earth.a");
+    expect(root.querySelector(".bg-note-foot")).toHaveTextContent("*");
+    expect(root.querySelector(".bg-note-cross")).toHaveTextContent("a");
+  });
+
+  it("twoMarkersAtOnePlace", () => {
+    const root = verse("Word.", [
+      { note: note("2", "crossref", "b"), field: "text", position: 5 },
+      { note: note("1", "footnote", "*"), field: "text", position: 5 },
+    ]);
+    expect(read(root)).toBe("1Word.b*");
+  });
+
+  it("markerAfterTheLineTag", () => {
+    const root = verse("<pof>Who is this</pof>", [{ note: note("1", "footnote", "*"), field: "text", position: 0 }]);
+    const line = root.querySelector(".bg-pof")!;
+    expect(line.querySelector(".bg-note-foot")).not.toBeNull();
+    expect(root.firstElementChild).toBe(line);
+  });
+
+  it("aMarkerAtTheStartOfARowThatOpensWithALineBreak", () => {
+    // A psalm's chapter-heading note goes at position 0; many stored rows open with "\n" before the first line.
+    const root = verse("\n<pof>Happy</pof>", [{ note: note("1", "footnote", "*"), field: "text", position: 0 }]);
+    const line = root.querySelector(".bg-pof")!;
+    expect(root.firstElementChild).toBe(line);
+    expect(line.querySelector(".bg-note-foot")).not.toBeNull();
+    expect(line.querySelector(".bg-vnum-hang")).not.toBeNull();
+  });
+
+  it("countsPositionsInCodePointsWithTags", () => {
+    // "L<sm>ORD</sm>" is 13 code points; the marker goes after it, before the space.
+    const root = verse("the L<sm>ORD</sm> 𝔊od", [{ note: note("1", "footnote", "*"), field: "text", position: 17 }]);
+    expect(root.textContent).toBe("1the LORD* 𝔊od");
+  });
+
+  it("aWholeVerseNoteMarksTheVerseNumber", () => {
+    const root = verse("Text.", [{ note: note("1", "footnote", null), field: "text", position: null }], "3");
+    const num = root.querySelector("a.bg-note-num")!;
+    expect(num).toHaveTextContent("3");
+    expect(num).toHaveAttribute("href", "#note-DRB-1");
+    expect(root.textContent).toBe("3Text.");
+  });
+
+  it("aMarkerInAHeading", () => {
+    const root = verse("Text.", [{ note: note("1", "footnote", "*"), field: "title", titleIndex: 0, position: 3 }]);
+    expect(root.querySelector(".bg-note-foot")).toBeNull();
+    const h = render(<NextIntlClientProvider locale="en" messages={en}><h2>{renderTitle("The Fall", [{ note: note("1", "footnote", "*"), field: "title", titleIndex: 0, position: 3 }], 0, at)}</h2></NextIntlClientProvider>).container;
+    expect(h.textContent).toBe("The* Fall");
   });
 });

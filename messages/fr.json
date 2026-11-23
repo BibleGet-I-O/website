@@ -271,5 +271,17 @@
       "brothers": "le chœur des frères",
       "maidens": "le chœur des jeunes filles"
     }
+  },
+  "Notes": {
+    "footnote": "Note {marker}",
+    "crossref": "Renvois {marker}",
+    "crossrefTitle": "Renvois, {label}",
+    "crossrefVerse": "Renvois sur le verset {verse}",
+    "verse": "Note sur le verset {verse}",
+    "heading": "Notes",
+    "count": "{count, plural, one {# note} other {# notes}}",
+    "resize": "Redimensionner les notes",
+    "backToText": "Retour au texte",
+    "visitorHint": "Les lecteurs connectés voient aussi les notes de cette édition."
   }
 }

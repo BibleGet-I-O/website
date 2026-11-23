@@ -271,5 +271,17 @@
       "brothers": "il coro dei fratelli",
       "maidens": "il coro delle fanciulle"
     }
+  },
+  "Notes": {
+    "footnote": "Nota {marker}",
+    "crossref": "Rimandi {marker}",
+    "crossrefTitle": "Rimandi, {label}",
+    "crossrefVerse": "Rimandi al versetto {verse}",
+    "verse": "Nota al versetto {verse}",
+    "heading": "Note",
+    "count": "{count, plural, one {# nota} other {# note}}",
+    "resize": "Ridimensiona le note",
+    "backToText": "Torna al testo",
+    "visitorHint": "Chi accede vede anche le note di questa edizione."
   }
 }

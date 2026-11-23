@@ -271,5 +271,17 @@
       "brothers": "el coro de los hermanos",
       "maidens": "el coro de las doncellas"
     }
+  },
+  "Notes": {
+    "footnote": "Nota {marker}",
+    "crossref": "Referencias {marker}",
+    "crossrefTitle": "Referencias, {label}",
+    "crossrefVerse": "Referencias al versículo {verse}",
+    "verse": "Nota al versículo {verse}",
+    "heading": "Notas",
+    "count": "{count, plural, one {# nota} other {# notas}}",
+    "resize": "Cambiar el tamaño de las notas",
+    "backToText": "Volver al texto",
+    "visitorHint": "Quien inicia sesión ve también las notas de esta edición."
   }
 }

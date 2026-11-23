@@ -1,5 +1,5 @@
 import { StickyHead } from "@/components/StickyHead";
-import { renderVerse } from "@/lib/formatted";
+import { renderTitle, renderVerse } from "@/lib/formatted";
 import { printedLabel, verseAnchor } from "@/lib/placement";
 import type { VerseRow } from "@/lib/types";
 
@@ -26,7 +26,7 @@ export function BookPage({ heading, chapter, rows, lang }: { heading: string; ch
         <section key={i}>
           {s.titles.map((t, j) => (
             <h2 key={j} data-head-col={0} data-head-text={s.titles.at(-1)} className={j === 0 ? "mt-6 mb-2 text-xl font-semibold" : "mb-2 text-base font-semibold italic"}>
-              {t}
+              {renderTitle(t, s.rows[0]?.notes, j, s.rows[0])}
             </h2>
           ))}
           <p className="bg-text mb-4">
@@ -38,6 +38,8 @@ export function BookPage({ heading, chapter, rows, lang }: { heading: string; ch
                   titles: r.titlePosition == null ? [] : r.titles,
                   titlePosition: r.titlePosition,
                   headCol: 0,
+                  notes: r.notes,
+                  at: r,
                 })}{" "}
               </span>
             ))}

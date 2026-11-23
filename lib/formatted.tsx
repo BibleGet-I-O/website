@@ -1,5 +1,8 @@
 import { Fragment, type ReactNode } from "react";
+import { NoteMarker } from "@/components/NoteMarker";
 import { SpeakerTag } from "@/components/SpeakerTag";
+import { markerDomId } from "@/lib/notes";
+import type { NoteMarker as Marker } from "@/lib/types";
 
 /**
  * Renders a verse's formatted `text` as React elements, a port of the endpoint's
@@ -18,8 +21,13 @@ const LINE_TAGS = new Set(["po", "pof", "pol", "poi", "poil", "poif", "pos", "po
 const INLINE_TAGS = new Set(["sm", "i", "sup", "speaker"]);
 /** Indented line tags: a verse number starting one hangs in the indent. `pr` (prose) has none. */
 const HANGING = new Set([...LINE_TAGS].filter((t) => t !== "pr"));
-/** Marks where mid-verse headings go (a private-use code point, removed from the text first). */
+/**
+ * Marks where something is inserted into the text: mid-verse headings (U+E000) and note markers (U+E001 on), private-use
+ * code points removed from the text first.
+ */
 const MARKER = "";
+const INSERTED = /[-]/g;
+const SPLIT = /([-])/;
 
 type Node = { k: "text"; s: string } | { k: "el"; tag: string; children: Node[] };
 type Raw = { k: "open" | "close"; tag: string; raw: string };
@@ -90,16 +98,63 @@ function parse(text: string): { nodes: Node[]; plain: boolean }[] {
   return out;
 }
 
-type Opts = { marker?: ReactNode; lead?: ReactNode };
+type Opts = { inserts?: Map<string, ReactNode>; lead?: ReactNode };
 
 function renderText(s: string, opts: Opts, key: string): ReactNode {
-  if (!s.includes(MARKER)) return s;
-  return s.split(MARKER).map((part, i) => (
-    <Fragment key={`${key}.${i}`}>
-      {i > 0 && opts.marker}
-      {part}
-    </Fragment>
-  ));
+  if (!opts.inserts?.size || !SPLIT.test(s)) return s;
+  return s.split(SPLIT).map((part, i) => <Fragment key={`${key}.${i}`}>{i % 2 === 1 ? opts.inserts!.get(part) : part}</Fragment>);
+}
+
+/** An opening line tag at the start of `s`: an insertion there goes inside the line, after the tag. */
+const LINE_OPEN = new RegExp(`^<(${[...LINE_TAGS].join("|")})>`);
+
+/**
+ * `text` with each insertion's private-use code point at its offset (code points, tags included); several at one
+ * offset keep their order. A marker `intoLine` just before a line's opening tag moves after it, into the line.
+ */
+function withInserts(text: string, at: { pos: number; mark: string; intoLine?: boolean }[]): string {
+  const cps = Array.from(text);
+  const before = new Map<number, string>();
+  for (const { pos, mark, intoLine } of at) {
+    let p = Math.min(Math.max(pos, 0), cps.length);
+    // A heading stays between lines; a note marker goes into the line it begins (past whitespace before it,
+    // which the lines drop: many rows open with "\n").
+    if (intoLine) {
+      let q = p;
+      while (q < cps.length && /\s/.test(cps[q])) q++;
+      for (let m = LINE_OPEN.exec(cps.slice(q, q + 8).join("")); m; m = LINE_OPEN.exec(cps.slice(q, q + 8).join(""))) {
+        q += m[0].length;
+        p = q;
+      }
+    }
+    before.set(p, (before.get(p) ?? "") + mark);
+  }
+  let out = "";
+  for (let i = 0; i <= cps.length; i++) out += (before.get(i) ?? "") + (cps[i] ?? "");
+  return out;
+}
+
+type Place = { chapter: number; verse: number; segment?: string | null };
+
+/** A note's marker in the text or a heading, its id built from the verse it is on. */
+function markerNode(m: Marker, at: Place | undefined, key: string): ReactNode {
+  return <NoteMarker key={key} note={m.note} id={at ? markerDomId(m.note.id, at) : ""} />;
+}
+
+/** A heading with the note markers printed in it (`field: "title"`, this heading's index). */
+export function renderTitle(text: string, notes: Marker[] | undefined, titleIndex: number, at?: Place): ReactNode {
+  const mine = (notes ?? []).filter((m) => m.field === "title" && m.titleIndex === titleIndex);
+  if (mine.length === 0) return text;
+  const inserts = new Map<string, ReactNode>();
+  const marked = withInserts(
+    text.replace(INSERTED, ""),
+    mine.map((m, i) => {
+      const mark = String.fromCodePoint(0xe001 + i);
+      inserts.set(mark, markerNode(m, at, `t${i}`));
+      return { pos: m.position ?? 0, mark, intoLine: true };
+    }),
+  );
+  return renderText(marked, { inserts }, "t");
 }
 
 function renderNodes(nodes: Node[], opts: Opts, key: string, lead?: ReactNode): ReactNode[] {
@@ -176,29 +231,47 @@ const labelClass = "font-sans text-xs text-red-700 dark:text-red-400";
  * tags included, and the verse reads `text[:pos]` + headings + `text[pos:]`. With no position the caller
  * prints the headings before the verse. `headCol` makes them feed that column's running head (StickyHead).
  */
-export function renderVerse({ label, text, titles = [], titlePosition = null, headingClass = defaultHeadingClass, headCol }: {
+export function renderVerse({ label, text, titles = [], titlePosition = null, headingClass = defaultHeadingClass, headCol, notes = [], at }: {
   label: string | null;
   text: string;
   titles?: string[];
   titlePosition?: number | null;
   headingClass?: (j: number) => string;
   headCol?: number;
+  /** The row's note markers (signed-in readers); those in its text go in, a whole-verse one marks the number. */
+  notes?: Marker[];
+  /** The verse, for the markers' ids (`m-{note}-v{chapter}.{verse}`), which the notes list links back to. */
+  at?: Place;
 }): ReactNode {
-  let marked = text.replaceAll(MARKER, "");
-  let marker: ReactNode;
+  const inserts = new Map<string, ReactNode>();
+  const at_: { pos: number; mark: string; intoLine?: boolean }[] = [];
   if (titlePosition != null && titlePosition > 0 && titles.length > 0) {
-    const cps = Array.from(marked);
-    marked = cps.slice(0, titlePosition).join("") + MARKER + cps.slice(titlePosition).join("");
-    marker = titles.map((t, j) => (
-      <span key={`h${j}`} role="heading" aria-level={2} data-head-col={headCol} data-head-text={headCol == null ? undefined : titles.at(-1)} className={headingClass(j)}>
-        {t}
-      </span>
-    ));
+    inserts.set(
+      MARKER,
+      titles.map((t, j) => (
+        <span key={`h${j}`} role="heading" aria-level={2} data-head-col={headCol} data-head-text={headCol == null ? undefined : titles.at(-1)} className={headingClass(j)}>
+          {renderTitle(t, notes, j, at)}
+        </span>
+      )),
+    );
+    at_.push({ pos: titlePosition, mark: MARKER });
   }
-  const lines = parse(marked.trimStart());
+  const inText = notes.filter((m) => m.field === "text");
+  const whole = inText.filter((m) => m.position === null);
+  inText.forEach((m, i) => {
+    // The first whole-verse note marks the number; any other is a marker at the start of the text.
+    if (m === whole[0] && label) return;
+    const mark = String.fromCodePoint(0xe001 + i);
+    inserts.set(mark, markerNode(m, at, `n${i}`));
+    at_.push({ pos: m.position ?? 0, mark, intoLine: true });
+  });
+  // Offsets count from the stored text, leading whitespace included; it is dropped afterwards.
+  const marked = withInserts(text.replace(INSERTED, ""), at_).trimStart();
+  const lines = parse(marked);
   const first = lines[0]?.nodes[0];
   const hang = !lines[0]?.plain && first?.k === "el" && HANGING.has(first.tag);
   // The hanging number is spaced by its padding (app/globals.css), so "12:1" still fits the indent.
-  const lead = label ? <sup className={hang ? `${labelClass} bg-vnum-hang` : `${labelClass} mr-0.5`}>{label}</sup> : undefined;
-  return renderParsed(lines, { marker, lead });
+  const number = whole[0] && label ? <NoteMarker note={whole[0].note} id={at ? markerDomId(whole[0].note.id, at) : ""}>{label}</NoteMarker> : label;
+  const lead = label ? <sup className={hang ? `${labelClass} bg-vnum-hang` : `${labelClass} mr-0.5`}>{number}</sup> : undefined;
+  return renderParsed(lines, { inserts, lead });
 }

@@ -90,7 +90,7 @@ export function Spread({ sides, rows, chapter, truncated = [], view = "side-by-s
             {/* Side by side: a row of their own. Interlinear: each edition's in its own cell, under its tag. */}
             {!interlinear && titles.some((h) => h.length > 0) && sides.map((side, s) => (
               <div key={`h${s}`} data-testid={`heading-${LETTERS[s]}`} lang={side.lang} className={muted(s)}>
-                <Headings titles={titles[s]} col={s} />
+                <Headings titles={titles[s]} col={s} row={cellsOf(r)[s]} />
               </div>
             ))}
             {sides.map((side, s) => {
@@ -107,7 +107,7 @@ export function Spread({ sides, rows, chapter, truncated = [], view = "side-by-s
                     <span data-testid="sigla" title={side.rubric?.full} className="font-sans text-xs text-slate-500 dark:text-slate-400">{side.rubric?.short ?? side.sigla}</span>
                   )}
                   {/* Interlinear: one column, so only the main edition's headings feed the running head. */}
-                  {interlinear && <Headings titles={titles[s]} col={s === 0 ? 0 : undefined} />}
+                  {interlinear && <Headings titles={titles[s]} col={s === 0 ? 0 : undefined} row={cellsOf(r)[s]} />}
                   {content}
                 </div>
               );
