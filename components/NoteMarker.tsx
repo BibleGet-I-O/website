@@ -21,7 +21,13 @@ function inPanel(): boolean {
  * passages, each a link. With `children` (the verse number), the verse as a whole is marked: CEI 2008 prints
  * no marker in the line.
  */
-export function NoteMarker({ note, id, children }: { note: Note; id: string; children?: ReactNode }) {
+export function NoteMarker({ note, id, children, verse }: {
+  note: Note;
+  id: string;
+  children?: ReactNode;
+  /** The verse number, for a note with no printed marker shown beside it (a verse's second CEI note): a dot. */
+  verse?: string;
+}) {
   const t = useTranslations("Notes");
   if (note.kind === "crossref") return <CrossReference note={note} id={id}>{children}</CrossReference>;
   const onClick = (e: MouseEvent) => {
@@ -35,10 +41,10 @@ export function NoteMarker({ note, id, children }: { note: Note; id: string; chi
       id={id}
       href={`#${noteDomId(note.id)}`}
       onClick={onClick}
-      aria-label={whole ? t("verse", { verse: String(children) }) : t("footnote", { marker: note.marker ?? "" })}
+      aria-label={whole ? t("verse", { verse: String(children) }) : note.marker ? t("footnote", { marker: note.marker }) : t("verse", { verse: verse ?? "" })}
       className={whole ? "bg-note-num" : "bg-note bg-note-foot"}
     >
-      {whole ? children : note.marker}
+      {whole ? children : (note.marker ?? "•")}
     </a>
   );
 }

@@ -137,8 +137,8 @@ function withInserts(text: string, at: { pos: number; mark: string; intoLine?: b
 type Place = { chapter: number; verse: number; segment?: string | null };
 
 /** A note's marker in the text or a heading, its id built from the verse it is on. */
-function markerNode(m: Marker, at: Place | undefined, key: string): ReactNode {
-  return <NoteMarker key={key} note={m.note} id={at ? markerDomId(m.note.id, at) : ""} />;
+function markerNode(m: Marker, at: Place | undefined, key: string, verse?: string): ReactNode {
+  return <NoteMarker key={key} note={m.note} id={at ? markerDomId(m.note.id, at) : ""} verse={verse} />;
 }
 
 /** A heading with the note markers printed in it (`field: "title"`, this heading's index). */
@@ -262,7 +262,7 @@ export function renderVerse({ label, text, titles = [], titlePosition = null, he
     // The first whole-verse note marks the number; any other is a marker at the start of the text.
     if (m === whole[0] && label) return;
     const mark = String.fromCodePoint(0xe001 + i);
-    inserts.set(mark, markerNode(m, at, `n${i}`));
+    inserts.set(mark, markerNode(m, at, `n${i}`, label ?? undefined));
     at_.push({ pos: m.position ?? 0, mark, intoLine: true });
   });
   // Offsets count from the stored text, leading whitespace included; it is dropped afterwards.
