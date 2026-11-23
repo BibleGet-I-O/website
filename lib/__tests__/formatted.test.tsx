@@ -225,6 +225,19 @@ describe("notes in a verse", () => {
     expect(root.textContent).toBe("3Text.");
   });
 
+  it("aSecondWholeVerseNoteGetsAChipOfItsOwn", () => {
+    // CEI 2008 prints no markers: a verse with two notes marks the number for the first, a dot for the second.
+    const root = verse("Text.", [
+      { note: note("1", "footnote", null), field: "text", position: null },
+      { note: note("2", "footnote", null), field: "text", position: null },
+    ], "3");
+    expect(root.querySelector("a.bg-note-num")).toHaveAttribute("href", "#note-DRB-1");
+    const chip = root.querySelector("a.bg-note-foot")!;
+    expect(chip).toHaveAttribute("href", "#note-DRB-2");
+    expect(chip).toHaveTextContent("•");
+    expect(chip).toHaveAttribute("aria-label", "Note on verse 3");
+  });
+
   it("aMarkerInAHeading", () => {
     const root = verse("Text.", [{ note: note("1", "footnote", "*"), field: "title", titleIndex: 0, position: 3 }]);
     expect(root.querySelector(".bg-note-foot")).toBeNull();

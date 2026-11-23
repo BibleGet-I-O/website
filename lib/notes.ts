@@ -58,9 +58,9 @@ export function noteRuns(body: string, refs: { span: [number, number] }[]): Note
 
 /**
  * Editions whose notes the API serves (endpoint migration 064's private data halves): a visitor reading one is
- * told that signed-in readers see them. CEI2008 joins when its notes are imported.
+ * told that signed-in readers see them.
  */
-export const NOTE_EDITIONS: ReadonlySet<string> = new Set(["NABRE"]);
+export const NOTE_EDITIONS: ReadonlySet<string> = new Set(["NABRE", "CEI2008"]);
 
 /** The footnotes marked on these rows, for the list under the chapter (cross-references open in place). */
 export function chapterFootnotes(rows: VerseRow[]): { note: Note; first: string }[] {
