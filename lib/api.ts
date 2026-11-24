@@ -198,6 +198,18 @@ export async function getIndex(sigla: string): Promise<EditionIndex> {
 /** A title the edition prints in a book, with its level (1 the highest). */
 export type OutlineTitle = { level: number; title: string; chapter: number; verse: number; segment: string | null; printedChapter: number | null };
 
+const whole = (n: unknown, min: number): n is number => Number.isInteger(n) && (n as number) >= min;
+
+/** One title of the endpoint's answer; null when malformed: an index is never worth a broken chapter page. */
+function toTitle(x: unknown): OutlineTitle | null {
+  if (typeof x !== "object" || x === null) return null;
+  const { level, title, chapter, verse, segment = null, printed_chapter: printedChapter = null } = x as Record<string, unknown>;
+  if (!whole(level, 1) || typeof title !== "string" || !whole(chapter, 0) || !whole(verse, 0)) return null;
+  if (segment !== null && typeof segment !== "string") return null;
+  if (printedChapter !== null && !whole(printedChapter, 0)) return null;
+  return { level, title, chapter, verse, segment, printedChapter };
+}
+
 /**
  * A book's titles; signed-in readers also get those of the edition's commentary, where it prints none. Empty when it
  * has none, or when the endpoint cannot say: the index is then simply not offered.
@@ -205,11 +217,9 @@ export type OutlineTitle = { level: number; title: string; chapter: number; vers
 export async function getOutline(sigla: string, bookNum: number, access: Access): Promise<OutlineTitle[]> {
   try {
     const body = (await request(`/metadata/outline?version=${encodeURIComponent(sigla)}&book=${bookNum}`, access, access === "reader" ? { cache: "no-store" } : METADATA)) as {
-      titles?: (Omit<OutlineTitle, "printedChapter"> & { printed_chapter: number | null })[];
+      titles?: unknown;
     } | null;
-    const titles = body?.titles;
-    if (!Array.isArray(titles)) return [];
-    return titles.map(({ printed_chapter, ...t }) => ({ ...t, printedChapter: printed_chapter }));
+    return Array.isArray(body?.titles) ? body.titles.flatMap((x: unknown) => toTitle(x) ?? []) : [];
   } catch (err) {
     if (err instanceof NotFound || err instanceof ApiUnavailable) return [];
     throw err;

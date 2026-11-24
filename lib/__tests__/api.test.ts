@@ -341,6 +341,17 @@ describe("getOutline", () => {
   });
 });
 
+describe("getOutline entries", () => {
+  it("leavesOutMalformedOnesAndKeepsTheRest", async () => {
+    const good = { level: 1, title: "A", chapter: 1, verse: 2, segment: "a", printed_chapter: null };
+    const bad = [null, "x", 3, [], {}, { ...good, level: "1" }, { ...good, level: 0 }, { ...good, title: null }, { ...good, chapter: 1.5 },
+      { ...good, verse: -1 }, { ...good, segment: 4 }, { ...good, printed_chapter: "2" }];
+    vi.stubGlobal("fetch", vi.fn(async () => json({ titles: [...bad, good, { ...good, segment: undefined, printed_chapter: undefined }] })));
+    const kept = { level: 1, title: "A", chapter: 1, verse: 2, segment: "a", printedChapter: null };
+    expect(await getOutline("NABRE", 1, "visitor")).toEqual([kept, { ...kept, segment: null }]);
+  });
+});
+
 describe("slugFor", () => {
   it("slugForStripsDiacritics", () => {
     expect(slugOf("Génesis")).toBe("genesis");
