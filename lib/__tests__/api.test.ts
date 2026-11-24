@@ -334,8 +334,10 @@ describe("getOutline", () => {
     expect(await getOutline("NABRE", 1, "visitor")).toEqual([]);
     vi.stubGlobal("fetch", vi.fn(async () => json({}, 503)));
     expect(await getOutline("NABRE", 1, "visitor")).toEqual([]);
-    vi.stubGlobal("fetch", vi.fn(async () => json({})));
-    expect(await getOutline("NABRE", 1, "visitor")).toEqual([]);
+    for (const body of [{}, null, { titles: null }, { titles: "x" }, { titles: {} }]) {
+      vi.stubGlobal("fetch", vi.fn(async () => json(body)));
+      expect(await getOutline("NABRE", 1, "visitor")).toEqual([]);
+    }
   });
 });
 

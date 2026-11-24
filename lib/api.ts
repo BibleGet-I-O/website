@@ -206,8 +206,10 @@ export async function getOutline(sigla: string, bookNum: number, access: Access)
   try {
     const body = (await request(`/metadata/outline?version=${encodeURIComponent(sigla)}&book=${bookNum}`, access, access === "reader" ? { cache: "no-store" } : METADATA)) as {
       titles?: (Omit<OutlineTitle, "printedChapter"> & { printed_chapter: number | null })[];
-    };
-    return (body.titles ?? []).map(({ printed_chapter, ...t }) => ({ ...t, printedChapter: printed_chapter }));
+    } | null;
+    const titles = body?.titles;
+    if (!Array.isArray(titles)) return [];
+    return titles.map(({ printed_chapter, ...t }) => ({ ...t, printedChapter: printed_chapter }));
   } catch (err) {
     if (err instanceof NotFound || err instanceof ApiUnavailable) return [];
     throw err;
