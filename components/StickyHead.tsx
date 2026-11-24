@@ -11,9 +11,9 @@ const nameClass = "text-center font-sans text-xs font-semibold text-slate-600 sm
  * comparing (`columns`, laid out with the page's own `gridClass` so each sits over its column), and a running head
  * per column: the last section heading scrolled past. Headings take part by carrying `data-head-col` (their
  * column's index), and `data-head-text` when they are printed in a group: the group's last heading, shown as soon as
- * its first is passed; `running` is how many columns have one (1 in a single column or interlinear).
+ * its first is passed; `tools` sit on the title's line; `running` is how many columns have one (1 in a single column or interlinear).
  */
-export function StickyHead({ title, columns, gridClass, running }: { title: string; columns: HeadColumn[]; gridClass: string; running: number }) {
+export function StickyHead({ title, columns, gridClass, running, tools }: { title: string; columns: HeadColumn[]; gridClass: string; running: number; tools?: ReactNode }) {
   const ref = useRef<HTMLDivElement>(null);
   const [heads, setHeads] = useState<string[]>([]);
 
@@ -48,7 +48,12 @@ export function StickyHead({ title, columns, gridClass, running }: { title: stri
       data-sticky-head=""
       className="sticky top-0 z-20 -mx-4 mb-4 border-b border-slate-200 bg-white px-4 py-2 sm:-mx-6 sm:px-6 dark:border-slate-800 dark:bg-slate-950"
     >
-      <h1 className="text-center font-sans text-xl font-semibold sm:text-2xl">{title}</h1>
+      {/* Equal sides keep the title centred, with or without tools. */}
+      <div data-title-line="" className="grid grid-cols-[minmax(2.25rem,1fr)_auto_minmax(2.25rem,1fr)] items-center gap-2">
+        <span />
+        <h1 className="text-center font-sans text-xl font-semibold sm:text-2xl">{title}</h1>
+        <span className="flex justify-end">{tools}</span>
+      </div>
       {columns.length > 0 && (
         <div className={gridClass}>
           {columns.map((c) => (

@@ -71,7 +71,8 @@
     "thirdEdition": "Third edition",
     "cancel": "Cancel",
     "turning": "Turning the page…",
-    "loading": "Loading"
+    "loading": "Loading",
+    "titleIndex": "Titles in {book}"
   },
   "Notice": {
     "signIn": "This edition shows visitors the first 30 verses of each chapter. Sign in to read the whole chapter.",

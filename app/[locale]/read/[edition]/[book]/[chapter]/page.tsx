@@ -11,17 +11,18 @@ import { RememberChapter } from "@/components/RememberChapter";
 import { Interlinear } from "@/components/Interlinear";
 import { PageTurn } from "@/components/PageTurn";
 import { getAccess } from "@/lib/access";
-import { ApiUnavailable, bookBySlug, getChapter, getEditions, getIndex, getVerses, NotFound, slugFor } from "@/lib/api";
+import { ApiUnavailable, bookBySlug, getChapter, getEditions, getIndex, getOutline, getVerses, NotFound, slugFor } from "@/lib/api";
 import { ESTHER, estherTradition, hasBothEstherTexts, type Tradition } from "@/lib/esther";
 import { compareQuery, comparisonFor, parseView, parseWith } from "@/lib/compare";
 import { hasChapter, PROLOGUE } from "@/lib/chapters";
 import { loadSecond } from "@/lib/interlinear";
 import { buildRows } from "@/lib/parallel";
-import { placeAsPrinted } from "@/lib/placement";
+import { placeAsPrinted, verseAnchor } from "@/lib/placement";
 import { Spread } from "@/components/Spread";
 import { ChapterNotes, type NoteGroup } from "@/components/ChapterNotes";
 import { chapterFootnotes, NOTE_EDITIONS } from "@/lib/notes";
 import { editionsCited, withNoteLinks } from "@/lib/note-links";
+import { TitleIndex } from "@/components/TitleIndex";
 import { TraditionSwitch } from "@/components/TraditionSwitch";
 import type { Chapter, EditionIndex, VerseRow } from "@/lib/types";
 
@@ -148,6 +149,8 @@ export default async function ChapterPage({ params, searchParams }: { params: Pr
         : [];
     return { rows: placeAsPrinted(prevLast, current.rows, nextFirst, chapter), truncated: current.truncated };
   };
+  // Asked at the same time as the chapter; awaited where its icon is built.
+  const outline = getOutline(edition.sigla, book.bookNum, info.access);
   // The Masoretic text beside the Septuagint, loaded at the same time; when it cannot be loaded, the
   // Septuagint alone with a note.
   const [main, masoretic] = await Promise.all([
@@ -209,6 +212,20 @@ export default async function ChapterPage({ params, searchParams }: { params: Pr
   const capped = main.truncated || (typeof masoretic === "object" && masoretic !== null && masoretic.truncated);
   const notice = noticeFor(capped, info, edition.copyright);
   const redirectTo = `/${locale}${base}/${slugFor(book, index.books)}/${chapter}${qs}`;
+  // The main edition's titles in this book, opened from the title's line; links keep the comparison.
+  const titleBase = `/${locale}${base}/${slugFor(book, index.books)}`;
+  const tools = (
+    <TitleIndex
+      book={book.name}
+      edition={edition.fullname}
+      opening={rows[0] ? { chapter: rows[0].chapter, verse: rows[0].verse, segment: rows[0].segment } : { chapter, verse: 1 }}
+      lang={edition.language || undefined}
+      titles={(await outline).map((x) => ({
+        level: x.level, title: x.title, chapter: x.chapter, verse: x.verse, segment: x.segment,
+        href: `${titleBase}/${x.printedChapter ?? x.chapter}${qs}#${verseAnchor(x)}`,
+      }))}
+    />
+  );
   const t = await getTranslations("Reader");
   const tn = await getTranslations("Notes");
   const heading = chapter === PROLOGUE ? t("prologueHeading", { book: book.name }) : t("heading", { book: book.name, chapter });
@@ -246,6 +263,7 @@ export default async function ChapterPage({ params, searchParams }: { params: Pr
           <article>
             <Spread
               title={heading}
+              tools={tools}
               sides={[
                 { sigla: edition.sigla, name: edition.fullname, lang: edition.language || undefined, rubric: { full: t("septuagint"), short: t("septuagintShort") } },
                 { sigla: `${edition.sigla}-MT`, name: edition.fullname, lang: edition.language || undefined, rubric: { full: t("masoretic"), short: t("masoreticShort") } },
@@ -259,7 +277,7 @@ export default async function ChapterPage({ params, searchParams }: { params: Pr
           </article>
         ) : masoretic === "unavailable" ? (
           <>
-            <BookPage heading={heading} chapter={chapter} rows={rows} lang={edition.language || undefined} />
+            <BookPage heading={heading} chapter={chapter} rows={rows} lang={edition.language || undefined} tools={tools} />
             <p role="note" className="my-4 rounded-lg border border-slate-300 bg-slate-50 p-3 text-sm dark:border-slate-700 dark:bg-slate-900">
               {t("secondUnavailable", { second: t("masoretic") })}
             </p>
@@ -267,6 +285,7 @@ export default async function ChapterPage({ params, searchParams }: { params: Pr
         ) : compared.length > 0 ? (
           await Interlinear({
             heading,
+            tools,
             main: { sigla: edition.sigla, name: edition.fullname, lang: edition.language || undefined },
             others: compared.map((e, i) => {
               const second = seconds[i];
@@ -286,7 +305,7 @@ export default async function ChapterPage({ params, searchParams }: { params: Pr
             redirectTo,
           })
         ) : (
-          <BookPage heading={heading} chapter={chapter} rows={rows} lang={edition.language || undefined} />
+          <BookPage heading={heading} chapter={chapter} rows={rows} lang={edition.language || undefined} tools={tools} />
         )}
         {notice && await CappedNotice({ kind: notice, redirectTo, ...(compared.length > 0 && { edition: edition.fullname }) })}
         {notesHint && (

@@ -78,6 +78,15 @@ describe("Interlinear", () => {
     expect(screen.getByRole("note")).toHaveTextContent(/Vulgata Clementina could not be loaded/);
   });
 
+  it("keepsItsToolsInEveryLayout", async () => {
+    const tools = <button type="button">Index</button>;
+    for (const second of [{ mode: "unavailable" }, { mode: "missing", reason: "chapter" }, { mode: "aligned", rows: [row(3, 1)], truncated: false, book: joel }] as Second[]) {
+      const { unmount } = await show({ second, tools });
+      expect(screen.getByRole("button", { name: "Index" })).toBeInTheDocument();
+      unmount();
+    }
+  });
+
   it("aCappedSecondEditionShowsItsNotice", async () => {
     await show({ secondNotice: "signIn", second: { mode: "aligned", rows: [row(3, 1)], truncated: true, book: joel } });
     const note = screen.getByRole("note");

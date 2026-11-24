@@ -1,3 +1,4 @@
+import type { ReactNode } from "react";
 import { StickyHead } from "@/components/StickyHead";
 import { renderTitle, renderVerse } from "@/lib/formatted";
 import { printedLabel, verseAnchor } from "@/lib/placement";
@@ -9,7 +10,7 @@ import type { VerseRow } from "@/lib/types";
  * its layout tags rendered (poetic lines, small capitals, speakers: see lib/formatted.tsx and the `.bg-`
  * rules in app/globals.css).
  */
-export function BookPage({ heading, chapter, rows, lang }: { heading: string; chapter: number; rows: VerseRow[]; lang?: string }) {
+export function BookPage({ heading, chapter, rows, lang, tools }: { heading: string; chapter: number; rows: VerseRow[]; lang?: string; tools?: ReactNode }) {
   // A heading closes the running paragraph: group the verses into sections, each opened by its headings.
   // A mid-verse heading (`titlePosition` set) is printed inside its verse instead.
   const sections: { titles: string[]; rows: VerseRow[] }[] = [];
@@ -21,7 +22,7 @@ export function BookPage({ heading, chapter, rows, lang }: { heading: string; ch
   return (
     <article lang={lang} className="font-serif text-lg leading-relaxed">
       {/* The title and the current section stay at the top while the chapter scrolls. */}
-      <StickyHead title={heading} columns={[]} gridClass="" running={1} />
+      <StickyHead title={heading} columns={[]} gridClass="" running={1} tools={tools} />
       {sections.map((s, i) => (
         <section key={i}>
           {s.titles.map((t, j) => (

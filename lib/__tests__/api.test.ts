@@ -1,7 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 vi.mock("server-only", () => ({}));
-import { ApiUnavailable, NotFound, bookBySlug, getApiVersion, getChapter, getEditions, getIndex, getVerses, slugFor } from "../api";
+import { ApiUnavailable, NotFound, bookBySlug, getApiVersion, getChapter, getEditions, getIndex, getOutline, getVerses, slugFor } from "../api";
 
 const raw = (verse: number, extra: object = {}) => ({
   chapter: 11, verse, text: `v${verse}`, title1: null, title2: null, title3: null,
@@ -315,6 +315,42 @@ describe("getVerses", () => {
 
 /** The slug of a book that is alone in its edition. */
 const slugOf = (name: string) => slugFor({ bookNum: 1, name }, [{ bookNum: 1, name }]);
+
+describe("getOutline", () => {
+  const titles = [{ level: 1, title: "A", chapter: 12, verse: 1, segment: null, printed_chapter: 11 }];
+
+  it("readsABooksTitlesWithTheReadersAccess", async () => {
+    const fn = vi.fn(async (_url: string | URL | Request, _init?: RequestInit) => json({ titles }));
+    vi.stubGlobal("fetch", fn);
+    expect(await getOutline("NABRE", 27, "reader")).toEqual([{ level: 1, title: "A", chapter: 12, verse: 1, segment: null, printedChapter: 11 }]);
+    expect(String(fn.mock.calls[0][0])).toContain("/metadata/outline?version=NABRE&book=27");
+    expect(fn.mock.calls[0][1]).toMatchObject({ cache: "no-store", headers: { "X-Api-Key": "reader-key" } });
+    await getOutline("NABRE", 27, "visitor");
+    expect(fn.mock.calls[1][1]).toMatchObject({ headers: { "X-Api-Key": "read-key" } });
+  });
+
+  it("isEmptyWhenTheEndpointHasNoneOrCannotSay", async () => {
+    vi.stubGlobal("fetch", vi.fn(async () => json({ detail: "Unknown metadata query" }, 404, "application/problem+json")));
+    expect(await getOutline("NABRE", 1, "visitor")).toEqual([]);
+    vi.stubGlobal("fetch", vi.fn(async () => json({}, 503)));
+    expect(await getOutline("NABRE", 1, "visitor")).toEqual([]);
+    for (const body of [{}, null, { titles: null }, { titles: "x" }, { titles: {} }]) {
+      vi.stubGlobal("fetch", vi.fn(async () => json(body)));
+      expect(await getOutline("NABRE", 1, "visitor")).toEqual([]);
+    }
+  });
+});
+
+describe("getOutline entries", () => {
+  it("leavesOutMalformedOnesAndKeepsTheRest", async () => {
+    const good = { level: 1, title: "A", chapter: 1, verse: 2, segment: "a", printed_chapter: null };
+    const bad = [null, "x", 3, [], {}, { ...good, level: "1" }, { ...good, level: 0 }, { ...good, title: null }, { ...good, chapter: 1.5 },
+      { ...good, verse: -1 }, { ...good, segment: 4 }, { ...good, printed_chapter: "2" }];
+    vi.stubGlobal("fetch", vi.fn(async () => json({ titles: [...bad, good, { ...good, segment: undefined, printed_chapter: undefined }] })));
+    const kept = { level: 1, title: "A", chapter: 1, verse: 2, segment: "a", printedChapter: null };
+    expect(await getOutline("NABRE", 1, "visitor")).toEqual([kept, { ...kept, segment: null }]);
+  });
+});
 
 describe("slugFor", () => {
   it("slugForStripsDiacritics", () => {

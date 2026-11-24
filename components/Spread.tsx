@@ -33,10 +33,12 @@ const COLUMNS: Record<number, string> = { 1: "grid-cols-1", 2: "grid-cols-2", 3:
  * in its own chapter). Without `gapNotes` (Esther's two texts, where the Septuagint's additions simply have no
  * Masoretic counterpart) the empty side stays empty.
  */
-export function Spread({ sides, rows, chapter, truncated = [], view = "side-by-side", gapNotes = true, title }: {
+export function Spread({ sides, rows, chapter, truncated = [], view = "side-by-side", gapNotes = true, title, tools }: {
   sides: SpreadSide[]; rows: ParallelRow[]; chapter: number; truncated?: boolean[]; view?: View; gapNotes?: boolean;
   /** The chapter's title: given, it heads the page in a strip that stays at the top, with the editions' names. */
   title?: string;
+  /** Beside the title (the title index). */
+  tools?: ReactNode;
 }) {
   const interlinear = view === "interlinear";
   const cols = interlinear ? 1 : sides.length;
@@ -76,7 +78,7 @@ export function Spread({ sides, rows, chapter, truncated = [], view = "side-by-s
 
   return (
     <>
-    {title !== undefined && <StickyHead title={title} columns={heads} gridClass={grid} running={interlinear ? 1 : sides.length} />}
+    {title !== undefined && <StickyHead title={title} columns={heads} gridClass={grid} running={interlinear ? 1 : sides.length} tools={tools} />}
     <div data-testid="spread" className={`${grid} font-serif ${size} leading-relaxed`}>
       {title === undefined && heads.map((h) => (
         <p key={h.key} data-testid="column-name" className={`mb-2 ${h.className ?? "text-center font-sans text-sm font-semibold text-slate-600 dark:text-slate-400"}`}>

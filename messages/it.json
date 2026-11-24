@@ -71,7 +71,8 @@
     "thirdEdition": "Terza edizione",
     "cancel": "Annulla",
     "turning": "Si volta pagina…",
-    "loading": "Caricamento"
+    "loading": "Caricamento",
+    "titleIndex": "Titoli in {book}"
   },
   "Notice": {
     "signIn": "Questa edizione mostra ai visitatori i primi 30 versetti di ogni capitolo. Accedi per leggere il capitolo intero.",
