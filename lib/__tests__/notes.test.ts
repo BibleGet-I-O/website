@@ -19,6 +19,13 @@ describe("notes", () => {
     expect(markerDomId("NABRE:19023001-1", { chapter: 23, verse: 1, segment: "a" })).toBe("m-NABRE-19023001-1-v23.1a");
   });
 
+  it("esthersHebrewRowHasItsOwnMarkerId", () => {
+    // Both texts on one page: the same note on the Greek and the Hebrew 1:1.
+    const at = { chapter: 1, verse: 1 };
+    expect(markerDomId("NABRE:1", { ...at, tradition: "HEBREW" })).toBe("m-NABRE-1-v1.1-hebrew");
+    expect(markerDomId("NABRE:1", at)).toBe("m-NABRE-1-v1.1");
+  });
+
   it("aNoteMarkedTwiceIsListedOnce", () => {
     const a = note("NABRE:1"), b = note("NABRE:2");
     const out = chapterNotes([row(1, 1, [a]), row(1, 2, [b, a]), row(1, 3)]);

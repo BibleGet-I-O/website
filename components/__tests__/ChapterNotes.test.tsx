@@ -97,6 +97,21 @@ describe("ChapterNotes", () => {
     expect(panel.style.getPropertyValue("--notes-h")).toBe("25dvh");
   });
 
+  it("aCancelledDragPutsTheHeightBack", () => {
+    render(wrap(<ChapterNotes groups={[group([note(1)])]} />));
+    const panel = document.querySelector<HTMLElement>("[data-notes-panel]")!;
+    const handle = screen.getByRole("button", { name: /Resize the notes/ });
+    vi.spyOn(panel, "getBoundingClientRect").mockReturnValue({ height: 200 } as DOMRect);
+    fireEvent.pointerDown(handle, { clientY: 500, pointerId: 1 });
+    fireEvent.pointerMove(handle, { clientY: 300, pointerId: 1 });
+    expect(panel.style.getPropertyValue("--notes-h")).toBe("400px");
+    fireEvent.pointerCancel(handle, { pointerId: 1 });
+    expect(panel.style.getPropertyValue("--notes-h")).toBe("25dvh");
+    // The next tap is a tap.
+    fireEvent.click(handle);
+    expect(panel).toHaveAttribute("data-size", "half");
+  });
+
   it("scrollsTheListToTheNotesOwnOffset", () => {
     render(wrap(<ChapterNotes groups={[group([note(1), note(2)])]} />));
     const target = document.getElementById("note-NABRE-01001002-1")!;

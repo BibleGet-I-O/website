@@ -83,6 +83,8 @@ export type VerseRow = {
    */
   titlePosition?: number | null;
   psalmHebrew?: string;
+  /** Esther's Hebrew text, shown beside the Greek: its markers need ids of their own. */
+  tradition?: "HEBREW";
   /** The row's note markers, in printed order (signed-in readers only; absent when none). */
   notes?: NoteMarker[];
 };

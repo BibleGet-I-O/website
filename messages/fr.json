@@ -70,7 +70,8 @@
     "stopComparing": "Arrêter la comparaison",
     "thirdEdition": "Troisième édition",
     "cancel": "Annuler",
-    "turning": "On tourne la page…"
+    "turning": "On tourne la page…",
+    "loading": "Chargement"
   },
   "Notice": {
     "signIn": "Cette édition montre aux visiteurs les 30 premiers versets de chaque chapitre. Connectez-vous pour lire le chapitre entier.",

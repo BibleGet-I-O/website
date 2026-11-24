@@ -35,7 +35,7 @@ function Body({ note }: { note: Note }): ReactNode {
     const r = ref === undefined ? undefined : note.refs[ref];
     const linkClass = "text-red-700 underline-offset-2 hover:underline dark:text-red-400";
     if (r?.href && r.editionName) out.push(<OtherEditionLink key={i} href={r.href} name={r.editionName} className={linkClass}>{parts}</OtherEditionLink>);
-    else out.push(r?.href ? <a key={i} href={r.href} className={linkClass}>{parts}</a> : parts);
+    else out.push(r?.href ? <a key={i} data-nav="" href={r.href} className={linkClass}>{parts}</a> : parts);
     i = j;
   }
   return out;
@@ -103,6 +103,11 @@ export function ChapterNotes({ groups }: { groups: NoteGroup[] }) {
     panel?.style.setProperty("--notes-h", HEIGHT[snapped]);
     savePanelSize(snapped);
   };
+  // The system took the touch away (a call, a gesture): back to the size it had.
+  const onCancel = (e: PointerEvent<HTMLButtonElement>) => {
+    drag.current = null;
+    (e.currentTarget.closest("[data-notes-panel]") as HTMLElement | null)?.style.setProperty("--notes-h", HEIGHT[size]);
+  };
   const onClick = () => {
     // A drag already chose the size; a tap cycles it.
     if (drag.current?.moved) {
@@ -129,6 +134,7 @@ export function ChapterNotes({ groups }: { groups: NoteGroup[] }) {
           onPointerDown={onDown}
           onPointerMove={onMove}
           onPointerUp={onUp}
+          onPointerCancel={onCancel}
           onClick={onClick}
           aria-label={`${t("resize")}: ${t("count", { count })}`}
           className="flex w-full shrink-0 touch-none flex-col items-center gap-1 py-1.5 text-xs text-slate-500 sm:hidden dark:text-slate-400"

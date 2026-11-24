@@ -134,7 +134,7 @@ function withInserts(text: string, at: { pos: number; mark: string; intoLine?: b
   return out;
 }
 
-type Place = { chapter: number; verse: number; segment?: string | null };
+type Place = { chapter: number; verse: number; segment?: string | null; tradition?: string };
 
 /** A note's marker in the text or a heading, its id built from the verse it is on. */
 function markerNode(m: Marker, at: Place | undefined, key: string, verse?: string): ReactNode {
