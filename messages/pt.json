@@ -71,7 +71,8 @@
     "thirdEdition": "Terceira edição",
     "cancel": "Cancelar",
     "turning": "Virando a página…",
-    "loading": "A carregar"
+    "loading": "A carregar",
+    "titleIndex": "Títulos de {book}"
   },
   "Notice": {
     "signIn": "Esta edição mostra aos visitantes os primeiros 30 versículos de cada capítulo. Entre para ler o capítulo inteiro.",

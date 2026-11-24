@@ -71,7 +71,8 @@
     "thirdEdition": "Dritte Ausgabe",
     "cancel": "Abbrechen",
     "turning": "Die Seite wird umgeblättert…",
-    "loading": "Wird geladen"
+    "loading": "Wird geladen",
+    "titleIndex": "Überschriften in {book}"
   },
   "Notice": {
     "signIn": "Diese Ausgabe zeigt Besuchern die ersten 30 Verse jedes Kapitels. Melden Sie sich an, um das ganze Kapitel zu lesen.",

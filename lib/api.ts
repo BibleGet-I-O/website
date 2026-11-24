@@ -195,6 +195,25 @@ export async function getIndex(sigla: string): Promise<EditionIndex> {
   return { sigla, books };
 }
 
+/** A title the edition prints in a book, with its level (1 the highest). */
+export type OutlineTitle = { level: number; title: string; chapter: number; verse: number; segment: string | null; printedChapter: number | null };
+
+/**
+ * A book's titles; signed-in readers also get those of the edition's commentary, where it prints none. Empty when it
+ * has none, or when the endpoint cannot say: the index is then simply not offered.
+ */
+export async function getOutline(sigla: string, bookNum: number, access: Access): Promise<OutlineTitle[]> {
+  try {
+    const body = (await request(`/metadata/outline?version=${encodeURIComponent(sigla)}&book=${bookNum}`, access, access === "reader" ? { cache: "no-store" } : METADATA)) as {
+      titles?: (Omit<OutlineTitle, "printedChapter"> & { printed_chapter: number | null })[];
+    };
+    return (body.titles ?? []).map(({ printed_chapter, ...t }) => ({ ...t, printedChapter: printed_chapter }));
+  } catch (err) {
+    if (err instanceof NotFound || err instanceof ApiUnavailable) return [];
+    throw err;
+  }
+}
+
 type Sluggable = Pick<Book, "bookNum" | "name">;
 
 /** The name's Latin letters and digits, hyphenated; `book-{n}` when none are left (a Greek-only name). */

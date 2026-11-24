@@ -12,6 +12,11 @@ function heading(col: number, text: string, top: number, groupLast?: string) {
   return h;
 }
 
+it("showsToolsOnTheTitlesLine", () => {
+  render(<StickyHead title="Genesis 4" columns={[]} gridClass="" running={1} tools={<button type="button">Index</button>} />);
+  expect(screen.getByRole("button", { name: "Index" }).closest("[data-title-line]")).toContainElement(screen.getByRole("heading", { level: 1 }));
+});
+
 function page(columns: string[], running: number, headings: [number, string, number, string?][]) {
   const r = render(
     <article>

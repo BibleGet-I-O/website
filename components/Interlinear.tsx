@@ -17,6 +17,8 @@ export type Compared = { side: SpreadSide; second: Second; notice?: NoticeKind |
 
 export type InterlinearProps = {
   heading: string;
+  /** Beside the heading (the title index). */
+  tools?: ReactNode;
   main: SpreadSide;
   /** One or two compared editions, in the order of `?with=`. */
   others: Compared[];
@@ -87,6 +89,7 @@ export async function Interlinear(p: InterlinearProps) {
         <>
           <Spread
             title={p.heading}
+            tools={p.tools}
             sides={[p.main, ...aligned.map((o) => o.side)]}
             rows={buildRows(p.rows, aligned.map(rowsOf), p.bookNum)}
             chapter={chapter}
@@ -97,7 +100,7 @@ export async function Interlinear(p: InterlinearProps) {
         </>
       ) : (
         <>
-          <StickyHead title={p.heading} columns={[]} gridClass="" running={1} />
+          <StickyHead title={p.heading} columns={[]} gridClass="" running={1} tools={p.tools} />
           <VerseLines rows={p.rows} chapter={chapter} lang={p.main.lang} headCol={0} />
         </>
       )}

@@ -71,7 +71,8 @@
     "thirdEdition": "Troisième édition",
     "cancel": "Annuler",
     "turning": "On tourne la page…",
-    "loading": "Chargement"
+    "loading": "Chargement",
+    "titleIndex": "Titres de {book}"
   },
   "Notice": {
     "signIn": "Cette édition montre aux visiteurs les 30 premiers versets de chaque chapitre. Connectez-vous pour lire le chapitre entier.",
