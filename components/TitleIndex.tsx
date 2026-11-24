@@ -7,12 +7,28 @@ export type IndexTitle = { level: number; title: string; chapter: number; verse:
 
 const INDENT = ["pl-2 font-semibold", "pl-6", "pl-10", "pl-14"];
 
+type Place = { chapter: number; verse: number; segment?: string | null };
+
+/** Whether `x` is at `opening` or before it; of one verse's parts, only the opening one itself. */
+function startsByThen(x: Place, opening: Place): boolean {
+  if (x.chapter !== opening.chapter) return x.chapter < opening.chapter;
+  if (x.verse !== opening.verse) return x.verse < opening.verse;
+  return (x.segment ?? null) === (opening.segment ?? null);
+}
+
 /**
  * The tree icon on the chapter's title line: it opens the edition's titles in this book, indented by the levels the
  * book has, each a link to its verse. The title this chapter opens under is marked and in view. A plain pick closes it
  * (ReaderBar navigates `a[data-nav]`; one in this chapter is the browser's own jump).
  */
-export function TitleIndex({ book, edition, chapter, titles, lang }: { book: string; edition: string; chapter: number; titles: IndexTitle[]; lang?: string }) {
+export function TitleIndex({ book, edition, opening, titles, lang }: {
+  book: string;
+  edition: string;
+  /** The first verse on the page (a chapter may open with a neighbour's, or with a lettered one). */
+  opening: { chapter: number; verse: number; segment?: string | null };
+  titles: IndexTitle[];
+  lang?: string;
+}) {
   const t = useTranslations("Reader");
   const tg = useTranslations("GoTo");
   const [open, setOpen] = useState(false);
@@ -30,7 +46,7 @@ export function TitleIndex({ book, edition, chapter, titles, lang }: { book: str
 
   if (titles.length === 0) return null;
   const levels = [...new Set(titles.map((x) => x.level))].sort((a, b) => a - b);
-  const here = titles.reduce((at, x, i) => (x.chapter < chapter || (x.chapter === chapter && x.verse <= 1) ? i : at), -1);
+  const here = titles.reduce((at, x, i) => (startsByThen(x, opening) ? i : at), -1);
 
   return (
     <>

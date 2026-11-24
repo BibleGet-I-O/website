@@ -50,7 +50,7 @@ export async function Interlinear(p: InterlinearProps) {
   if (p.others.every((o) => o.second.mode === "unavailable")) {
     return (
       <>
-        <BookPage heading={p.heading} chapter={chapter} rows={p.rows} lang={p.main.lang} />
+        <BookPage heading={p.heading} chapter={chapter} rows={p.rows} lang={p.main.lang} tools={p.tools} />
         {p.others.map((o) => note(o.side.sigla, t("secondUnavailable", names(o))))}
       </>
     );

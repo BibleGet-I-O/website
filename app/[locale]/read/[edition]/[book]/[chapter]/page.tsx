@@ -218,7 +218,7 @@ export default async function ChapterPage({ params, searchParams }: { params: Pr
     <TitleIndex
       book={book.name}
       edition={edition.fullname}
-      chapter={chapter}
+      opening={rows[0] ? { chapter: rows[0].chapter, verse: rows[0].verse, segment: rows[0].segment } : { chapter, verse: 1 }}
       lang={edition.language || undefined}
       titles={(await outline).map((x) => ({
         level: x.level, title: x.title, chapter: x.chapter, verse: x.verse, segment: x.segment,
