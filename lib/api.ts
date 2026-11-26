@@ -1,7 +1,7 @@
 import "server-only";
 import { versesIn } from "@/lib/chapters";
 import { ESTHER } from "./esther";
-import type { Access, Book, Chapter, Edition, EditionIndex, Note, NoteMarker, VerseRow } from "./types";
+import type { Access, Book, Chapter, Edition, EditionIndex, IntroBlock, IntroHeading, Introduction, Note, NoteMarker, NoteRef, PrintedPiece, Sic, VerseRow } from "./types";
 
 export class ApiUnavailable extends Error {
   constructor(message = "The BibleGet endpoint is unavailable") {
@@ -211,17 +211,104 @@ function toTitle(x: unknown): OutlineTitle | null {
 }
 
 /**
- * A book's titles; signed-in readers also get those of the edition's commentary, where it prints none. Empty when it
- * has none, or when the endpoint cannot say: the index is then simply not offered.
+ * A book's titles; signed-in readers also get those of the edition's commentary, where it prints none, and the name
+ * of the book's introduction. Empty when it has none, or when the endpoint cannot say: the index (and the
+ * introduction's icon) is then simply not offered.
  */
-export async function getOutline(sigla: string, bookNum: number, access: Access): Promise<OutlineTitle[]> {
+export async function getBookOutline(sigla: string, bookNum: number, access: Access): Promise<{ titles: OutlineTitle[]; introduction: { id: string; title: string } | null }> {
   try {
     const body = (await request(`/metadata/outline?version=${encodeURIComponent(sigla)}&book=${bookNum}`, access, access === "reader" ? { cache: "no-store" } : METADATA)) as {
       titles?: unknown;
+      introduction?: unknown;
     } | null;
-    return Array.isArray(body?.titles) ? body.titles.flatMap((x: unknown) => toTitle(x) ?? []) : [];
+    const titles = Array.isArray(body?.titles) ? body.titles.flatMap((x: unknown) => toTitle(x) ?? []) : [];
+    const named = toHeading({ ...(body?.introduction as object), books: [bookNum] });
+    return { titles, introduction: named && { id: named.id, title: named.title } };
   } catch (err) {
-    if (err instanceof NotFound || err instanceof ApiUnavailable) return [];
+    if (err instanceof NotFound || err instanceof ApiUnavailable) return { titles: [], introduction: null };
+    throw err;
+  }
+}
+
+/** A book's titles (see getBookOutline). */
+export async function getOutline(sigla: string, bookNum: number, access: Access): Promise<OutlineTitle[]> {
+  return (await getBookOutline(sigla, bookNum, access)).titles;
+}
+
+const isObject = (x: unknown): x is Record<string, unknown> => typeof x === "object" && x !== null && !Array.isArray(x);
+const isSpan = (x: unknown): x is [number, number] => Array.isArray(x) && x.length === 2 && x.every((n) => whole(n, 0));
+
+/** A citation's passage; null when malformed. */
+function toPassage(x: unknown): { start: NoteRef["start"]; end: NoteRef["end"] } | null {
+  if (!isObject(x) || !isObject(x.start)) return null;
+  const { book, chapter, verse = null, segment = null, printed_chapter: printedChapter = null } = x.start;
+  if (!whole(book, 1) || !whole(chapter, 0) || (verse !== null && !whole(verse, 0))) return null;
+  if ((segment !== null && typeof segment !== "string") || (printedChapter !== null && !whole(printedChapter, 0))) return null;
+  const e = x.end ?? null;
+  if (e !== null && !(isObject(e) && whole(e.book, 1) && whole(e.chapter, 0) && whole(e.verse, 0))) return null;
+  return {
+    start: { book, chapter, verse, segment, printedChapter },
+    end: e === null ? null : { book: e.book as number, chapter: e.chapter as number, verse: e.verse as number },
+  };
+}
+
+/** Printed text with its citations and misprints; null when the text is malformed (a bad citation is only dropped). */
+function toPiece(x: unknown): PrintedPiece | null {
+  if (!isObject(x) || typeof x.text !== "string") return null;
+  const refs = (Array.isArray(x.refs) ? x.refs : []).flatMap((r: unknown) => {
+    const p = toPassage(r);
+    return p && isObject(r) && isSpan(r.span) ? [{ ...p, span: r.span }] : [];
+  });
+  const sic: Sic[] = (Array.isArray(x.sic) ? x.sic : []).flatMap((s: unknown) =>
+    isObject(s) && isSpan(s.span) && typeof s.intended === "string" ? [{ span: s.span, intended: s.intended, ref: toPassage(s.ref) }] : []);
+  return { text: x.text, refs, ...(sic.length > 0 && { sic }) };
+}
+
+function toBlock(x: unknown): IntroBlock | null {
+  if (!isObject(x)) return null;
+  if (x.type === "row") {
+    if (!Array.isArray(x.cells)) return null;
+    const cells = x.cells.map(toPiece);
+    return cells.every((c): c is PrintedPiece => c !== null) ? { type: "row", cells } : null;
+  }
+  const p = toPiece(x);
+  if (!p) return null;
+  if (x.type === "paragraph") return { type: "paragraph", ...p };
+  if ((x.type === "heading" || x.type === "item") && whole(x.level, 1)) return { type: x.type, level: x.level, ...p };
+  return null;
+}
+
+function toHeading(x: unknown): IntroHeading | null {
+  if (!isObject(x) || typeof x.id !== "string" || typeof x.title !== "string" || !Array.isArray(x.books)) return null;
+  return x.books.every((b) => whole(b, 1)) ? { id: x.id, title: x.title, books: x.books as number[] } : null;
+}
+
+function toIntroduction(x: unknown): Introduction | null {
+  const h = toHeading(x);
+  if (!h || !isObject(x) || !Array.isArray(x.blocks)) return null;
+  return { ...h, blocks: x.blocks.flatMap((b: unknown) => toBlock(b) ?? []) };
+}
+
+/**
+ * A book's introduction (null when it has none) and the general introductions that cover it, in print order. For
+ * signed-in readers only: the endpoint gives them to the reader key alone.
+ */
+export async function getIntroduction(sigla: string, bookNum: number): Promise<{ introduction: Introduction | null; general: IntroHeading[] }> {
+  const body = (await request(`/metadata/introduction?version=${encodeURIComponent(sigla)}&book=${bookNum}`, "reader", { cache: "no-store" })) as Record<string, unknown> | null;
+  return {
+    introduction: toIntroduction(body?.introduction),
+    general: Array.isArray(body?.general) ? body.general.flatMap((g: unknown) => toHeading(g) ?? []) : [],
+  };
+}
+
+/** One general introduction by its id; null when the edition has none so named. Signed-in readers only. */
+export async function getGeneralIntroduction(sigla: string, id: string): Promise<Introduction | null> {
+  if (!/^[a-z0-9-]{1,40}$/.test(id)) return null;
+  try {
+    const body = (await request(`/metadata/introduction?version=${encodeURIComponent(sigla)}&id=${id}`, "reader", { cache: "no-store" })) as Record<string, unknown> | null;
+    return toIntroduction(body?.introduction);
+  } catch (err) {
+    if (err instanceof NotFound) return null;
     throw err;
   }
 }

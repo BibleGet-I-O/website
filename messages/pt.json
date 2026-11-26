@@ -72,7 +72,13 @@
     "cancel": "Cancelar",
     "turning": "Virando a página…",
     "loading": "A carregar",
-    "titleIndex": "Títulos de {book}"
+    "titleIndex": "Títulos de {book}",
+    "sic": "<i>sic!</i> leia-se: <ref>{intended}</ref>",
+    "introduction": "Introdução",
+    "introductionTo": "Introdução a {book}",
+    "generalIntroductions": "Introduções gerais",
+    "introductionsForReaders": "Os leitores com sessão iniciada podem ler as introduções desta edição.",
+    "readBook": "Ler {book}"
   },
   "Notice": {
     "signIn": "Esta edição mostra aos visitantes os primeiros 30 versículos de cada capítulo. Entre para ler o capítulo inteiro.",

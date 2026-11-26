@@ -72,7 +72,13 @@
     "cancel": "Cancel",
     "turning": "Turning the page…",
     "loading": "Loading",
-    "titleIndex": "Titles in {book}"
+    "titleIndex": "Titles in {book}",
+    "sic": "<i>sic!</i> expected: <ref>{intended}</ref>",
+    "introduction": "Introduction",
+    "introductionTo": "Introduction to {book}",
+    "generalIntroductions": "General introductions",
+    "introductionsForReaders": "Signed-in readers can read this edition's introductions.",
+    "readBook": "Read {book}"
   },
   "Notice": {
     "signIn": "This edition shows visitors the first 30 verses of each chapter. Sign in to read the whole chapter.",

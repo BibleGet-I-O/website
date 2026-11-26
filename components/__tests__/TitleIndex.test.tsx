@@ -2,7 +2,7 @@ import { describe, it, expect } from "vitest";
 import { render, screen, fireEvent, within } from "@testing-library/react";
 import { NextIntlClientProvider } from "next-intl";
 import en from "@/messages/en.json";
-import { TitleIndex, type IndexTitle } from "@/components/TitleIndex";
+import { IntroductionLink, TitleIndex, type IndexTitle } from "@/components/TitleIndex";
 
 const title = (level: number, text: string, chapter: number, verse: number): IndexTitle => ({ level, title: text, chapter, verse, href: `/en/read/x/genesis/${chapter}#v${chapter}.${verse}` });
 const titles = [title(1, "I. ORIGINS", 1, 1), title(3, "Creation", 1, 1), title(3, "The Garden", 2, 4), title(1, "II. ANCESTORS", 11, 27), title(4, "Terah", 11, 27)];
@@ -63,5 +63,30 @@ describe("TitleIndex", () => {
 
   it("nothingWithoutTitles", () => {
     expect(show({ titles: [] }).container).toBeEmptyDOMElement();
+  });
+
+  it("opensWithTheIntroductionWhenTheBookHasOne", () => {
+    show({ introduction: { href: "/en/read/x/genesis/introduction?with=CEI2008" } });
+    open();
+    expect(links()[0].textContent).toBe("Introduction");
+    expect(links()[0]).toHaveAttribute("href", "/en/read/x/genesis/introduction?with=CEI2008");
+    expect(links()[0]).toHaveAttribute("data-nav");
+    expect(links().slice(1).map((a) => a.textContent)[0]).toBe("I. ORIGINS1:1");
+  });
+
+  it("isOfferedForAnIntroductionAlone", () => {
+    show({ titles: [], introduction: { href: "/en/read/x/genesis/introduction" } });
+    open();
+    expect(links().map((a) => a.textContent)).toEqual(["Introduction"]);
+  });
+});
+
+describe("IntroductionLink", () => {
+  it("isABookIconLinkingToTheIntroduction", () => {
+    render(<NextIntlClientProvider locale="en" messages={en}><IntroductionLink book="Genesis" href="/en/read/x/genesis/introduction" /></NextIntlClientProvider>);
+    const a = screen.getByRole("link", { name: "Introduction to Genesis" });
+    expect(a).toHaveAttribute("href", "/en/read/x/genesis/introduction");
+    expect(a).toHaveAttribute("data-nav");
+    expect(a.querySelector("svg")).not.toBeNull();
   });
 });

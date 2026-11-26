@@ -72,7 +72,13 @@
     "cancel": "Annulla",
     "turning": "Si volta pagina…",
     "loading": "Caricamento",
-    "titleIndex": "Titoli in {book}"
+    "titleIndex": "Titoli in {book}",
+    "sic": "<i>sic!</i> leggi: <ref>{intended}</ref>",
+    "introduction": "Introduzione",
+    "introductionTo": "Introduzione a {book}",
+    "generalIntroductions": "Introduzioni generali",
+    "introductionsForReaders": "Chi ha effettuato l'accesso può leggere le introduzioni di questa edizione.",
+    "readBook": "Leggi {book}"
   },
   "Notice": {
     "signIn": "Questa edizione mostra ai visitatori i primi 30 versetti di ogni capitolo. Accedi per leggere il capitolo intero.",

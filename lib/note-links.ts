@@ -1,6 +1,6 @@
 import "server-only";
 import { slugFor } from "@/lib/api";
-import type { EditionIndex, VerseRow } from "@/lib/types";
+import type { EditionIndex, Introduction, NoteRef, PrintedPiece, VerseRow } from "@/lib/types";
 
 /** How to link into an edition: its index, its locale-prefixed path, the query to keep, and (another edition) its name. */
 export type EditionLinks = { index: EditionIndex; base: string; query: string; name?: string };
@@ -30,15 +30,31 @@ export function withNoteLinks(rows: VerseRow[], own: string, linkFor: (sigla: st
           refs: m.note.refs.map((ref) => {
             const other = ref.edition && ref.edition !== own ? ref.edition : undefined;
             const to = linkFor(other ?? own);
-            const book = to?.index.books.find((b) => b.bookNum === ref.start.book);
-            if (!to || !book) return ref;
-            const { chapter, verse, segment, printedChapter } = ref.start;
-            const anchor = verse === null ? "" : `#v${chapter}.${verse}${segment ?? ""}`;
-            const href = `${to.base}/${slugFor(book, to.index.books)}/${printedChapter ?? chapter}${to.query}${anchor}`;
+            const href = to && passageHref(ref.start, to);
+            if (!href) return ref;
             return { ...ref, href, ...(other && to.name && { editionName: to.name }) };
           }),
         },
       })),
     };
   });
+}
+
+/** The link to a passage in an edition: the chapter that prints it, at its verse; undefined for a book it lacks. */
+export function passageHref(start: NoteRef["start"], to: EditionLinks): string | undefined {
+  const book = to.index.books.find((b) => b.bookNum === start.book);
+  if (!book) return undefined;
+  const { chapter, verse, segment, printedChapter } = start;
+  const anchor = verse === null ? "" : `#v${chapter}.${verse}${segment ?? ""}`;
+  return `${to.base}/${slugFor(book, to.index.books)}/${printedChapter ?? chapter}${to.query}${anchor}`;
+}
+
+/** An introduction with each citation's link, and each misprint's intended passage's, into its own edition. */
+export function withIntroLinks(intro: Introduction, to: EditionLinks): Introduction {
+  const link = (p: PrintedPiece): PrintedPiece => ({
+    ...p,
+    refs: p.refs.map((r) => ({ ...r, ...(passageHref(r.start, to) && { href: passageHref(r.start, to) }) })),
+    ...(p.sic && { sic: p.sic.map((s) => (s.ref ? { ...s, ref: { ...s.ref, ...(passageHref(s.ref.start, to) && { href: passageHref(s.ref.start, to) }) } } : s)) }),
+  });
+  return { ...intro, blocks: intro.blocks.map((b) => (b.type === "row" ? { ...b, cells: b.cells.map(link) } : { ...b, ...link(b) })) };
 }

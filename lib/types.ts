@@ -47,6 +47,25 @@ export type NoteRef = {
   editionName?: string;
 };
 
+/** A verified misprint, left as printed: "[sic! expected: intended]" follows `span`, the intended passage linked. */
+export type Sic = { span: [number, number]; intended: string; ref: { start: NoteRef["start"]; end: NoteRef["end"]; href?: string } | null };
+
+/** Printed text with its citations and misprints (`span`s are code points of `text`, tags included). */
+export type PrintedPiece = { text: string; refs: NoteRef[]; sic?: Sic[] };
+
+/** A block of an introduction as printed: outline items carry their own numerals ("I.", "A."). */
+export type IntroBlock =
+  | ({ type: "heading"; level: number } & PrintedPiece)
+  | ({ type: "paragraph" } & PrintedPiece)
+  | ({ type: "item"; level: number } & PrintedPiece)
+  | { type: "row"; cells: PrintedPiece[] };
+
+/** An introduction's name; `books` are the universal numbers of those it introduces. */
+export type IntroHeading = { id: string; title: string; books: number[] };
+
+/** A book's or a general introduction, as the edition prints it (signed-in readers only). */
+export type Introduction = IntroHeading & { blocks: IntroBlock[] };
+
 /** A footnote or cross-reference as the edition prints it (signed-in readers only). */
 export type Note = {
   /** `{EDITION}:{source id}`, stable across imports. */
