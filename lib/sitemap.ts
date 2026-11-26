@@ -1,5 +1,6 @@
 import { LOCALES } from "@/i18n/routing";
 import { chapterNumbers } from "@/lib/chapters";
+import { DOC_PAGES, docHref } from "@/lib/docs";
 
 /**
  * The production origin sitemaps are built from (`SITE_CANONICAL_ORIGIN`), read per request. Null on staging
@@ -11,13 +12,16 @@ export function canonicalOrigin(): string | null {
   return /^https?:\/\/[^/\s]+$/.test(o) ? o : null;
 }
 
+/** The docs sitemap's name, /sitemaps/docs.xml (no edition has this slug). */
+export const DOCS_SITEMAP = "docs";
+
 const XML_HEAD = '<?xml version="1.0" encoding="UTF-8"?>';
 const NS = "http://www.sitemaps.org/schemas/sitemap/0.9";
 const esc = (s: string) => s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&apos;");
 
-/** The sitemap index: one sitemap per edition (each stays under the 50,000-URL limit). */
+/** The sitemap index: one sitemap per edition (each stays under the 50,000-URL limit), and the docs'. */
 export function sitemapIndexXml(origin: string, editionSlugs: string[]): string {
-  const items = editionSlugs.map((s) => `<sitemap><loc>${esc(`${origin}/sitemaps/${s}.xml`)}</loc></sitemap>`);
+  const items = [...editionSlugs, DOCS_SITEMAP].map((s) => `<sitemap><loc>${esc(`${origin}/sitemaps/${s}.xml`)}</loc></sitemap>`);
   return `${XML_HEAD}\n<sitemapindex xmlns="${NS}">\n${items.join("\n")}\n</sitemapindex>\n`;
 }
 
@@ -29,5 +33,11 @@ export function editionSitemapXml(origin: string, editionSlug: string, books: { 
     urls.push(base);
     for (const b of books) for (const n of chapterNumbers(b)) urls.push(`${base}/${b.slug}/${n}`);
   }
+  return `${XML_HEAD}\n<urlset xmlns="${NS}">\n${urls.map((u) => `<url><loc>${esc(u)}</loc></url>`).join("\n")}\n</urlset>\n`;
+}
+
+/** The docs' sitemap: the index and every page, in every interface language. */
+export function docsSitemapXml(origin: string): string {
+  const urls = LOCALES.flatMap((locale) => [undefined, ...DOC_PAGES.map((p) => p.slug)].map((slug) => `${origin}/${locale}${docHref(slug)}`));
   return `${XML_HEAD}\n<urlset xmlns="${NS}">\n${urls.map((u) => `<url><loc>${esc(u)}</loc></url>`).join("\n")}\n</urlset>\n`;
 }

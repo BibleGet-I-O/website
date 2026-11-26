@@ -24,6 +24,9 @@ export function SiteHeader({ auth }: { auth: React.ReactNode }) {
         {/* From sm up the pages come first (API, sign in); on a phone the hamburger closes the bar. */}
         <div className="order-last sm:order-first">
           <NavMenu>
+            <Link href="/docs" className="hover:underline">
+              {h("docs")}
+            </Link>
             <Link href="/scalar" className="hover:underline">
               {h("api")}
             </Link>
