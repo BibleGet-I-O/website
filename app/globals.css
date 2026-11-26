@@ -168,8 +168,8 @@
   }
 
   /*
-   * One verse per line (interlinear): the number has its own margin column, so lines start level with it
-   * and keep only their relative indent; stanza spacing stays between lines of the same verse.
+   * One verse per line (compared editions): no gutter, so lines start at the column's edge, with the number inside
+   * the first line, and keep only their relative indent; stanza spacing stays between lines of the same verse.
    */
   .bg-compact .bg-line { margin-left: 0; }
   .bg-compact .bg-poi, .bg-compact .bg-poif, .bg-compact .bg-poil, .bg-compact .bg-po3, .bg-compact .bg-po3l { margin-left: 1em; }
