@@ -1,0 +1,51 @@
+# How to contribute
+
+BibleGet is an open project, and much of its work is careful checking: of the text, of the links between editions, of
+the pages you are reading. There are several ways to help.
+
+## Reviewing the alignment of editions
+
+The links from each edition's verses to the [textual units](/docs/textual-units) of CBTUDR are made by rule where a
+rule decides, and drafted by tools where it does not. Every draft is checked by a person before it becomes part of the
+registry. Reviewers work on this site, at `/review`: chapter by chapter, starting with the drafts the tools were least
+sure of, they see each verse beside the units it may be linked to, and accept, correct or relink it. The reviewed links
+then go to the registry as contributions to [CatholicOS/cbtudr](https://github.com/CatholicOS/cbtudr), where who
+reviewed what is kept in the history.
+
+Reviewing needs a good reading knowledge of the edition's language (the units are based on the Latin of the Nova
+Vulgata, so some Latin helps) and a reviewer's role on your account: if you would like to help, open an issue in the
+[CBTUDR repository](https://github.com/CatholicOS/cbtudr/issues).
+
+## Reporting an error in the text
+
+If a verse on this site reads differently from the printed edition, a word is missing, a line is broken in the wrong
+place, or a heading is out of place, please report it in the [endpoint's
+issues](https://github.com/BibleGet-I-O/endpoint/issues), giving the edition, the reference, what the site shows and
+what the printed edition has. Errors are corrected against the edition's own source; where the source itself is wrong,
+the error is reported to its publisher.
+
+A misprint in an edition is not corrected silently. Where a note or an introduction cites a wrong verse, the citation
+stays as printed and the site adds, in red, what was meant: *[sic! expected …]*.
+
+## Reporting a problem with the site
+
+A link that leads nowhere, a page that does not work on your device, a mistake in these documentation pages, or a
+translation that reads badly: please open an issue in the [website's
+repository](https://github.com/BibleGet-I-O/website/issues). These pages are written in English first and then
+translated; readers who can check a translation against the English are especially welcome.
+
+## The repositories
+
+| Repository | What it holds |
+|---|---|
+| [BibleGet-I-O/endpoint](https://github.com/BibleGet-I-O/endpoint) | the API, and its wiki on the data model |
+| [BibleGet-I-O/website](https://github.com/BibleGet-I-O/website) | this site |
+| [BibleGet-I-O/bibleget-wordpress](https://github.com/BibleGet-I-O/bibleget-wordpress) | the WordPress plugin |
+| [BibleGet-I-O/BibleGet-Google-Docs-Addin](https://github.com/BibleGet-I-O/BibleGet-Google-Docs-Addin) | the Google Docs add-on |
+| [CatholicOS/cbtudr](https://github.com/CatholicOS/cbtudr) | the textual units and the edition maps |
+| [CatholicOS/cbppedr](https://github.com/CatholicOS/cbppedr) | the persons, places and events of the Bible |
+
+<Sources>
+- BibleGet I/O, [endpoint](https://github.com/BibleGet-I-O/endpoint) and [website](https://github.com/BibleGet-I-O/website) repositories.
+- CatholicOS, [CBTUDR](https://github.com/CatholicOS/cbtudr): the schema proposal, on drafts, reviews and attribution.
+</Sources>

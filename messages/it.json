@@ -309,7 +309,8 @@
     },
     "parts": {
       "text": "La Bibbia e il suo testo",
-      "manuscripts": "Manoscritti e tradizioni"
+      "manuscripts": "Manoscritti e tradizioni",
+      "project": "Il progetto"
     },
     "pages": {
       "how-the-bible-reached-us": {
@@ -359,12 +360,25 @@
       "vulgate": {
         "title": "La Vulgata",
         "description": "Il latino di Girolamo, l'edizione clementina e la Nova Vulgata."
+      },
+      "textual-units": {
+        "title": "Unità testuali e CBTUDR",
+        "description": "Identificatori dello stesso testo in ogni edizione, e le mappe dai versetti di ciascuna."
+      },
+      "data-and-api": {
+        "title": "I dati e l'API",
+        "description": "Che cosa offre l'API di BibleGet, come usarla, e i registri a cui attinge."
+      },
+      "contributing": {
+        "title": "Come contribuire",
+        "description": "Revisionare gli allineamenti, segnalare errori, e i repository del progetto."
       }
     },
     "contents": "Indice",
     "prev": "Precedente",
     "next": "Successiva",
     "sources": "Fonti",
+    "drafts": "Tutti gli identificatori di CBTUDR sono bozze, in attesa della revisione del comitato, fino alla versione v1.0.0 del registro.",
     "untranslated": "Questa pagina non è ancora disponibile in italiano: ecco il testo inglese."
   }
 }

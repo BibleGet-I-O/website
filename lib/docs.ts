@@ -6,7 +6,7 @@ import type { Locale } from "@/i18n/routing";
  * content/docs/<lang>/<slug>.mdx holds each page's text. The sidebar, index, pager, <title>, sitemap and the routes'
  * static params all read this table. Design: docs/superpowers/specs/2026-11-26-documentation-section-design.md.
  */
-export const DOC_PARTS = ["text", "manuscripts"] as const;
+export const DOC_PARTS = ["text", "manuscripts", "project"] as const;
 export type DocPart = (typeof DOC_PARTS)[number];
 
 const EN: readonly Locale[] = ["en"];
@@ -24,6 +24,9 @@ export const DOC_PAGES = [
   { slug: "codex-vaticanus", part: "manuscripts", langs: EN },
   { slug: "codex-alexandrinus", part: "manuscripts", langs: EN },
   { slug: "vulgate", part: "manuscripts", langs: EN },
+  { slug: "textual-units", part: "project", langs: EN },
+  { slug: "data-and-api", part: "project", langs: EN },
+  { slug: "contributing", part: "project", langs: EN },
 ] as const satisfies readonly { slug: string; part: DocPart; langs: readonly Locale[] }[];
 export type DocPage = (typeof DOC_PAGES)[number];
 export type DocSlug = DocPage["slug"];

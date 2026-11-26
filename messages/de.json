@@ -309,7 +309,8 @@
     },
     "parts": {
       "text": "Die Bibel und ihr Text",
-      "manuscripts": "Handschriften und Überlieferungen"
+      "manuscripts": "Handschriften und Überlieferungen",
+      "project": "Das Projekt"
     },
     "pages": {
       "how-the-bible-reached-us": {
@@ -359,12 +360,25 @@
       "vulgate": {
         "title": "Die Vulgata",
         "description": "Das Latein des Hieronymus, die Clementina und die Nova Vulgata."
+      },
+      "textual-units": {
+        "title": "Textuelle Einheiten und CBTUDR",
+        "description": "Kennungen für denselben Text in jeder Ausgabe, und die Zuordnungen der Verse jeder Ausgabe."
+      },
+      "data-and-api": {
+        "title": "Die Daten und die API",
+        "description": "Was die BibleGet-API bietet, wie man sie nutzt, und die Register, auf denen sie aufbaut."
+      },
+      "contributing": {
+        "title": "Mitwirken",
+        "description": "Zuordnungen prüfen, Fehler melden, und die Repositorien des Projekts."
       }
     },
     "contents": "Inhalt",
     "prev": "Zurück",
     "next": "Weiter",
     "sources": "Quellen",
+    "drafts": "Alle Kennungen von CBTUDR sind Entwürfe, bis zur Prüfung durch das Komitee und zur Version v1.0.0 des Registers.",
     "untranslated": "Diese Seite gibt es noch nicht auf Deutsch: hier ist der englische Text."
   }
 }
