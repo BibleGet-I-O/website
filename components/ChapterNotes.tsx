@@ -3,9 +3,9 @@
 import { useEffect, useRef, useState, useSyncExternalStore, type PointerEvent, type ReactNode } from "react";
 import { useTranslations } from "next-intl";
 import { NOTE_EVENT } from "@/components/NoteMarker";
-import { OtherEditionLink } from "@/components/OtherEdition";
+import { PrintedText } from "@/components/PrintedText";
 import { DEFAULT_SIZE, loadPanelSize, nextSize, savePanelSize, snapSize, subscribePanelSize, type PanelSize } from "@/lib/note-panel";
-import { noteDomId, noteRuns } from "@/lib/notes";
+import { noteDomId } from "@/lib/notes";
 import type { Note } from "@/lib/types";
 
 export type NoteGroup = { edition: string; name: string; notes: { note: Note; first: string }[] };
@@ -17,28 +17,7 @@ const HIGHLIGHT_MS = 2000;
 const DRAG_PX = 8;
 
 function Body({ note }: { note: Note }): ReactNode {
-  const runs = noteRuns(note.body, note.refs);
-  const styled = (r: (typeof runs)[number], k: number) => {
-    let n: ReactNode = r.text;
-    if (r.sm) n = <span className="bg-sm">{n}</span>;
-    if (r.b) n = <b>{n}</b>;
-    if (r.i) n = <i>{n}</i>;
-    return <span key={k}>{n}</span>;
-  };
-  // Consecutive runs of one citation make one link.
-  const out: ReactNode[] = [];
-  for (let i = 0; i < runs.length; ) {
-    const ref = runs[i].ref;
-    let j = i;
-    while (j < runs.length && runs[j].ref === ref) j++;
-    const parts = runs.slice(i, j).map((r, k) => styled(r, i + k));
-    const r = ref === undefined ? undefined : note.refs[ref];
-    const linkClass = "text-red-700 underline-offset-2 hover:underline dark:text-red-400";
-    if (r?.href && r.editionName) out.push(<OtherEditionLink key={i} href={r.href} name={r.editionName} className={linkClass}>{parts}</OtherEditionLink>);
-    else out.push(r?.href ? <a key={i} data-nav="" href={r.href} className={linkClass}>{parts}</a> : parts);
-    i = j;
-  }
-  return out;
+  return <PrintedText text={note.body} refs={note.refs} />;
 }
 
 /**

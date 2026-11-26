@@ -72,7 +72,13 @@
     "cancel": "Abbrechen",
     "turning": "Die Seite wird umgeblättert…",
     "loading": "Wird geladen",
-    "titleIndex": "Überschriften in {book}"
+    "titleIndex": "Überschriften in {book}",
+    "sic": "<i>sic!</i> lies: <ref>{intended}</ref>",
+    "introduction": "Einführung",
+    "introductionTo": "Einführung in {book}",
+    "generalIntroductions": "Allgemeine Einführungen",
+    "introductionsForReaders": "Angemeldete Leser können die Einführungen dieser Ausgabe lesen.",
+    "readBook": "{book} lesen"
   },
   "Notice": {
     "signIn": "Diese Ausgabe zeigt Besuchern die ersten 30 Verse jedes Kapitels. Melden Sie sich an, um das ganze Kapitel zu lesen.",

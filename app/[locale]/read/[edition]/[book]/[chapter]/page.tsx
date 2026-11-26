@@ -11,7 +11,7 @@ import { RememberChapter } from "@/components/RememberChapter";
 import { Interlinear } from "@/components/Interlinear";
 import { PageTurn } from "@/components/PageTurn";
 import { getAccess } from "@/lib/access";
-import { ApiUnavailable, bookBySlug, getChapter, getEditions, getIndex, getOutline, getVerses, NotFound, slugFor } from "@/lib/api";
+import { ApiUnavailable, bookBySlug, getBookOutline, getChapter, getEditions, getIndex, getVerses, NotFound, slugFor } from "@/lib/api";
 import { ESTHER, estherTradition, hasBothEstherTexts, type Tradition } from "@/lib/esther";
 import { compareQuery, comparisonFor, parseView, parseWith } from "@/lib/compare";
 import { hasChapter, PROLOGUE } from "@/lib/chapters";
@@ -22,12 +22,13 @@ import { Spread } from "@/components/Spread";
 import { ChapterNotes, type NoteGroup } from "@/components/ChapterNotes";
 import { chapterFootnotes, NOTE_EDITIONS } from "@/lib/notes";
 import { editionsCited, withNoteLinks } from "@/lib/note-links";
-import { TitleIndex } from "@/components/TitleIndex";
+import { IntroductionLink, TitleIndex } from "@/components/TitleIndex";
+import { IntroductionPage } from "@/components/IntroductionPage";
 import { TraditionSwitch } from "@/components/TraditionSwitch";
 import type { Chapter, EditionIndex, VerseRow } from "@/lib/types";
 
 type Params = { locale: string; edition: string; book: string; chapter: string };
-type Search = { with?: string | string[]; view?: string | string[]; tradition?: string | string[] };
+type Search = { with?: string | string[]; view?: string | string[]; tradition?: string | string[]; part?: string | string[] };
 
 const one = (v: string | string[] | undefined) => (Array.isArray(v) ? v[0] : v);
 
@@ -103,6 +104,14 @@ export default async function ChapterPage({ params, searchParams }: { params: Pr
   const index: EditionIndex = await orNotFound(getIndex(edition.sigla));
   const book = bookBySlug(index, bookParam);
   if (!book) notFound();
+  if (chapterParam === "introduction") {
+    const withSiglas = parseWith(one(search.with), edition.sigla, editions.map((e) => e.sigla));
+    const view = parseView(one(search.view));
+    return IntroductionPage({
+      locale, edition, editions, index, book, reader: (await getAccess()).access === "reader", part: one(search.part),
+      withSiglas, view, query: compareQuery({ with: withSiglas, view }),
+    });
+  }
   // Chapter 0 is Sirach's prologue, in an edition that prints it.
   if (!/^(0|[1-9]\d*)$/.test(chapterParam)) notFound();
   const chapter = Number(chapterParam);
@@ -150,7 +159,7 @@ export default async function ChapterPage({ params, searchParams }: { params: Pr
     return { rows: placeAsPrinted(prevLast, current.rows, nextFirst, chapter), truncated: current.truncated };
   };
   // Asked at the same time as the chapter; awaited where its icon is built.
-  const outline = getOutline(edition.sigla, book.bookNum, info.access);
+  const outline = getBookOutline(edition.sigla, book.bookNum, info.access);
   // The Masoretic text beside the Septuagint, loaded at the same time; when it cannot be loaded, the
   // Septuagint alone with a note.
   const [main, masoretic] = await Promise.all([
@@ -214,17 +223,24 @@ export default async function ChapterPage({ params, searchParams }: { params: Pr
   const redirectTo = `/${locale}${base}/${slugFor(book, index.books)}/${chapter}${qs}`;
   // The main edition's titles in this book, opened from the title's line; links keep the comparison.
   const titleBase = `/${locale}${base}/${slugFor(book, index.books)}`;
+  const { titles, introduction } = await outline;
+  // The book's introduction (signed-in readers): the book icon, and the index's first entry; it keeps the comparison.
+  const introHref = introduction ? `${titleBase}/introduction${compareQuery({ with: withSiglas, view })}` : undefined;
   const tools = (
-    <TitleIndex
+    <span className="flex items-center gap-1">
+      {introHref && <IntroductionLink book={book.name} href={introHref} />}
+      <TitleIndex
       book={book.name}
       edition={edition.fullname}
       opening={rows[0] ? { chapter: rows[0].chapter, verse: rows[0].verse, segment: rows[0].segment } : { chapter, verse: 1 }}
       lang={edition.language || undefined}
-      titles={(await outline).map((x) => ({
+      titles={titles.map((x) => ({
         level: x.level, title: x.title, chapter: x.chapter, verse: x.verse, segment: x.segment,
         href: `${titleBase}/${x.printedChapter ?? x.chapter}${qs}#${verseAnchor(x)}`,
       }))}
-    />
+      {...(introHref && { introduction: { href: introHref } })}
+      />
+    </span>
   );
   const t = await getTranslations("Reader");
   const tn = await getTranslations("Notes");

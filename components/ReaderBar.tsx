@@ -27,6 +27,8 @@ export type ReaderBarProps = {
   /** Whether the edition has both Esther texts and this is Esther: then the Greek / Hebrew choice shows. */
   esther: boolean;
   tradition?: Tradition;
+  /** A page of the book other than a chapter (its introduction, "introduction:pentateuch"), whose bar shows `chapter`. */
+  part?: string;
 };
 
 const selectClass = "rounded border border-slate-300 bg-white px-2 py-1 dark:border-slate-700 dark:bg-slate-900";
@@ -37,7 +39,7 @@ export function ReaderBar(p: ReaderBarProps) {
   const tg = useTranslations("GoTo");
   const router = useRouter();
   const current = p.books.find((b) => b.slug === p.book);
-  const routeKey = [p.edition, p.book, p.chapter, p.withSiglas.join(","), p.view, p.tradition ?? ""].join("|");
+  const routeKey = [p.edition, p.book, p.chapter, p.part ?? "", p.withSiglas.join(","), p.view, p.tradition ?? ""].join("|");
   // What a navigation still on its way asked for: a second change made before the new page's props arrive
   // builds on it (the Interlinear toggle, then a third edition, keeps the interlinear view). It applies only
   // while the props are those it was asked from.

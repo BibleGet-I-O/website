@@ -135,6 +135,18 @@ describe("loading overlay", () => {
     expect(push).toHaveBeenLastCalledWith("/en/read/nabre/john/1#v1.3");
     expect(loading()).not.toBeNull();
   });
+
+  it("anIntroductionIsAnotherPageThanTheChapterItsBarShows", () => {
+    window.history.replaceState(null, "", "/en/read/nabre/tobit/3");
+    const href = "/en/read/nabre/tobit/introduction";
+    const link = <a data-nav="" href={href}>Introduction</a>;
+    const { rerender } = render(wrap(<><ReaderBar {...props} />{link}</>));
+    fireEvent.click(screen.getByText("Introduction"));
+    expect(loading()).not.toBeNull();
+    // The introduction's page shows the same chapter in its bar: its arrival still lifts the cover.
+    rerender(wrap(<><ReaderBar {...props} part="introduction" />{link}</>));
+    expect(loading()).toBeNull();
+  });
 });
 
 describe("ReaderBar", () => {

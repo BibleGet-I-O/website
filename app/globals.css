@@ -63,6 +63,10 @@
 
   /* Inline tags. L<sm>ORD</sm> reads LORD in small capitals. */
   .bg-sm { font-variant-caps: small-caps; text-transform: lowercase; }
+  /* A verified misprint's note, "[sic! expected: …]": in the rubrics' red, a size below the text, upright. */
+  .bg-sic { color: #a3161b; font-size: 0.8em; font-style: normal; font-weight: normal;
+    @variant dark { color: var(--color-red-400); }
+  }
   .bg-speaker {
     display: inline-block;
     margin-right: 0.2em;
