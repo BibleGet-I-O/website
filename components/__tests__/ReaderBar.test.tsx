@@ -440,6 +440,13 @@ describe("ReaderBar", () => {
     expect(form.querySelector("input[name=from]")).toHaveAttribute("value", "/en/read/nabre/tobit/3?with=DRB");
   });
 
+  it("aSearchFromAnIntroductionReturnsToIt", () => {
+    const { container } = render(wrap(<ReaderBar {...props} part="introduction:historical-books" withSiglas={["DRB"]} />));
+    fireEvent.click(screen.getByRole("button", { name: "Search" }));
+    const from = container.querySelector("form[role=search] input[name=from]");
+    expect(from).toHaveAttribute("value", "/en/read/nabre/tobit/introduction?with=DRB&part=historical-books");
+  });
+
   it("theSearchPanelOpensBelowTheToolbar", () => {
     render(wrap(<ReaderBar {...props} />));
     fireEvent.click(screen.getByRole("button", { name: "Search" }));

@@ -77,6 +77,11 @@ export function ReaderBar(p: ReaderBarProps) {
   const [goToOpenOn, setGoToOpenOn] = useState<string | null>(null);
   const goToOpen = goToOpenOn === routeKey;
 
+  // This introduction's URL with the query `qs` (a general one keeps its `part`).
+  const partHref = (qs: string) => {
+    const id = p.part?.split(":")[1];
+    return `/${p.locale}/read/${editionSlug(p.edition)}/${p.book}/introduction${id ? `${qs}${qs ? "&" : "?"}part=${encodeURIComponent(id)}` : qs}`;
+  };
   // The URL a change leads to, and what it asks for: go() pushes it, the go-to panel renders it as each link's href.
   const plan = (o: SettingsChange & { book?: string; chapter?: number }) => {
     const was = pending.current.from === routeKey ? pending.current : { from: routeKey };
@@ -93,11 +98,7 @@ export function ReaderBar(p: ReaderBarProps) {
     const asked = { from: routeKey, with: w, view, tradition };
     // On an introduction, a change of settings stays on it (a general one keeps its `part`); a book or chapter
     // picked leaves it.
-    if (p.part && o.book === undefined && o.chapter === undefined) {
-      const id = p.part.split(":")[1];
-      const query = id ? `${qs}${qs ? "&" : "?"}part=${encodeURIComponent(id)}` : qs;
-      return { href: `/${p.locale}/read/${editionSlug(p.edition)}/${book}/introduction${query}`, asked };
-    }
+    if (p.part && o.book === undefined && o.chapter === undefined) return { href: partHref(qs), asked };
     return { href: `/${p.locale}/read/${editionSlug(p.edition)}/${book}/${chapter}${qs}`, asked };
   };
   const target = (o: SettingsChange & { book?: string; chapter?: number }) => plan(o).href;
@@ -130,12 +131,12 @@ export function ReaderBar(p: ReaderBarProps) {
     locale: p.locale,
     edition: p.edition,
     editionName: p.editions.find((e) => e.sigla === p.edition)?.fullname ?? p.edition,
-    from: `/${p.locale}/read/${editionSlug(p.edition)}/${p.book}/${p.chapter}${compareQuery({
+    from: ((qs: string) => (p.part ? partHref(qs) : `/${p.locale}/read/${editionSlug(p.edition)}/${p.book}/${p.chapter}${qs}`))(compareQuery({
       with: p.withSiglas,
       view: p.view,
       tradition: p.esther || p.tradition !== undefined ? p.tradition : undefined,
       twoTexts: p.esther && p.withSiglas.length === 0,
-    })}`,
+    })),
   };
 
   return (
