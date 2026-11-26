@@ -2,6 +2,8 @@ import type { ReactNode } from "react";
 import { StickyHead } from "@/components/StickyHead";
 import { renderTitle, renderVerse } from "@/lib/formatted";
 import { printedLabel, verseAnchor } from "@/lib/placement";
+import { printedElsewhere } from "@/lib/why";
+import { WhyLink } from "@/components/WhyLink";
 import type { VerseRow } from "@/lib/types";
 
 /**
@@ -41,6 +43,7 @@ export function BookPage({ heading, chapter, rows, lang, tools }: { heading: str
                   headCol: 0,
                   notes: r.notes,
                   at: r,
+                  why: printedElsewhere(r, chapter) ? <WhyLink topic="printed-elsewhere" /> : undefined,
                 })}{" "}
               </span>
             ))}

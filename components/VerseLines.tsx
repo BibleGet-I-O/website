@@ -1,5 +1,7 @@
 import { renderTitle, renderVerse } from "@/lib/formatted";
 import { printedLabel, verseAnchor } from "@/lib/placement";
+import { printedElsewhere } from "@/lib/why";
+import { WhyLink } from "@/components/WhyLink";
 import type { VerseRow } from "@/lib/types";
 
 const midHeadingClass = (j: number) =>
@@ -36,7 +38,7 @@ export function VerseLine({ row, chapter, headings = true, anchor = false, headC
     <>
       {headings && <Headings titles={headingsBefore(row)} col={headCol} row={row} />}
       <p data-testid="verse-line" id={anchor ? verseAnchor(row) : undefined} className={`bg-text bg-compact${anchor ? " verse-target" : ""}`}>
-        {renderVerse({ label: printedLabel(row, chapter), text: row.text, titles: mid ? row.titles : [], titlePosition: row.titlePosition, headingClass: midHeadingClass, headCol, notes: row.notes, at: row })}
+        {renderVerse({ label: printedLabel(row, chapter), text: row.text, titles: mid ? row.titles : [], titlePosition: row.titlePosition, headingClass: midHeadingClass, headCol, notes: row.notes, at: row, why: printedElsewhere(row, chapter) ? <WhyLink topic="printed-elsewhere" /> : undefined })}
       </p>
     </>
   );

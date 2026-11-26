@@ -94,6 +94,12 @@ describe("renderVerse", () => {
     expect(root.firstElementChild).toBe(first);
   });
 
+  it("putsTheWhyMarkAfterTheNumber", () => {
+    const root = html(renderVerse({ label: "12:1", text: "For your spirit is in all things.", why: <i data-testid="why">?</i> }));
+    expect(root.querySelector("sup")?.textContent).toBe("12:1?");
+    expect(root.textContent).toBe("12:1?For your spirit is in all things.");
+  });
+
   it("keepsAProseVerseNumberInlineBeforeTheText", () => {
     const root = html(renderVerse({ label: "1", text: "In the beginning God created heaven, and earth." }));
     const sup = root.querySelector("sup");

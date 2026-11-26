@@ -1,7 +1,11 @@
-import { describe, it, expect } from "vitest";
+import { describe, it, expect, vi } from "vitest";
 import { render, screen, within } from "@testing-library/react";
 import { NextIntlClientProvider } from "next-intl";
 import en from "@/messages/en.json";
+vi.mock("@/i18n/navigation", () => ({
+  Link: ({ href, children, ...p }: { href: string; children?: React.ReactNode }) => <a href={href} {...p}>{children}</a>,
+}));
+
 import { Spread } from "@/components/Spread";
 import { VerseLines } from "@/components/VerseLines";
 import { buildRows, PSALMS } from "@/lib/parallel";
@@ -241,5 +245,31 @@ describe("Spread", () => {
     expect(Array.from(head.querySelectorAll("[data-testid=column-name]")).map((e) => e.textContent)).toEqual([A.name, B.name]);
     expect(screen.getByRole("heading", { level: 2, name: "Cain and Abel" })).toHaveAttribute("data-head-col", "0");
     expect(screen.getByRole("heading", { level: 2, name: "Caín y Abel" })).toHaveAttribute("data-head-col", "1");
+  });
+
+  it("esthersTwoTextsExplainTheirDifference", () => {
+    const rubric = (full: string) => ({ full, short: full.slice(0, 3) });
+    const sides = [{ ...A, rubric: rubric("Septuagint") }, { ...A, sigla: "NABRE-MT", rubric: rubric("Masoretic text") }];
+    render(wrap(<Spread sides={sides} rows={buildRows([row(1, 1)], [[row(1, 1)]], 19)} chapter={1} gapNotes={false} />));
+    expect(screen.getAllByRole("link", { name: "Why do the Greek and Hebrew texts differ?" })).toHaveLength(2);
+  });
+
+  it("editionsWithoutARubricHaveNoMark", () => {
+    render(wrap(<Spread sides={[A, B]} rows={buildRows([row(5, 1)], [[row(5, 1)]], 47)} chapter={5} />));
+    expect(screen.queryByRole("link", { name: /Why/ })).toBeNull();
+  });
+
+  it("aComparedPsalmNumberedOtherwiseIsExplained", () => {
+    // NABRE Psalm 10 beside VGCL, whose verses are 9:22-39 (synthetic text).
+    const a = [row(10, 1, "10:1"), row(10, 2, "10:2")];
+    const c = [row(9, 22, "10:1"), row(9, 23, "10:2")];
+    render(wrap(<Spread sides={[A, C]} rows={buildRows(a, [c], PSALMS)} chapter={10} psalms />));
+    expect(screen.getAllByRole("link", { name: "Why are the Psalms numbered two ways?" })).toHaveLength(1);
+  });
+
+  it("aComparedPsalmNumberedAlikeHasNoMark", () => {
+    const a = [row(2, 1, "2:1")];
+    render(wrap(<Spread sides={[A, B]} rows={buildRows(a, [[row(2, 1, "2:1")]], PSALMS)} chapter={2} psalms />));
+    expect(screen.queryByRole("link", { name: /Why/ })).toBeNull();
   });
 });

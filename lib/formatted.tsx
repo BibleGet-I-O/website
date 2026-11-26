@@ -231,7 +231,7 @@ const labelClass = "font-sans text-xs text-red-700 dark:text-red-400";
  * tags included, and the verse reads `text[:pos]` + headings + `text[pos:]`. With no position the caller
  * prints the headings before the verse. `headCol` makes them feed that column's running head (StickyHead).
  */
-export function renderVerse({ label, text, titles = [], titlePosition = null, headingClass = defaultHeadingClass, headCol, notes = [], at }: {
+export function renderVerse({ label, text, titles = [], titlePosition = null, headingClass = defaultHeadingClass, headCol, notes = [], at, why }: {
   label: string | null;
   text: string;
   titles?: string[];
@@ -242,6 +242,8 @@ export function renderVerse({ label, text, titles = [], titlePosition = null, he
   notes?: Marker[];
   /** The verse, for the markers' ids (`m-{note}-v{chapter}.{verse}`), which the notes list links back to. */
   at?: Place;
+  /** A "why?" mark after the number (a verse printed in another chapter). */
+  why?: ReactNode;
 }): ReactNode {
   const inserts = new Map<string, ReactNode>();
   const at_: { pos: number; mark: string; intoLine?: boolean }[] = [];
@@ -272,6 +274,6 @@ export function renderVerse({ label, text, titles = [], titlePosition = null, he
   const hang = !lines[0]?.plain && first?.k === "el" && HANGING.has(first.tag);
   // The hanging number is spaced by its padding (app/globals.css), so "12:1" still fits the indent.
   const number = whole[0] && label ? <NoteMarker note={whole[0].note} id={at ? markerDomId(whole[0].note.id, at) : ""}>{label}</NoteMarker> : label;
-  const lead = label ? <sup className={hang ? `${labelClass} bg-vnum-hang` : `${labelClass} mr-0.5`}>{number}</sup> : undefined;
+  const lead = label ? <sup className={hang ? `${labelClass} bg-vnum-hang` : `${labelClass} mr-0.5`}>{number}{why}</sup> : undefined;
   return renderParsed(lines, { inserts, lead });
 }
