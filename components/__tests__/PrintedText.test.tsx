@@ -39,6 +39,12 @@ describe("PrintedText", () => {
     expect(screen.queryByRole("link")).toBeNull();
   });
 
+  it("aMisprintedCitationKeepsNoLinkToItsWrongPassage", () => {
+    show({ text: "Gn 35:43.", refs: [{ start: start(35, 43), end: null, span: [0, 8], href: "/wrong" }], sic: [{ span: [3, 8], intended: "36:43", ref: { start: start(36, 43), end: null, href: "/right" } }] });
+    expect(screen.getAllByRole("link").map((a) => a.getAttribute("href"))).toEqual(["/right"]);
+    expect(screen.getByTestId("p").textContent).toBe("Gn 35:43 [sic! expected: 36:43].");
+  });
+
   it("speaksTheReadersLanguage", () => {
     show(piece, it_ as typeof en, "it");
     expect(screen.getByTestId("p").textContent).toContain("[sic! leggi: 36:43]");

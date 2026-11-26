@@ -12,6 +12,8 @@ const intro: Introduction = {
     { type: "heading", level: 1, text: "Outline of Genesis", refs: [] },
     { type: "item", level: 1, text: "I. The Nations", refs: [] },
     { type: "item", level: 2, text: "A. Creation", refs: [] },
+    { type: "item", level: 1, text: "II. The Ancestors", refs: [] },
+    { type: "heading", level: 3, text: "A subsection", refs: [] },
     { type: "paragraph", text: "After the list.", refs: [] },
     { type: "row", cells: [{ text: "Vulg.", refs: [] }, { text: "Greek", refs: [] }] },
     { type: "row", cells: [{ text: "11:2", refs: [] }, { text: "A:1", refs: [] }] },
@@ -35,8 +37,17 @@ describe("IntroductionView", () => {
 
   it("groupsOutlineItemsIntoAListIndentedByLevel", () => {
     show();
-    const items = within(screen.getByRole("list", { name: "Outline of Genesis" })).getAllByRole("listitem");
-    expect(items.map((li) => [li.textContent, li.getAttribute("data-level")])).toEqual([["I. The Nations", "1"], ["A. Creation", "2"]]);
+    const outline = screen.getByRole("list", { name: "Outline of Genesis" });
+    // A deeper item is in a list of its parent's: I. holds A.; II. is I.'s sibling.
+    const top = Array.from(outline.children);
+    expect(top.map((li) => li.getAttribute("data-level"))).toEqual(["1", "1"]);
+    expect(within(top[0] as HTMLElement).getByRole("list").textContent).toBe("A. Creation");
+    expect(top[1].textContent).toBe("II. The Ancestors");
+  });
+
+  it("aDeeperHeadingIsADeeperElement", () => {
+    show();
+    expect(screen.getByRole("heading", { level: 4, name: "A subsection" })).toBeInTheDocument();
   });
 
   it("groupsRowsIntoATable", () => {

@@ -90,7 +90,15 @@ export function ReaderBar(p: ReaderBarProps) {
     // Esther's text is kept while its edition, or a compared one, prints both (`p.tradition` is then set).
     const keepsText = p.esther || p.tradition !== undefined;
     const qs = compareQuery({ with: w, view, tradition: keepsText ? tradition : undefined, twoTexts: p.esther && book === p.book && w.length === 0 });
-    return { href: `/${p.locale}/read/${editionSlug(p.edition)}/${book}/${chapter}${qs}`, asked: { from: routeKey, with: w, view, tradition } };
+    const asked = { from: routeKey, with: w, view, tradition };
+    // On an introduction, a change of settings stays on it (a general one keeps its `part`); a book or chapter
+    // picked leaves it.
+    if (p.part && o.book === undefined && o.chapter === undefined) {
+      const id = p.part.split(":")[1];
+      const query = id ? `${qs}${qs ? "&" : "?"}part=${encodeURIComponent(id)}` : qs;
+      return { href: `/${p.locale}/read/${editionSlug(p.edition)}/${book}/introduction${query}`, asked };
+    }
+    return { href: `/${p.locale}/read/${editionSlug(p.edition)}/${book}/${chapter}${qs}`, asked };
   };
   const target = (o: SettingsChange & { book?: string; chapter?: number }) => plan(o).href;
 

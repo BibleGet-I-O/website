@@ -11,8 +11,10 @@ const linkClass = "text-red-700 underline-offset-2 hover:underline dark:text-red
  * link (one into another edition with its small book), and after each verified misprint, left as printed, a note
  * "[sic! expected: …]" in rubric red, set upright with *sic!* in italics, the intended passage linked.
  */
-export function PrintedText({ text, refs, sic = [] }: PrintedPiece): ReactNode {
+export function PrintedText({ text, refs: printed, sic = [] }: PrintedPiece): ReactNode {
   const t = useTranslations("Reader");
+  // A citation a misprint falls in links to the misprinted passage: none of it is a link, the note's passage is.
+  const refs = printed.filter((r) => !sic.some((s) => s.span[0] < r.span[1] && r.span[0] < s.span[1]));
   // The misprints first, so that a misprinted citation (whose link would be wrong) is cut as the misprint.
   const runs = noteRuns(text, [...sic, ...refs]);
   const styled = (r: (typeof runs)[number], k: number) => {

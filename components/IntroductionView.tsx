@@ -3,7 +3,26 @@ import { useTranslations } from "next-intl";
 import { PrintedText } from "@/components/PrintedText";
 import type { IntroBlock, Introduction } from "@/lib/types";
 
-const ITEM_INDENT = ["pl-0", "pl-6", "pl-12"];
+type Item = Extract<IntroBlock, { type: "item" }>;
+
+/** Outline items as nested lists: an item deeper than the one before it opens a list inside that one. */
+function outline(items: Item[]): ReactNode[] {
+  const out: ReactNode[] = [];
+  for (let i = 0; i < items.length; ) {
+    const level = items[i].level;
+    let j = i + 1;
+    while (j < items.length && items[j].level > level) j++;
+    const children = items.slice(i + 1, j);
+    out.push(
+      <li key={i} data-level={level}>
+        <PrintedText {...items[i]} />
+        {children.length > 0 && <ul className="mt-1 list-none space-y-1 pl-6">{outline(children)}</ul>}
+      </li>,
+    );
+    i = j;
+  }
+  return out;
+}
 
 /**
  * An introduction as the edition prints it: its title, then its headings, paragraphs, outline items (each with its own
@@ -33,11 +52,7 @@ export function IntroductionView({ heading, intro, lang, general }: {
     if (g.kind === "item") {
       return (
         <ul key={g.at} {...named} className="mb-4 list-none space-y-1">
-          {g.blocks.map((b, k) => b.type === "item" && (
-            <li key={k} data-level={b.level} className={ITEM_INDENT[Math.min(b.level - 1, ITEM_INDENT.length - 1)]}>
-              <PrintedText {...b} />
-            </li>
-          ))}
+          {outline(g.blocks.flatMap((b) => (b.type === "item" ? [b] : [])))}
         </ul>
       );
     }
@@ -56,7 +71,8 @@ export function IntroductionView({ heading, intro, lang, general }: {
     }
     const b = g.blocks[0];
     if (b.type === "heading") {
-      const H = b.level <= 1 ? "h2" : "h3";
+      // Level 1 under the page's h1, each deeper level a step deeper, to h6.
+      const H = `h${Math.min(b.level + 1, 6)}` as "h2" | "h3" | "h4" | "h5" | "h6";
       return <H key={g.at} id={headingId(g.at)} className={b.level <= 1 ? "mt-6 mb-2 text-xl font-semibold" : "mb-2 text-base font-semibold italic"}><PrintedText {...b} /></H>;
     }
     return b.type === "paragraph" ? <p key={g.at} className="mb-4"><PrintedText {...b} /></p> : null;

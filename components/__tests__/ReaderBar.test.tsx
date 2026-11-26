@@ -262,6 +262,13 @@ describe("ReaderBar", () => {
     expect(push).toHaveBeenLastCalledWith("/en/read/nabre/tobit/3?with=DRB,VGCL&view=interlinear");
   });
 
+  it("aSettingsChangeOnAnIntroductionStaysOnIt", () => {
+    render(wrap(<ReaderBar {...props} part="introduction:historical-books" withSiglas={["CEI2008", "VGCL"]} />));
+    openMenu();
+    fireEvent.click(item(/Remove the third edition/));
+    expect(push).toHaveBeenLastCalledWith("/en/read/nabre/tobit/introduction?with=CEI2008&part=historical-books");
+  });
+
   it("removeThirdKeepsTheSecond", () => {
     render(wrap(<ReaderBar {...props} withSiglas={["CEI2008", "VGCL"]} />));
     openMenu();
