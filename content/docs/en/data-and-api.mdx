@@ -17,8 +17,10 @@ parameter and response, is the interactive [API reference](/scalar).
 - **Search** (`/search/…`): by keyword, with stemming; by meaning, from a question in natural language; a hybrid of the
   two; passages similar to a given verse; and word suggestions as you type.
 
-Responses are JSON by default, or XML or HTML (with the `return` parameter or an `Accept` header). Errors are reported
-as `application/problem+json` (RFC 9457).
+Responses are JSON by default, or XML or HTML (with the `return` parameter or an `Accept` header). A request that fails
+is answered with `application/problem+json` (RFC 9457). A quote that can be read only in part, as when one reference is
+valid and another is not, is answered with the verses it could read and an `errors` list beside them: check `errors` even
+when there are results.
 
 ## Keys
 
