@@ -27,6 +27,8 @@ export type ReaderBarProps = {
   /** Whether the edition has both Esther texts and this is Esther: then the Greek / Hebrew choice shows. */
   esther: boolean;
   tradition?: Tradition;
+  /** A page of the book other than a chapter (its introduction, "introduction:pentateuch"), whose bar shows `chapter`. */
+  part?: string;
 };
 
 const selectClass = "rounded border border-slate-300 bg-white px-2 py-1 dark:border-slate-700 dark:bg-slate-900";
@@ -37,7 +39,7 @@ export function ReaderBar(p: ReaderBarProps) {
   const tg = useTranslations("GoTo");
   const router = useRouter();
   const current = p.books.find((b) => b.slug === p.book);
-  const routeKey = [p.edition, p.book, p.chapter, p.withSiglas.join(","), p.view, p.tradition ?? ""].join("|");
+  const routeKey = [p.edition, p.book, p.chapter, p.part ?? "", p.withSiglas.join(","), p.view, p.tradition ?? ""].join("|");
   // What a navigation still on its way asked for: a second change made before the new page's props arrive
   // builds on it (the Interlinear toggle, then a third edition, keeps the interlinear view). It applies only
   // while the props are those it was asked from.
@@ -75,6 +77,11 @@ export function ReaderBar(p: ReaderBarProps) {
   const [goToOpenOn, setGoToOpenOn] = useState<string | null>(null);
   const goToOpen = goToOpenOn === routeKey;
 
+  // This introduction's URL with the query `qs` (a general one keeps its `part`).
+  const partHref = (qs: string) => {
+    const id = p.part?.split(":")[1];
+    return `/${p.locale}/read/${editionSlug(p.edition)}/${p.book}/introduction${id ? `${qs}${qs ? "&" : "?"}part=${encodeURIComponent(id)}` : qs}`;
+  };
   // The URL a change leads to, and what it asks for: go() pushes it, the go-to panel renders it as each link's href.
   const plan = (o: SettingsChange & { book?: string; chapter?: number }) => {
     const was = pending.current.from === routeKey ? pending.current : { from: routeKey };
@@ -88,7 +95,11 @@ export function ReaderBar(p: ReaderBarProps) {
     // Esther's text is kept while its edition, or a compared one, prints both (`p.tradition` is then set).
     const keepsText = p.esther || p.tradition !== undefined;
     const qs = compareQuery({ with: w, view, tradition: keepsText ? tradition : undefined, twoTexts: p.esther && book === p.book && w.length === 0 });
-    return { href: `/${p.locale}/read/${editionSlug(p.edition)}/${book}/${chapter}${qs}`, asked: { from: routeKey, with: w, view, tradition } };
+    const asked = { from: routeKey, with: w, view, tradition };
+    // On an introduction, a change of settings stays on it (a general one keeps its `part`); a book or chapter
+    // picked leaves it.
+    if (p.part && o.book === undefined && o.chapter === undefined) return { href: partHref(qs), asked };
+    return { href: `/${p.locale}/read/${editionSlug(p.edition)}/${book}/${chapter}${qs}`, asked };
   };
   const target = (o: SettingsChange & { book?: string; chapter?: number }) => plan(o).href;
 
@@ -120,12 +131,12 @@ export function ReaderBar(p: ReaderBarProps) {
     locale: p.locale,
     edition: p.edition,
     editionName: p.editions.find((e) => e.sigla === p.edition)?.fullname ?? p.edition,
-    from: `/${p.locale}/read/${editionSlug(p.edition)}/${p.book}/${p.chapter}${compareQuery({
+    from: ((qs: string) => (p.part ? partHref(qs) : `/${p.locale}/read/${editionSlug(p.edition)}/${p.book}/${p.chapter}${qs}`))(compareQuery({
       with: p.withSiglas,
       view: p.view,
       tradition: p.esther || p.tradition !== undefined ? p.tradition : undefined,
       twoTexts: p.esther && p.withSiglas.length === 0,
-    })}`,
+    })),
   };
 
   return (

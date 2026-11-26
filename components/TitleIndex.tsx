@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, type MouseEvent } from "react";
 import { useTranslations } from "next-intl";
 
 export type IndexTitle = { level: number; title: string; chapter: number; verse: number; segment?: string | null; href: string };
@@ -18,16 +18,19 @@ function startsByThen(x: Place, opening: Place): boolean {
 
 /**
  * The tree icon on the chapter's title line: it opens the edition's titles in this book, indented by the levels the
- * book has, each a link to its verse. The title this chapter opens under is marked and in view. A plain pick closes it
- * (ReaderBar navigates `a[data-nav]`; one in this chapter is the browser's own jump).
+ * book has, each a link to its verse; the book's introduction first, where it has one (signed-in readers). The title
+ * this chapter opens under is marked and in view. A plain pick closes it (ReaderBar navigates `a[data-nav]`; one in
+ * this chapter is the browser's own jump).
  */
-export function TitleIndex({ book, edition, opening, titles, lang }: {
+export function TitleIndex({ book, edition, opening, titles, lang, introduction }: {
   book: string;
   edition: string;
   /** The first verse on the page (a chapter may open with a neighbour's, or with a lettered one). */
   opening: { chapter: number; verse: number; segment?: string | null };
   titles: IndexTitle[];
   lang?: string;
+  /** The book's introduction, the index's first entry. */
+  introduction?: { href: string };
 }) {
   const t = useTranslations("Reader");
   const tg = useTranslations("GoTo");
@@ -44,9 +47,12 @@ export function TitleIndex({ book, edition, opening, titles, lang }: {
     } else if (!open && d.open) d.close();
   }, [open]);
 
-  if (titles.length === 0) return null;
+  if (titles.length === 0 && !introduction) return null;
   const levels = [...new Set(titles.map((x) => x.level))].sort((a, b) => a - b);
   const here = titles.reduce((at, x, i) => (startsByThen(x, opening) ? i : at), -1);
+  const pick = (e: MouseEvent) => {
+    if (e.button === 0 && !e.metaKey && !e.ctrlKey && !e.shiftKey && !e.altKey) setOpen(false);
+  };
 
   return (
     <>
@@ -82,6 +88,13 @@ export function TitleIndex({ book, edition, opening, titles, lang }: {
               <button type="button" onClick={() => setOpen(false)} className="font-semibold">{tg("close")}</button>
             </header>
             <ul lang={lang} className="flex-1 overflow-y-auto p-3">
+              {introduction && (
+                <li>
+                  <a data-nav="" href={introduction.href} onClick={pick} className="flex rounded py-1.5 pr-2 pl-2 font-semibold italic hover:bg-slate-100 dark:hover:bg-slate-800">
+                    {t("introduction")}
+                  </a>
+                </li>
+              )}
               {titles.map((x, i) => {
                 const depth = levels.indexOf(x.level);
                 return (
@@ -92,9 +105,7 @@ export function TitleIndex({ book, edition, opening, titles, lang }: {
                       data-depth={depth}
                       href={x.href}
                       aria-current={i === here ? "true" : undefined}
-                      onClick={(e) => {
-                        if (e.button === 0 && !e.metaKey && !e.ctrlKey && !e.shiftKey && !e.altKey) setOpen(false);
-                      }}
+                      onClick={pick}
                       className={`flex items-baseline justify-between gap-3 rounded py-1.5 pr-2 hover:bg-slate-100 dark:hover:bg-slate-800 ${INDENT[Math.min(depth, INDENT.length - 1)]}${i === here ? " text-red-700 dark:text-red-400" : ""}`}
                     >
                       <span>{x.title}</span>
@@ -108,5 +119,24 @@ export function TitleIndex({ book, edition, opening, titles, lang }: {
         )}
       </dialog>
     </>
+  );
+}
+
+/** The book icon on the chapter's title line, beside the index's: a link to the book's introduction. */
+export function IntroductionLink({ book, href }: { book: string; href: string }) {
+  const t = useTranslations("Reader");
+  const label = t("introductionTo", { book });
+  return (
+    <a
+      data-nav=""
+      href={href}
+      aria-label={label}
+      title={label}
+      className="grid size-9 place-items-center rounded-full text-slate-600 hover:bg-slate-100 focus-visible:outline-2 focus-visible:outline-red-700 dark:text-slate-300 dark:hover:bg-slate-800"
+    >
+      <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+        <path d="M4 5.5A2.5 2.5 0 0 1 6.5 3H20v15H6.5A2.5 2.5 0 0 0 4 20.5zM4 20.5A2.5 2.5 0 0 0 6.5 23H20v-5M8 7.5h8M8 11h6" />
+      </svg>
+    </a>
   );
 }

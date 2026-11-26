@@ -135,6 +135,18 @@ describe("loading overlay", () => {
     expect(push).toHaveBeenLastCalledWith("/en/read/nabre/john/1#v1.3");
     expect(loading()).not.toBeNull();
   });
+
+  it("anIntroductionIsAnotherPageThanTheChapterItsBarShows", () => {
+    window.history.replaceState(null, "", "/en/read/nabre/tobit/3");
+    const href = "/en/read/nabre/tobit/introduction";
+    const link = <a data-nav="" href={href}>Introduction</a>;
+    const { rerender } = render(wrap(<><ReaderBar {...props} />{link}</>));
+    fireEvent.click(screen.getByText("Introduction"));
+    expect(loading()).not.toBeNull();
+    // The introduction's page shows the same chapter in its bar: its arrival still lifts the cover.
+    rerender(wrap(<><ReaderBar {...props} part="introduction" />{link}</>));
+    expect(loading()).toBeNull();
+  });
 });
 
 describe("ReaderBar", () => {
@@ -248,6 +260,13 @@ describe("ReaderBar", () => {
     fireEvent.click(item(/Change second edition/));
     pick("DRB");
     expect(push).toHaveBeenLastCalledWith("/en/read/nabre/tobit/3?with=DRB,VGCL&view=interlinear");
+  });
+
+  it("aSettingsChangeOnAnIntroductionStaysOnIt", () => {
+    render(wrap(<ReaderBar {...props} part="introduction:historical-books" withSiglas={["CEI2008", "VGCL"]} />));
+    openMenu();
+    fireEvent.click(item(/Remove the third edition/));
+    expect(push).toHaveBeenLastCalledWith("/en/read/nabre/tobit/introduction?with=CEI2008&part=historical-books");
   });
 
   it("removeThirdKeepsTheSecond", () => {
@@ -419,6 +438,13 @@ describe("ReaderBar", () => {
     const form = container.querySelector("form[role=search]")!;
     expect(form).toHaveAttribute("action", "/en/read/nabre/search");
     expect(form.querySelector("input[name=from]")).toHaveAttribute("value", "/en/read/nabre/tobit/3?with=DRB");
+  });
+
+  it("aSearchFromAnIntroductionReturnsToIt", () => {
+    const { container } = render(wrap(<ReaderBar {...props} part="introduction:historical-books" withSiglas={["DRB"]} />));
+    fireEvent.click(screen.getByRole("button", { name: "Search" }));
+    const from = container.querySelector("form[role=search] input[name=from]");
+    expect(from).toHaveAttribute("value", "/en/read/nabre/tobit/introduction?with=DRB&part=historical-books");
   });
 
   it("theSearchPanelOpensBelowTheToolbar", () => {
