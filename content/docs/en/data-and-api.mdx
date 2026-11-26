@@ -1,0 +1,68 @@
+# Data and the API
+
+Everything you read on this site comes from the **BibleGet API**, the same service that BibleGet's plugins for WordPress
+and Google Docs use. This page tells developers what it offers and how access works; the full reference, with every
+parameter and response, is the interactive [API reference](/scalar).
+
+## What the API offers
+
+- **Quotes** (`/quote`): verses by reference, in one or more editions at once, as a reader would cite them:
+  `?query=Jn3,16-18&version=NABRE,CEI2008`. The citation grammar accepts both English (`Jn 3:16`) and European
+  (`Gv 3,16`) notation and book names in many languages. A psalm number is read as a Hebrew number, as in the Nova
+  Vulgata; `numbering=edition` reads it in the edition's own numbering ([the Psalms' two
+  numberings](/docs/why-editions-differ#psalm-numbering)). For Esther, `text_tradition` chooses the Greek or the Hebrew
+  text ([Esther](/docs/why-editions-differ#esther)).
+- **Metadata** (`/metadata/…`): the editions available, the book names and abbreviations in each language, each
+  edition's chapters and verses, and a book's section titles.
+- **Search** (`/search/…`): by keyword, with stemming; by meaning, from a question in natural language; a hybrid of the
+  two; passages similar to a given verse; and word suggestions as you type.
+
+Responses are JSON by default, or XML or HTML (with the `return` parameter or an `Accept` header). A request that fails
+is answered with `application/problem+json` (RFC 9457). A quote that can be read only in part, as when one reference is
+valid and another is not, is answered with the verses it could read and an `errors` list beside them: check `errors` even
+when there are results.
+
+## Keys
+
+Every request to a data route carries a credential in the `X-Api-Key` header:
+
+- a **project key**, issued to a registered developer project once it is approved;
+- an **installation token**, which each installation of a BibleGet plugin obtains for itself when it is first set up.
+
+Each credential has an hourly rate limit, reported in `X-RateLimit-*` headers; a request over the limit gets `429` with
+`Retry-After`. The API stores no IP addresses: requests are counted by credential, not by caller. Pages for developers
+to sign in, register a project and manage its keys are being prepared on this site.
+
+When the API changes in a way that affects clients, it says so in the answer itself: notices for the credential that
+made the request, with standard `Deprecation` and `Sunset` headers. That is the only way to reach a plugin installation,
+which has no developer account.
+
+## Copyrighted editions
+
+Some editions are under copyright and are quoted by permission ([copyright](/copyright)): NABRE, CEI 2008, *El Libro del
+Pueblo de Dios* and the Nova Vulgata. Their text is served within a limit of 30 verses per request, and their
+notes and introductions are offered only to this site's signed-in readers. Searches in these editions return at most 30
+results per request.
+
+## The registries
+
+The API draws on two open registries of the Catholic Digital Commons Foundation, which any Bible application may use:
+
+- **[CBTUDR](https://github.com/CatholicOS/cbtudr)**, the Common Biblical Textual Unit Data Repository: identifiers for
+  the same text in every edition, and each edition's map of its verses to them (see [textual units](/docs/textual-units)).
+- **[CBPPEDR](https://github.com/CatholicOS/cbppedr)**, the Common Biblical Persons, Places and Events Data Repository:
+  identifiers for the people, places and events of the Bible, with their names, their relations, and the textual units
+  where they appear, so that one entry serves every edition. Its rule is "better unidentified than misidentified".
+
+Both hold identifiers and structure only, never the text of an edition, and both are drafts until their release v1.0.0.
+
+## The code
+
+The API, this website and the plugins are open source, in the [BibleGet I/O](https://github.com/BibleGet-I-O)
+organization on GitHub; the endpoint's wiki documents its data model.
+
+<Sources>
+- BibleGet I/O, [API reference](/scalar) (the endpoint's OpenAPI description), and the endpoint's [design for API keys and installations](https://github.com/BibleGet-I-O/endpoint/blob/development/docs/superpowers/specs/2026-11-17-api-keys-installations-design.md).
+- BibleGet I/O, [endpoint wiki](https://github.com/BibleGet-I-O/endpoint/wiki).
+- CatholicOS, [CBTUDR](https://github.com/CatholicOS/cbtudr) and [CBPPEDR](https://github.com/CatholicOS/cbppedr).
+</Sources>

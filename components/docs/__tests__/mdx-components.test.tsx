@@ -39,6 +39,13 @@ describe("the docs' MDX components", () => {
     expect(screen.getByRole("heading", { name: "Fonti" })).toHaveAttribute("id", "sources");
   });
 
+  it("theDraftsBannerSaysTheIdentifiersAreDrafts", () => {
+    const Drafts = docsComponents.Drafts as React.FC;
+    render(<Drafts />, { locale: "it" });
+    expect(screen.getByRole("note")).toHaveTextContent("bozze");
+    expect(screen.getByRole("note")).toHaveTextContent("v1.0.0");
+  });
+
   it("theUntranslatedNoticeIsInTheInterfaceLanguage", () => {
     render(<UntranslatedNotice />, { locale: "it" });
     expect(screen.getByRole("note")).toHaveTextContent("Questa pagina non è ancora disponibile in italiano");

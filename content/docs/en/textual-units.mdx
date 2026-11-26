@@ -1,0 +1,100 @@
+# Textual units and CBTUDR
+
+"Tobit 5:4" is not the same text in every Bible. Chapters begin at different places (Genesis 31:55 in the Vulgate is
+Genesis 32:1 in the Hebrew numbering); one edition's verse is two in another (the Clementine Vulgate's Tobit 5:3–4 is CEI
+2008's Tobit 5:4); some editions print verses out of order; whole books follow different recensions. A reference names
+a place in one edition's numbering, not a piece of text. [Why editions differ](/docs/why-editions-differ) shows what this
+looks like in the reader; this page describes the project's answer for developers and students: the **Common Biblical
+Textual Unit Data Repository** (CBTUDR), curated by the Catholic Engineering Task Force of the Catholic Digital Commons
+Foundation.
+
+<Drafts />
+
+## Textual units
+
+CBTUDR gives each **textual unit** a stable identifier, `btu:`, independent of any edition's numbering. For each
+edition it then publishes which units each verse contains. With the two, an application can line up two editions verse
+by verse, even across chapter boundaries; carry a reference from one edition to another; and define a passage, such as a
+lectionary reading, once for every edition.
+
+The registry holds identifiers and verse structure only, **never Bible text**. Mapping a copyrighted edition records how
+it is numbered, not what it says.
+
+## The Nova Vulgata as reference
+
+The units are seeded from the verses of the **Nova Vulgata**, the Church's Latin Bible ([the Vulgate](/docs/vulgate)),
+which the instruction *Liturgiam authenticam* (2001) makes "the point of reference as regards the delineation of the
+canonical text" for translations used in the liturgy. Each of its verses, as published on vatican.va, is a unit to
+begin with: 35,776 units for the 73 books. A unit is then **split** where an edition divides it, and text the Nova
+Vulgata lacks gets a unit of its own.
+
+Some features of the Nova Vulgata carry into the units. Its Psalms are numbered the Hebrew way, with the superscription
+counted as verse 1 ([the Psalms' two numberings](/docs/why-editions-differ#psalm-numbering)). Esther is one book, the
+Hebrew text with the Greek additions as lettered verses (`btu:est.1.1a`). Where the Nova Vulgata prints a verse number in
+brackets, without text, because the critical text omits it (33 such numbers, Matthew 17:21 among them), the unit exists
+and is marked `nv_omitted`, so that the editions that print text there can map to it.
+
+## The identifiers
+
+```text
+btu:tb.5.4          the unit that began as Nova Vulgata Tobit 5:4
+btu:tb.5.4.1        its first part, once some edition divides it
+btu:tb.5.4.1.2      the second part of that part
+btu:est.1.1a        a lettered verse of the Nova Vulgata itself (Esther's Greek additions)
+btu:tb.5.4+1        text the Nova Vulgata lacks, placed after Tobit 5:4
+```
+
+The book segment is the Holy See's Latin abbreviation, lowercased (`tb`, `1sam`, `eccli`, `apc`). Splits are numbered,
+not lettered, so that a split can never be mistaken for one of the Nova Vulgata's own lettered verses. A parent unit is
+exactly its children, in order: a link to `btu:tb.5.4` stays valid when the unit is split, so nothing that already
+links to it needs to change.
+
+An identifier records where the unit was first created, for readability. **It is not a reference** and must not be
+parsed as one: `btu:tb.5.4` is "the unit that began as Nova Vulgata Tobit 5:4", not "Tobit 5:4 in your edition".
+Translating between numberings is the job of the edition maps.
+
+Under the CDCF URI scheme, the full identifier is `cdcf:btu:tb.5.4`. The scheme's `cdcf:verse/…` identifies a
+*reference*, a citation read in some numbering; a `btu:` identifier names the *text*, and an edition's map connects the
+two.
+
+## Edition maps
+
+For each edition, the registry lists, in the edition's own reading order, the units each of its verses contains:
+
+```json
+{"edition": "vgcl", "book": "tb", "verses": [
+  {"ref": "5:3", "units": ["btu:tb.5.4.1"], "kind": "corresponding", "status": "reviewed"},
+  {"ref": "5:4", "units": ["btu:tb.5.4.2"], "kind": "corresponding", "status": "reviewed"}
+]}
+```
+
+- **`ref`** is the edition's own verse: `10:18a`, or `1:1a@GREEK` where an edition prints both texts of Esther.
+- **`kind`** is `same` (the same text, renumbered or re-divided) or `corresponding` (a different recension or source
+  text: the passage corresponds, but it is not the same text, as with the Vulgate's longer Tobit).
+- **`status`** is `rule` (made by a documented rule, such as a chapter boundary or the Psalms), `draft` (proposed by a
+  tool, not yet reviewed) or `reviewed`.
+
+All seven editions on this site are mapped. About nine links in ten are made by rule; the rest are drafts proposed by
+tools, where no rule decides (where the text itself differs, as in Tobit, Job, Sirach, Greek Esther and Exodus 40, by
+comparing the verses' meaning with a multilingual sentence-embedding model, LaBSE), and they are being reviewed one by
+one. The registry's validator checks that
+every verse covers whole units, and that, within one text of an edition, no unit is covered twice by links of the same
+text made by rule or reviewed (drafts may still overlap, until review settles them).
+
+## In the reader
+
+Today the reader's comparison still lines verses up by their numbers, and the Psalms by their Hebrew reference. Lining
+editions up by unit, so that the Clementine Vulgate's Tobit 5:3–4 stands beside CEI 2008's Tobit 5:4, is the next step,
+once the maps are reviewed and released.
+
+## Licences
+
+The data (identifiers, units and maps) is in the public domain (CC0 1.0); the documentation and the registry tables are
+under CC BY-ND 4.0; the scripts under Apache 2.0.
+
+<Sources>
+- CatholicOS, [CBTUDR](https://github.com/CatholicOS/cbtudr): the README and the [schema proposal](https://github.com/CatholicOS/cbtudr/blob/main/docs/schema-proposal.md), with the data counted here (units and map statuses, November 2026).
+- CatholicOS, [CDCF URI scheme](https://github.com/CatholicOS/cdcf-uri-scheme), and [issue 13](https://github.com/CatholicOS/cdcf-uri-scheme/issues/13).
+- Congregation for Divine Worship, [*Liturgiam authenticam*](https://www.vatican.va/roman_curia/congregations/ccdds/documents/rc_con_ccdds_doc_20010507_liturgiam-authenticam_en.html) (2001), 37.
+- The Nova Vulgata, as published by the Holy See: [index](https://www.vatican.va/archive/bible/nova_vulgata/documents/nova-vulgata_index_lt.html).
+</Sources>
