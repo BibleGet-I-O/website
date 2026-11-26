@@ -78,7 +78,14 @@
     "introductionTo": "Introduction to {book}",
     "generalIntroductions": "General introductions",
     "introductionsForReaders": "Signed-in readers can read this edition's introductions.",
-    "readBook": "Read {book}"
+    "readBook": "Read {book}",
+    "why": {
+      "esther": "Why do the Greek and Hebrew texts differ?",
+      "missingVerses": "Why does this edition lack this verse?",
+      "psalmNumbering": "Why are the Psalms numbered two ways?",
+      "printedElsewhere": "Why is this verse printed here?",
+      "short": "Why?"
+    }
   },
   "Notice": {
     "signIn": "This edition shows visitors the first 30 verses of each chapter. Sign in to read the whole chapter.",
@@ -135,7 +142,8 @@
     "closeMenu": "Close menu",
     "mainNav": "Main navigation",
     "language": "Language",
-    "api": "API"
+    "api": "API",
+    "docs": "Docs"
   },
   "Review": {
     "title": "Review",
@@ -293,5 +301,70 @@
     "visitorHint": "Signed-in readers also see this edition's notes.",
     "inEdition": "In {edition}",
     "inEditionShort": "in {edition}"
+  },
+  "Docs": {
+    "index": {
+      "title": "Documentation",
+      "description": "How the Bible reached us, how its manuscripts and translations differ, and the editions on this site."
+    },
+    "parts": {
+      "text": "The Bible and its text",
+      "manuscripts": "Manuscripts and traditions"
+    },
+    "pages": {
+      "how-the-bible-reached-us": {
+        "title": "How the Bible reached us",
+        "description": "From the Hebrew scriptures to the editions on this site, in one page."
+      },
+      "why-editions-differ": {
+        "title": "Why editions differ",
+        "description": "Numbering, the Psalms, Greek and Hebrew forms, missing verses: what the reader shows, and why."
+      },
+      "hebrew-text": {
+        "title": "The Hebrew text",
+        "description": "The books, the scribes and the Masoretes; the Aleppo and Leningrad codices; the critical editions."
+      },
+      "codex-aleppo": {
+        "title": "The Aleppo Codex",
+        "description": "The tenth-century Bible of Aaron ben Asher, model of the Masoretic text, and what became of it."
+      },
+      "codex-leningrad": {
+        "title": "The Leningrad Codex",
+        "description": "The oldest complete Hebrew Bible (1008), the text of today's scholarly editions."
+      },
+      "qumran": {
+        "title": "The Qumran scrolls",
+        "description": "The Dead Sea Scrolls, and what they show of the text before the Masoretes."
+      },
+      "septuagint": {
+        "title": "The Septuagint",
+        "description": "The Greek translation the early Church read: its books, its numbering and its editions."
+      },
+      "new-testament-text": {
+        "title": "The New Testament's text",
+        "description": "Papyri, codices and versions, and how a critical edition is made."
+      },
+      "codex-sinaiticus": {
+        "title": "Codex Sinaiticus",
+        "description": "The fourth-century Bible from St Catherine's Monastery, now shared by four libraries."
+      },
+      "codex-vaticanus": {
+        "title": "Codex Vaticanus",
+        "description": "The Vatican Library's fourth-century Greek Bible."
+      },
+      "codex-alexandrinus": {
+        "title": "Codex Alexandrinus",
+        "description": "The fifth-century Greek Bible in the British Library."
+      },
+      "vulgate": {
+        "title": "The Vulgate",
+        "description": "Jerome's Latin, the Clementine edition and the Nova Vulgata."
+      }
+    },
+    "contents": "Contents",
+    "prev": "Previous",
+    "next": "Next",
+    "sources": "Sources",
+    "untranslated": "This page is not yet available in English."
   }
 }

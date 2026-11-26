@@ -78,7 +78,14 @@
     "introductionTo": "Einführung in {book}",
     "generalIntroductions": "Allgemeine Einführungen",
     "introductionsForReaders": "Angemeldete Leser können die Einführungen dieser Ausgabe lesen.",
-    "readBook": "{book} lesen"
+    "readBook": "{book} lesen",
+    "why": {
+      "esther": "Warum unterscheiden sich der griechische und der hebräische Text?",
+      "missingVerses": "Warum fehlt dieser Vers in dieser Ausgabe?",
+      "psalmNumbering": "Warum werden die Psalmen auf zwei Arten gezählt?",
+      "printedElsewhere": "Warum steht dieser Vers hier?",
+      "short": "Warum?"
+    }
   },
   "Notice": {
     "signIn": "Diese Ausgabe zeigt Besuchern die ersten 30 Verse jedes Kapitels. Melden Sie sich an, um das ganze Kapitel zu lesen.",
@@ -135,7 +142,8 @@
     "closeMenu": "Menü schließen",
     "mainNav": "Hauptnavigation",
     "language": "Sprache",
-    "api": "API"
+    "api": "API",
+    "docs": "Dokumentation"
   },
   "Review": {
     "title": "Prüfung",
@@ -293,5 +301,70 @@
     "visitorHint": "Angemeldete Leser sehen auch die Anmerkungen dieser Ausgabe.",
     "inEdition": "In {edition}",
     "inEditionShort": "in {edition}"
+  },
+  "Docs": {
+    "index": {
+      "title": "Dokumentation",
+      "description": "Wie die Bibel zu uns kam, worin sich ihre Handschriften und Übersetzungen unterscheiden, und die Ausgaben dieser Website."
+    },
+    "parts": {
+      "text": "Die Bibel und ihr Text",
+      "manuscripts": "Handschriften und Überlieferungen"
+    },
+    "pages": {
+      "how-the-bible-reached-us": {
+        "title": "Wie die Bibel zu uns kam",
+        "description": "Von den hebräischen Schriften zu den Ausgaben dieser Website, auf einer Seite."
+      },
+      "why-editions-differ": {
+        "title": "Warum sich Ausgaben unterscheiden",
+        "description": "Zählung, Psalmen, griechische und hebräische Fassungen, fehlende Verse: was der Leser zeigt, und warum."
+      },
+      "hebrew-text": {
+        "title": "Der hebräische Text",
+        "description": "Die Bücher, die Schreiber und die Masoreten; die Codices von Aleppo und Leningrad; die kritischen Ausgaben."
+      },
+      "codex-aleppo": {
+        "title": "Der Codex von Aleppo",
+        "description": "Die Bibel des 10. Jahrhunderts von Aaron ben Ascher, Vorbild des masoretischen Textes, und ihre Geschichte."
+      },
+      "codex-leningrad": {
+        "title": "Der Codex Leningradensis",
+        "description": "Die älteste vollständige hebräische Bibel (1008), der Text der heutigen wissenschaftlichen Ausgaben."
+      },
+      "qumran": {
+        "title": "Die Qumran-Rollen",
+        "description": "Die Schriftrollen vom Toten Meer, und was sie vom Text vor den Masoreten zeigen."
+      },
+      "septuagint": {
+        "title": "Die Septuaginta",
+        "description": "Die griechische Übersetzung, die die frühe Kirche las: ihre Bücher, ihre Zählung und ihre Ausgaben."
+      },
+      "new-testament-text": {
+        "title": "Der Text des Neuen Testaments",
+        "description": "Papyri, Codices und Übersetzungen, und wie eine kritische Ausgabe entsteht."
+      },
+      "codex-sinaiticus": {
+        "title": "Der Codex Sinaiticus",
+        "description": "Die Bibel des 4. Jahrhunderts aus dem Katharinenkloster, heute auf vier Bibliotheken verteilt."
+      },
+      "codex-vaticanus": {
+        "title": "Der Codex Vaticanus",
+        "description": "Die griechische Bibel des 4. Jahrhunderts der Vatikanischen Bibliothek."
+      },
+      "codex-alexandrinus": {
+        "title": "Der Codex Alexandrinus",
+        "description": "Die griechische Bibel des 5. Jahrhunderts in der British Library."
+      },
+      "vulgate": {
+        "title": "Die Vulgata",
+        "description": "Das Latein des Hieronymus, die Clementina und die Nova Vulgata."
+      }
+    },
+    "contents": "Inhalt",
+    "prev": "Zurück",
+    "next": "Weiter",
+    "sources": "Quellen",
+    "untranslated": "Diese Seite gibt es noch nicht auf Deutsch: hier ist der englische Text."
   }
 }

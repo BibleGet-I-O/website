@@ -64,9 +64,16 @@ describe("BookPage", () => {
       [row(12, 1, { printedChapter: 11, label: "1" })],
       11,
     );
-    const { container } = render(<BookPage heading="Wisdom 11" chapter={11} rows={placed} />);
+    const { container } = render(
+      <NextIntlClientProvider locale="en" messages={en}>
+        <BookPage heading="Wisdom 11" chapter={11} rows={placed} />
+      </NextIntlClientProvider>,
+    );
     const sups = Array.from(container.querySelectorAll("sup")).map((e) => e.textContent);
     expect(sups).toEqual(["25", "26", "12:1"]);
+    // Its number explains why it is printed here; the chapter's own verses carry no mark.
+    expect(screen.getAllByRole("link", { name: "Why is this verse printed here?" })).toHaveLength(1);
+    expect(screen.getByRole("link", { name: "Why is this verse printed here?" })).toHaveAttribute("href", "/en/docs/why-editions-differ#printed-elsewhere");
     // Twelve no longer shows it.
     const twelve = placeAsPrinted([], [row(12, 1, { printedChapter: 11, label: "1" }), row(12, 2)], [], 12);
     expect(twelve.map((r) => r.verse)).toEqual([2]);

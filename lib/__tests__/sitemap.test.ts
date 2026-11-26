@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, afterEach } from "vitest";
-import { canonicalOrigin, editionSitemapXml, sitemapIndexXml } from "@/lib/sitemap";
+import { canonicalOrigin, docsSitemapXml, editionSitemapXml, sitemapIndexXml } from "@/lib/sitemap";
 
 describe("sitemap", () => {
   afterEach(() => vi.unstubAllEnvs());
@@ -40,5 +40,16 @@ describe("sitemap", () => {
     expect(xml).toContain('<sitemapindex xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">');
     expect(xml).toContain("<loc>https://www.bibleget.io/sitemaps/nvbse.xml</loc>");
     expect(xml).toContain("<loc>https://www.bibleget.io/sitemaps/drb.xml</loc>");
+  });
+
+  it("theIndexNamesTheDocsSitemap", () => {
+    expect(sitemapIndexXml("https://www.bibleget.io", ["nvbse"])).toContain("<loc>https://www.bibleget.io/sitemaps/docs.xml</loc>");
+  });
+
+  it("theDocsSitemapHasEveryPageInEveryLanguage", () => {
+    const xml = docsSitemapXml("https://www.bibleget.io");
+    expect(xml.match(/<loc>/g)).toHaveLength(78);
+    expect(xml).toContain("<loc>https://www.bibleget.io/it/docs</loc>");
+    expect(xml).toContain("<loc>https://www.bibleget.io/pt/docs/codex-vaticanus</loc>");
   });
 });

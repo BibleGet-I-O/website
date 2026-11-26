@@ -1,5 +1,6 @@
 import { Fragment, type ReactNode } from "react";
 import { GapNote } from "@/components/GapNote";
+import { WhyLink } from "@/components/WhyLink";
 import { Headings, VerseLine, headingsBefore } from "@/components/VerseLines";
 import { StickyHead, type HeadColumn } from "@/components/StickyHead";
 import type { View } from "@/lib/compare";
@@ -33,8 +34,10 @@ const COLUMNS: Record<number, string> = { 1: "grid-cols-1", 2: "grid-cols-2", 3:
  * in its own chapter). Without `gapNotes` (Esther's two texts, where the Septuagint's additions simply have no
  * Masoretic counterpart) the empty side stays empty.
  */
-export function Spread({ sides, rows, chapter, truncated = [], view = "side-by-side", gapNotes = true, title, tools }: {
+export function Spread({ sides, rows, chapter, truncated = [], view = "side-by-side", gapNotes = true, title, tools, psalms = false }: {
   sides: SpreadSide[]; rows: ParallelRow[]; chapter: number; truncated?: boolean[]; view?: View; gapNotes?: boolean;
+  /** The Psalms: a compared column whose verses belong to another psalm ("9:22" beside Psalm 10) explains the two numberings. */
+  psalms?: boolean;
   /** The chapter's title: given, it heads the page in a strip that stays at the top, with the editions' names. */
   title?: string;
   /** Beside the title (the title index). */
@@ -63,8 +66,12 @@ export function Spread({ sides, rows, chapter, truncated = [], view = "side-by-s
   const muted = (s: number) => (s > 0 && !sides[s].rubric ? "text-slate-700 dark:text-slate-300" : "");
 
   const grid = `grid ${COLUMNS[cols]} ${gap}`;
+  // Interlinear has no column heads: each side's "why?" goes once, after its first label.
+  const firstOf = sides.map((_, s) => rows.findIndex((r) => cellsOf(r)[s]));
+  const otherPsalm = (s: number) => psalms && s > 0 && rows.some((r) => { const v = cellsOf(r)[s]; return v !== undefined && v.chapter !== chapter; });
   // The editions' names: the rubric's (Septuagint / Masoretic text), short on phones, or the edition's.
-  const heads: HeadColumn[] = interlinear ? [] : sides.map((side) => side.rubric ? {
+  // Esther's two texts, and a psalm numbered otherwise, carry a "why?" after their names.
+  const heads: HeadColumn[] = interlinear ? [] : sides.map((side, s) => side.rubric ? {
     key: side.sigla,
     className: "text-center font-sans text-xs font-semibold uppercase tracking-wide text-red-700 dark:text-red-400",
     label: (
@@ -72,9 +79,10 @@ export function Spread({ sides, rows, chapter, truncated = [], view = "side-by-s
         {/* On phones the short name shows; screen readers always read the full one. */}
         <span className="sr-only sm:not-sr-only">{side.rubric.full}</span>
         <span aria-hidden="true" className="sm:hidden">{side.rubric.short}</span>
+        <WhyLink topic="esther" />
       </>
     ),
-  } : { key: side.sigla, label: side.name });
+  } : { key: side.sigla, label: otherPsalm(s) ? <>{side.name}<WhyLink topic="psalm-numbering" /></> : side.name });
 
   return (
     <>
@@ -106,7 +114,10 @@ export function Spread({ sides, rows, chapter, truncated = [], view = "side-by-s
                   className={`py-0.5 ${muted(s)} ${interlinear && last ? "mb-3" : ""}`}
                 >
                   {interlinear && (s > 0 || side.rubric) && (content || titles[s].length > 0) && (
-                    <span data-testid="sigla" title={side.rubric?.full} className="font-sans text-xs text-slate-500 dark:text-slate-400">{side.rubric?.short ?? side.sigla}</span>
+                    <span data-testid="sigla" title={side.rubric?.full} className="font-sans text-xs text-slate-500 dark:text-slate-400">
+                      {side.rubric?.short ?? side.sigla}
+                      {i === firstOf[s] && (side.rubric ? <WhyLink topic="esther" /> : otherPsalm(s) && <WhyLink topic="psalm-numbering" />)}
+                    </span>
                   )}
                   {/* Interlinear: one column, so only the main edition's headings feed the running head. */}
                   {interlinear && <Headings titles={titles[s]} col={s === 0 ? 0 : undefined} row={cellsOf(r)[s]} />}

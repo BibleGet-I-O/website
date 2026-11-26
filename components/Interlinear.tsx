@@ -7,7 +7,7 @@ import { StickyHead } from "@/components/StickyHead";
 import { VerseLines } from "@/components/VerseLines";
 import type { View } from "@/lib/compare";
 import type { Second } from "@/lib/interlinear";
-import { buildRows } from "@/lib/parallel";
+import { buildRows, PSALMS } from "@/lib/parallel";
 import type { VerseRow } from "@/lib/types";
 
 const noteClass = "my-4 rounded-lg border border-slate-300 bg-slate-50 p-3 text-sm dark:border-slate-700 dark:bg-slate-900";
@@ -95,6 +95,7 @@ export async function Interlinear(p: InterlinearProps) {
             chapter={chapter}
             truncated={[p.truncated, ...aligned.map(truncatedOf)]}
             view={p.view}
+            psalms={p.bookNum === PSALMS}
           />
           {(await Promise.all(aligned.map(capped))).map((n, i) => <Fragment key={aligned[i].side.sigla}>{n}</Fragment>)}
         </>

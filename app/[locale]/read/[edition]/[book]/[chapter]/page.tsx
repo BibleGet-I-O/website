@@ -16,7 +16,9 @@ import { ESTHER, estherTradition, hasBothEstherTexts, type Tradition } from "@/l
 import { compareQuery, comparisonFor, parseView, parseWith } from "@/lib/compare";
 import { hasChapter, PROLOGUE } from "@/lib/chapters";
 import { loadSecond } from "@/lib/interlinear";
-import { buildRows } from "@/lib/parallel";
+import { buildRows, PSALMS } from "@/lib/parallel";
+import { psalmNote } from "@/lib/why";
+import { PsalmNumber } from "@/components/PsalmNumber";
 import { placeAsPrinted, verseAnchor } from "@/lib/placement";
 import { Spread } from "@/components/Spread";
 import { ChapterNotes, type NoteGroup } from "@/components/ChapterNotes";
@@ -228,6 +230,7 @@ export default async function ChapterPage({ params, searchParams }: { params: Pr
   const introHref = introduction ? `${titleBase}/introduction${compareQuery({ with: withSiglas, view })}` : undefined;
   const tools = (
     <span className="flex items-center gap-1">
+      {book.bookNum === PSALMS && <PsalmNumber note={psalmNote(rows, chapter)} />}
       {introHref && <IntroductionLink book={book.name} href={introHref} />}
       <TitleIndex
       book={book.name}
