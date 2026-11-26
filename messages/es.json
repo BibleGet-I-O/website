@@ -78,7 +78,14 @@
     "introductionTo": "Introducción a {book}",
     "generalIntroductions": "Introducciones generales",
     "introductionsForReaders": "Los lectores que han iniciado sesión pueden leer las introducciones de esta edición.",
-    "readBook": "Leer {book}"
+    "readBook": "Leer {book}",
+    "why": {
+      "esther": "¿Por qué difieren el texto griego y el hebreo?",
+      "missingVerses": "¿Por qué esta edición no tiene este versículo?",
+      "psalmNumbering": "¿Por qué los Salmos tienen dos numeraciones?",
+      "printedElsewhere": "¿Por qué este versículo está impreso aquí?",
+      "short": "¿Por qué?"
+    }
   },
   "Notice": {
     "signIn": "Esta edición muestra a los visitantes los primeros 30 versículos de cada capítulo. Inicia sesión para leer el capítulo completo.",
@@ -135,7 +142,8 @@
     "closeMenu": "Cerrar el menú",
     "mainNav": "Navegación principal",
     "language": "Idioma",
-    "api": "API"
+    "api": "API",
+    "docs": "Documentación"
   },
   "Review": {
     "title": "Revisión",
@@ -293,5 +301,62 @@
     "visitorHint": "Quien inicia sesión ve también las notas de esta edición.",
     "inEdition": "En {edition}",
     "inEditionShort": "en {edition}"
+  },
+  "Docs": {
+    "index": {
+      "title": "Documentación",
+      "description": "Cómo nos ha llegado la Biblia, en qué difieren sus manuscritos y sus traducciones, y las ediciones de este sitio."
+    },
+    "parts": {
+      "text": "La Biblia y su texto",
+      "manuscripts": "Manuscritos y tradiciones"
+    },
+    "pages": {
+      "how-the-bible-reached-us": {
+        "title": "Cómo nos ha llegado la Biblia",
+        "description": "De las Escrituras hebreas a las ediciones de este sitio, en una página."
+      },
+      "why-editions-differ": {
+        "title": "Por qué difieren las ediciones",
+        "description": "Numeración, Salmos, formas griega y hebrea, versículos que faltan: lo que muestra el lector, y por qué."
+      },
+      "hebrew-text": {
+        "title": "El texto hebreo",
+        "description": "Los libros, los escribas y los masoretas; los códices de Alepo y de Leningrado; las ediciones críticas."
+      },
+      "qumran": {
+        "title": "Los rollos de Qumrán",
+        "description": "Los manuscritos del mar Muerto, y lo que muestran del texto antes de los masoretas."
+      },
+      "septuagint": {
+        "title": "La Septuaginta",
+        "description": "La traducción griega que leyó la Iglesia antigua: sus libros, su numeración y sus ediciones."
+      },
+      "new-testament-text": {
+        "title": "El texto del Nuevo Testamento",
+        "description": "Papiros, códices y versiones, y cómo se hace una edición crítica."
+      },
+      "codex-sinaiticus": {
+        "title": "El Códice Sinaítico",
+        "description": "La Biblia del siglo IV del monasterio de Santa Catalina, hoy repartida entre cuatro bibliotecas."
+      },
+      "codex-vaticanus": {
+        "title": "El Códice Vaticano",
+        "description": "La Biblia griega del siglo IV de la Biblioteca Vaticana."
+      },
+      "codex-alexandrinus": {
+        "title": "El Códice Alejandrino",
+        "description": "La Biblia griega del siglo V de la British Library."
+      },
+      "vulgate": {
+        "title": "La Vulgata",
+        "description": "El latín de Jerónimo, la edición clementina y la Nova Vulgata."
+      }
+    },
+    "contents": "Índice",
+    "prev": "Anterior",
+    "next": "Siguiente",
+    "sources": "Fuentes",
+    "untranslated": "Esta página aún no está disponible en español: este es el texto inglés."
   }
 }

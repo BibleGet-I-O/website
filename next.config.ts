@@ -1,4 +1,5 @@
 import type { NextConfig } from "next";
+import createMDX from "@next/mdx";
 import createNextIntlPlugin from "next-intl/plugin";
 
 const config: NextConfig = {
@@ -12,4 +13,8 @@ const config: NextConfig = {
   },
 };
 
-export default createNextIntlPlugin("./i18n/request.ts")(config);
+// MDX for the documentation section (content/docs), compiled at build time: nothing is read from disk at runtime.
+// remark-gfm for tables, named by string since Turbopack cannot take plugin functions.
+const withMDX = createMDX({ options: { remarkPlugins: ["remark-gfm"] } });
+
+export default createNextIntlPlugin("./i18n/request.ts")(withMDX(config));

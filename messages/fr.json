@@ -78,7 +78,14 @@
     "introductionTo": "Introduction à {book}",
     "generalIntroductions": "Introductions générales",
     "introductionsForReaders": "Les lecteurs connectés peuvent lire les introductions de cette édition.",
-    "readBook": "Lire {book}"
+    "readBook": "Lire {book}",
+    "why": {
+      "esther": "Pourquoi les textes grec et hébreu diffèrent-ils ?",
+      "missingVerses": "Pourquoi cette édition n'a-t-elle pas ce verset ?",
+      "psalmNumbering": "Pourquoi les psaumes ont-ils deux numérotations ?",
+      "printedElsewhere": "Pourquoi ce verset est-il imprimé ici ?",
+      "short": "Pourquoi ?"
+    }
   },
   "Notice": {
     "signIn": "Cette édition montre aux visiteurs les 30 premiers versets de chaque chapitre. Connectez-vous pour lire le chapitre entier.",
@@ -135,7 +142,8 @@
     "closeMenu": "Fermer le menu",
     "mainNav": "Navigation principale",
     "language": "Langue",
-    "api": "API"
+    "api": "API",
+    "docs": "Documentation"
   },
   "Review": {
     "title": "Relecture",
@@ -293,5 +301,62 @@
     "visitorHint": "Les lecteurs connectés voient aussi les notes de cette édition.",
     "inEdition": "Dans {edition}",
     "inEditionShort": "dans {edition}"
+  },
+  "Docs": {
+    "index": {
+      "title": "Documentation",
+      "description": "Comment la Bible nous est parvenue, en quoi ses manuscrits et ses traductions diffèrent, et les éditions de ce site."
+    },
+    "parts": {
+      "text": "La Bible et son texte",
+      "manuscripts": "Manuscrits et traditions"
+    },
+    "pages": {
+      "how-the-bible-reached-us": {
+        "title": "Comment la Bible nous est parvenue",
+        "description": "Des Écritures hébraïques aux éditions de ce site, en une page."
+      },
+      "why-editions-differ": {
+        "title": "Pourquoi les éditions diffèrent",
+        "description": "Numérotation, psaumes, formes grecque et hébraïque, versets absents : ce que montre le lecteur, et pourquoi."
+      },
+      "hebrew-text": {
+        "title": "Le texte hébreu",
+        "description": "Les livres, les scribes et les massorètes ; les codex d'Alep et de Leningrad ; les éditions critiques."
+      },
+      "qumran": {
+        "title": "Les manuscrits de Qumrân",
+        "description": "Les manuscrits de la mer Morte, et ce qu'ils montrent du texte avant les massorètes."
+      },
+      "septuagint": {
+        "title": "La Septante",
+        "description": "La traduction grecque que lisait l'Église ancienne : ses livres, sa numérotation et ses éditions."
+      },
+      "new-testament-text": {
+        "title": "Le texte du Nouveau Testament",
+        "description": "Papyrus, codex et versions, et comment se fait une édition critique."
+      },
+      "codex-sinaiticus": {
+        "title": "Le Codex Sinaïticus",
+        "description": "La Bible du IVe siècle du monastère Sainte-Catherine, aujourd'hui partagée entre quatre bibliothèques."
+      },
+      "codex-vaticanus": {
+        "title": "Le Codex Vaticanus",
+        "description": "La Bible grecque du IVe siècle de la Bibliothèque vaticane."
+      },
+      "codex-alexandrinus": {
+        "title": "Le Codex Alexandrinus",
+        "description": "La Bible grecque du Ve siècle de la British Library."
+      },
+      "vulgate": {
+        "title": "La Vulgate",
+        "description": "Le latin de Jérôme, l'édition clémentine et la Nova Vulgata."
+      }
+    },
+    "contents": "Sommaire",
+    "prev": "Précédente",
+    "next": "Suivante",
+    "sources": "Sources",
+    "untranslated": "Cette page n'est pas encore disponible en français : voici le texte anglais."
   }
 }

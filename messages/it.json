@@ -78,7 +78,14 @@
     "introductionTo": "Introduzione a {book}",
     "generalIntroductions": "Introduzioni generali",
     "introductionsForReaders": "Chi ha effettuato l'accesso può leggere le introduzioni di questa edizione.",
-    "readBook": "Leggi {book}"
+    "readBook": "Leggi {book}",
+    "why": {
+      "esther": "Perché il testo greco e quello ebraico differiscono?",
+      "missingVerses": "Perché questa edizione non ha questo versetto?",
+      "psalmNumbering": "Perché i Salmi hanno due numerazioni?",
+      "printedElsewhere": "Perché questo versetto è stampato qui?",
+      "short": "Perché?"
+    }
   },
   "Notice": {
     "signIn": "Questa edizione mostra ai visitatori i primi 30 versetti di ogni capitolo. Accedi per leggere il capitolo intero.",
@@ -135,7 +142,8 @@
     "closeMenu": "Chiudi il menu",
     "mainNav": "Navigazione principale",
     "language": "Lingua",
-    "api": "API"
+    "api": "API",
+    "docs": "Documentazione"
   },
   "Review": {
     "title": "Revisione",
@@ -293,5 +301,62 @@
     "visitorHint": "Chi accede vede anche le note di questa edizione.",
     "inEdition": "In {edition}",
     "inEditionShort": "in {edition}"
+  },
+  "Docs": {
+    "index": {
+      "title": "Documentazione",
+      "description": "Come ci è giunta la Bibbia, in che cosa differiscono i suoi manoscritti e le sue traduzioni, e le edizioni di questo sito."
+    },
+    "parts": {
+      "text": "La Bibbia e il suo testo",
+      "manuscripts": "Manoscritti e tradizioni"
+    },
+    "pages": {
+      "how-the-bible-reached-us": {
+        "title": "Come ci è giunta la Bibbia",
+        "description": "Dalle Scritture ebraiche alle edizioni di questo sito, in una pagina."
+      },
+      "why-editions-differ": {
+        "title": "Perché le edizioni differiscono",
+        "description": "Numerazione, Salmi, forme greca ed ebraica, versetti mancanti: che cosa mostra il lettore, e perché."
+      },
+      "hebrew-text": {
+        "title": "Il testo ebraico",
+        "description": "I libri, gli scribi e i masoreti; i codici di Aleppo e di Leningrado; le edizioni critiche."
+      },
+      "qumran": {
+        "title": "I rotoli di Qumran",
+        "description": "I manoscritti del Mar Morto, e che cosa mostrano del testo prima dei masoreti."
+      },
+      "septuagint": {
+        "title": "La Settanta",
+        "description": "La traduzione greca letta dalla Chiesa antica: i suoi libri, la sua numerazione e le sue edizioni."
+      },
+      "new-testament-text": {
+        "title": "Il testo del Nuovo Testamento",
+        "description": "Papiri, codici e versioni, e come si fa un'edizione critica."
+      },
+      "codex-sinaiticus": {
+        "title": "Il Codice Sinaitico",
+        "description": "La Bibbia del IV secolo del monastero di Santa Caterina, oggi divisa fra quattro biblioteche."
+      },
+      "codex-vaticanus": {
+        "title": "Il Codice Vaticano",
+        "description": "La Bibbia greca del IV secolo della Biblioteca Vaticana."
+      },
+      "codex-alexandrinus": {
+        "title": "Il Codice Alessandrino",
+        "description": "La Bibbia greca del V secolo della British Library."
+      },
+      "vulgate": {
+        "title": "La Vulgata",
+        "description": "Il latino di Girolamo, l'edizione clementina e la Nova Vulgata."
+      }
+    },
+    "contents": "Indice",
+    "prev": "Precedente",
+    "next": "Successiva",
+    "sources": "Fonti",
+    "untranslated": "Questa pagina non è ancora disponibile in italiano: ecco il testo inglese."
   }
 }
