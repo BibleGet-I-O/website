@@ -1,6 +1,6 @@
 # Documentation section: design
 
-**Date:** 2026-11-26 · **Status:** draft for the user's review · **Size:** a project, delivered in several PRs
+**Date:** 2026-11-26 · **Status:** approved by the user 2026-11-26 · **Size:** a project, delivered in several PRs
 
 ## Intent
 
@@ -56,7 +56,7 @@ mappings.
   via LaParola.net, migration 016) and the source mirrors' READMEs (`BibleGet-I-O/Luzzi-Riveduta`,
   `BibleGet-I-O/Clementine-Vulgate`). Where the site's copy is not recorded (DRB: which Challoner revision), the page
   says what the edition is in general from public sources and keeps a `<Pending>` for this site's copy, as for the
-  copyrighted editions.
+  copyrighted editions (decided by the user 2026-11-26 for DRB).
 - **This project's documents** for Part IV: CBTUDR's README and `docs/schema-proposal.md`; the endpoint wiki
   (`Versification-Differences`, `Esther-Greek-and-Hebrew-Variants`, `Jeremiah-Textual-Traditions`,
   `Daniel-Deuterocanonical-Additions`, `Psalms-Numbering`, `Deuterocanonical-Books`, `Book-Numbering`).
