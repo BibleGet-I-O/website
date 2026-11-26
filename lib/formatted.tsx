@@ -231,7 +231,7 @@ const labelClass = "font-sans text-xs text-red-700 dark:text-red-400";
  * tags included, and the verse reads `text[:pos]` + headings + `text[pos:]`. With no position the caller
  * prints the headings before the verse. `headCol` makes them feed that column's running head (StickyHead).
  */
-export function renderVerse({ label, text, titles = [], titlePosition = null, headingClass = defaultHeadingClass, headCol, notes = [], at, why }: {
+export function renderVerse({ label, text, titles = [], titlePosition = null, headingClass = defaultHeadingClass, headCol, notes = [], at, why, hang: hangable = true }: {
   label: string | null;
   text: string;
   titles?: string[];
@@ -244,6 +244,11 @@ export function renderVerse({ label, text, titles = [], titlePosition = null, he
   at?: Place;
   /** A "why?" mark after the number (a verse printed in another chapter). */
   why?: ReactNode;
+  /**
+   * Whether a poetic verse's number may hang in its first line's indent (default). Compared editions set it off: their
+   * lines have no gutter, so the number stays inside the line and the text moves right to make room for it.
+   */
+  hang?: boolean;
 }): ReactNode {
   const inserts = new Map<string, ReactNode>();
   const at_: { pos: number; mark: string; intoLine?: boolean }[] = [];
@@ -271,7 +276,7 @@ export function renderVerse({ label, text, titles = [], titlePosition = null, he
   const marked = withInserts(text.replace(INSERTED, ""), at_).trimStart();
   const lines = parse(marked);
   const first = lines[0]?.nodes[0];
-  const hang = !lines[0]?.plain && first?.k === "el" && HANGING.has(first.tag);
+  const hang = hangable && !lines[0]?.plain && first?.k === "el" && HANGING.has(first.tag);
   // The hanging number is spaced by its padding (app/globals.css), so "12:1" still fits the indent.
   const number = whole[0] && label ? <NoteMarker note={whole[0].note} id={at ? markerDomId(whole[0].note.id, at) : ""}>{label}</NoteMarker> : label;
   const lead = label ? <sup className={hang ? `${labelClass} bg-vnum-hang` : `${labelClass} mr-0.5`}>{number}{why}</sup> : undefined;

@@ -27,7 +27,8 @@ export function Headings({ titles, col, row }: { titles: string[]; col?: number;
 /**
  * One verse on its own line, its printed number (in rubric red) at the start of the text, and its section headings
  * above it (or inside it, at `titlePosition`): no gutter, so narrow columns keep their width for the text. Poetic
- * lines keep their relative indents.
+ * lines keep their relative indents, and the number stays inside the first line rather than hanging to its left, where
+ * it would spill into the column beside it.
  * `headings={false}` leaves the headings before the verse to the caller (the interlinear gives them a row);
  * `anchor` makes this line the one a link to the verse (#v3.16) lands on (one side of a page only); `headCol`
  * makes its headings feed that column's running head.
@@ -38,7 +39,7 @@ export function VerseLine({ row, chapter, headings = true, anchor = false, headC
     <>
       {headings && <Headings titles={headingsBefore(row)} col={headCol} row={row} />}
       <p data-testid="verse-line" id={anchor ? verseAnchor(row) : undefined} className={`bg-text bg-compact${anchor ? " verse-target" : ""}`}>
-        {renderVerse({ label: printedLabel(row, chapter), text: row.text, titles: mid ? row.titles : [], titlePosition: row.titlePosition, headingClass: midHeadingClass, headCol, notes: row.notes, at: row, why: printedElsewhere(row, chapter) ? <WhyLink topic="printed-elsewhere" /> : undefined })}
+        {renderVerse({ label: printedLabel(row, chapter), text: row.text, titles: mid ? row.titles : [], titlePosition: row.titlePosition, headingClass: midHeadingClass, headCol, notes: row.notes, at: row, hang: false, why: printedElsewhere(row, chapter) ? <WhyLink topic="printed-elsewhere" /> : undefined })}
       </p>
     </>
   );
