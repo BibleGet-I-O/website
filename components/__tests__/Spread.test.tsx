@@ -254,6 +254,21 @@ describe("Spread", () => {
     expect(screen.getAllByRole("link", { name: "Why do the Greek and Hebrew texts differ?" })).toHaveLength(2);
   });
 
+  it("theInterlinearViewExplainsEstherOnceForEachText", () => {
+    const rubric = (full: string) => ({ full, short: full.slice(0, 3) });
+    const sides = [{ ...A, rubric: rubric("Septuagint") }, { ...A, sigla: "NABRE-MT", rubric: rubric("Masoretic text") }];
+    const rows = buildRows([row(1, 1), row(1, 2)], [[row(1, 1), row(1, 2)]], 19);
+    render(wrap(<Spread sides={sides} rows={rows} chapter={1} gapNotes={false} view="interlinear" />));
+    expect(screen.getAllByRole("link", { name: "Why do the Greek and Hebrew texts differ?" })).toHaveLength(2);
+  });
+
+  it("theInterlinearViewExplainsAPsalmNumberedOtherwiseOnce", () => {
+    const a = [row(10, 1, "10:1"), row(10, 2, "10:2")];
+    const c = [row(9, 22, "10:1"), row(9, 23, "10:2")];
+    render(wrap(<Spread sides={[A, C]} rows={buildRows(a, [c], PSALMS)} chapter={10} psalms view="interlinear" />));
+    expect(screen.getAllByRole("link", { name: "Why are the Psalms numbered two ways?" })).toHaveLength(1);
+  });
+
   it("editionsWithoutARubricHaveNoMark", () => {
     render(wrap(<Spread sides={[A, B]} rows={buildRows([row(5, 1)], [[row(5, 1)]], 47)} chapter={5} />));
     expect(screen.queryByRole("link", { name: /Why/ })).toBeNull();

@@ -66,6 +66,8 @@ export function Spread({ sides, rows, chapter, truncated = [], view = "side-by-s
   const muted = (s: number) => (s > 0 && !sides[s].rubric ? "text-slate-700 dark:text-slate-300" : "");
 
   const grid = `grid ${COLUMNS[cols]} ${gap}`;
+  // Interlinear has no column heads: each side's "why?" goes once, after its first label.
+  const firstOf = sides.map((_, s) => rows.findIndex((r) => cellsOf(r)[s]));
   const otherPsalm = (s: number) => psalms && s > 0 && rows.some((r) => { const v = cellsOf(r)[s]; return v !== undefined && v.chapter !== chapter; });
   // The editions' names: the rubric's (Septuagint / Masoretic text), short on phones, or the edition's.
   // Esther's two texts, and a psalm numbered otherwise, carry a "why?" after their names.
@@ -112,7 +114,10 @@ export function Spread({ sides, rows, chapter, truncated = [], view = "side-by-s
                   className={`py-0.5 ${muted(s)} ${interlinear && last ? "mb-3" : ""}`}
                 >
                   {interlinear && (s > 0 || side.rubric) && (content || titles[s].length > 0) && (
-                    <span data-testid="sigla" title={side.rubric?.full} className="font-sans text-xs text-slate-500 dark:text-slate-400">{side.rubric?.short ?? side.sigla}</span>
+                    <span data-testid="sigla" title={side.rubric?.full} className="font-sans text-xs text-slate-500 dark:text-slate-400">
+                      {side.rubric?.short ?? side.sigla}
+                      {i === firstOf[s] && (side.rubric ? <WhyLink topic="esther" /> : otherPsalm(s) && <WhyLink topic="psalm-numbering" />)}
+                    </span>
                   )}
                   {/* Interlinear: one column, so only the main edition's headings feed the running head. */}
                   {interlinear && <Headings titles={titles[s]} col={s === 0 ? 0 : undefined} row={cellsOf(r)[s]} />}
