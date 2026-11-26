@@ -158,8 +158,8 @@ Vitest + Testing Library; `@next/mdx` ~16.4.6, `@mdx-js/loader` ^3.1.1, `@mdx-js
   `/read/nabre?book=27&chapter=11&with=VGCL&view=interlinear#v11.26`; `everyReaderLinkIsInTheFixture` (scan every
   `content/docs/**/*.mdx` for `<ReaderLink …>`: its `edition` is a fixture key, its `book` in that edition's list, each `with` too).
 - [ ] **Step 2:** `npx vitest run components/docs/__tests__/ReaderLink.test.tsx lib/__tests__/docs-reader-links.test.ts` → FAIL.
-- [ ] **Step 3:** Implement; write the fixture from staging's API (`https://query.bibleget.io/dev/v3/metadata/...` with the
-  developer's own key, never printed or committed).
+- [ ] **Step 3:** Implement; write the fixture from the API the staging site uses (`$BIBLEGET_API_URL/v3/metadata/bibleversions`
+  and `/v3/metadata/versionindex?versions=…`, with a key read from the environment, never printed or committed).
 - [ ] **Step 4:** → PASS.
 - [ ] **Step 5:** Commit `feat(docs): links from the docs into the reader`.
 
@@ -190,7 +190,8 @@ Vitest + Testing Library; `@next/mdx` ~16.4.6, `@mdx-js/loader` ^3.1.1, `@mdx-js
   (`otherPsalmNumbers` of rows reporting `psalmHebrew` "23:1" on chapter 23 → `[]`; on chapter 22 → `[23]`; VGCL 9 → `[10]`
   when 9 and 10 reported); `psalmNote([9,10])` = `"(9–10)"`; `GapNote` shows the link; `Spread` with Esther's two sides shows
   two marks, with no rubric none; `renderVerse` puts `why` after the number.
-- [ ] **Step 2:** `npx vitest run components/__tests__/WhyLink.test.tsx lib/__tests__/why.test.ts components/__tests__/Spread.test.tsx components/__tests__/GapNote.test.tsx lib/__tests__/formatted.test.tsx` → FAIL.
+- [ ] **Step 2:** `npx vitest run components/__tests__/WhyLink.test.tsx lib/__tests__/why.test.ts components/__tests__/Spread.test.tsx components/__tests__/GapNote.test.tsx lib/__tests__/formatted.test.tsx` → FAIL
+  (`GapNote.test.tsx` is new; the others exist).
 - [ ] **Step 3:** Implement.
 - [ ] **Step 4:** → PASS, and the whole suite (`npm test`).
 - [ ] **Step 5:** Commit `feat(reader): "why?" marks where editions differ, linked to the docs`.
