@@ -18,7 +18,7 @@ export function WhyLink({ topic, short = false }: { topic: WhyTopic; short?: boo
       href={whyHref(topic)}
       aria-label={label}
       title={label}
-      className="ml-1 inline-flex items-center align-middle font-sans text-xs font-normal not-italic normal-case tracking-normal text-slate-400 no-underline hover:text-red-700 dark:text-slate-500 dark:hover:text-red-400"
+      className="ml-1 inline-flex items-center align-middle font-sans text-xs font-normal not-italic normal-case tracking-normal text-slate-500 no-underline hover:text-red-700 dark:text-slate-400 dark:hover:text-red-400"
     >
       {short ? (
         t("short")

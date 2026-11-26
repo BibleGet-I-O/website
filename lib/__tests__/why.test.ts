@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { otherPsalmNumbers, printedElsewhere, psalmNote } from "@/lib/why";
+import { printedElsewhere, psalmNote } from "@/lib/why";
 import type { VerseRow } from "@/lib/types";
 
 const row = (chapter: number, verse: number, extra: Partial<VerseRow> = {}): VerseRow => ({
@@ -15,14 +15,18 @@ describe("where the reader explains a difference", () => {
   });
 
   it("samePsalmNumberShowsNothing", () => {
-    expect(otherPsalmNumbers([row(23, 1, { psalmHebrew: "23:1" })], 23)).toEqual([]);
-    expect(otherPsalmNumbers([row(22, 1, { psalmHebrew: "23:1" }), row(22, 2, { psalmHebrew: "23:2" })], 22)).toEqual([23]);
-    expect(otherPsalmNumbers([row(9, 1, { psalmHebrew: "9:1" }), row(9, 22, { psalmHebrew: "10:1" })], 9)).toEqual([10]);
-    expect(otherPsalmNumbers([row(1, 1)], 1)).toEqual([]);
+    expect(psalmNote([row(23, 1, { psalmHebrew: "23:1" })], 23)).toBeNull();
+    expect(psalmNote([row(1, 1)], 1)).toBeNull();
   });
 
-  it("psalmNote", () => {
-    expect(psalmNote([23])).toBe("(23)");
-    expect(psalmNote([9, 10])).toBe("(9–10)");
+  it("psalmNoteGivesTheOtherNumbering", () => {
+    // VGCL 22 is Hebrew 23, verse for verse.
+    expect(psalmNote([row(22, 1, { psalmHebrew: "23:1" }), row(22, 2, { psalmHebrew: "23:2" })], 22)).toBe("(23)");
+    // VGCL 9 is Hebrew 9 and 10.
+    expect(psalmNote([row(9, 1, { psalmHebrew: "9:1" }), row(9, 22, { psalmHebrew: "10:1" })], 9)).toBe("(9–10)");
+    // VGCL 147 is Hebrew 147:12-20.
+    expect(psalmNote([row(147, 1, { psalmHebrew: "147:12" }), row(147, 9, { psalmHebrew: "147:20" })], 147)).toBe("(147:12–20)");
+    // VGCL 115 is Hebrew 116:10-19.
+    expect(psalmNote([row(115, 1, { psalmHebrew: "116:10" }), row(115, 10, { psalmHebrew: "116:19" })], 115)).toBe("(116:10–19)");
   });
 });

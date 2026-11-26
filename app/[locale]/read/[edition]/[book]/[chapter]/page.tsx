@@ -17,7 +17,7 @@ import { compareQuery, comparisonFor, parseView, parseWith } from "@/lib/compare
 import { hasChapter, PROLOGUE } from "@/lib/chapters";
 import { loadSecond } from "@/lib/interlinear";
 import { buildRows, PSALMS } from "@/lib/parallel";
-import { otherPsalmNumbers } from "@/lib/why";
+import { psalmNote } from "@/lib/why";
 import { PsalmNumber } from "@/components/PsalmNumber";
 import { placeAsPrinted, verseAnchor } from "@/lib/placement";
 import { Spread } from "@/components/Spread";
@@ -230,7 +230,7 @@ export default async function ChapterPage({ params, searchParams }: { params: Pr
   const introHref = introduction ? `${titleBase}/introduction${compareQuery({ with: withSiglas, view })}` : undefined;
   const tools = (
     <span className="flex items-center gap-1">
-      {book.bookNum === PSALMS && <PsalmNumber numbers={otherPsalmNumbers(rows, chapter)} />}
+      {book.bookNum === PSALMS && <PsalmNumber note={psalmNote(rows, chapter)} />}
       {introHref && <IntroductionLink book={book.name} href={introHref} />}
       <TitleIndex
       book={book.name}
