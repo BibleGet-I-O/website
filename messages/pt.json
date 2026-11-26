@@ -317,6 +317,14 @@
         "title": "Como a Bíblia chegou até nós",
         "description": "Das Escrituras hebraicas às edições deste site, numa página."
       },
+      "canon": {
+        "title": "O cânon das Escrituras",
+        "description": "Que livros formam a Bíblia e como a Igreja os reconheceu, das primeiras listas ao Concílio de Trento."
+      },
+      "reformation": {
+        "title": "A Reforma e a Bíblia",
+        "description": "Como os Reformadores consideraram a Escritura e o cânon, e porque a maioria das Bíblias protestantes tem 66 livros."
+      },
       "why-editions-differ": {
         "title": "Por que as edições diferem",
         "description": "Numeração, Salmos, formas grega e hebraica, versículos que faltam: o que o leitor mostra, e porquê."

@@ -317,6 +317,14 @@
         "title": "Come ci è giunta la Bibbia",
         "description": "Dalle Scritture ebraiche alle edizioni di questo sito, in una pagina."
       },
+      "canon": {
+        "title": "Il canone delle Scritture",
+        "description": "Quali libri formano la Bibbia e come la Chiesa li ha riconosciuti, dalle prime liste al Concilio di Trento."
+      },
+      "reformation": {
+        "title": "La Riforma e la Bibbia",
+        "description": "Come i Riformatori considerarono la Scrittura e il canone, e perché la maggior parte delle Bibbie protestanti ha 66 libri."
+      },
       "why-editions-differ": {
         "title": "Perché le edizioni differiscono",
         "description": "Numerazione, Salmi, forme greca ed ebraica, versetti mancanti: che cosa mostra il lettore, e perché."

@@ -317,6 +317,14 @@
         "title": "Wie die Bibel zu uns kam",
         "description": "Von den hebräischen Schriften zu den Ausgaben dieser Website, auf einer Seite."
       },
+      "canon": {
+        "title": "Der Kanon der Schrift",
+        "description": "Welche Bücher zur Bibel gehören und wie die Kirche sie erkannte, von den ersten Listen bis zum Konzil von Trient."
+      },
+      "reformation": {
+        "title": "Die Reformation und die Bibel",
+        "description": "Wie die Reformatoren die Schrift und den Kanon sahen und warum die meisten evangelischen Bibeln 66 Bücher haben."
+      },
       "why-editions-differ": {
         "title": "Warum sich Ausgaben unterscheiden",
         "description": "Zählung, Psalmen, griechische und hebräische Fassungen, fehlende Verse: was der Leser zeigt, und warum."

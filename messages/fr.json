@@ -317,6 +317,14 @@
         "title": "Comment la Bible nous est parvenue",
         "description": "Des Écritures hébraïques aux éditions de ce site, en une page."
       },
+      "canon": {
+        "title": "Le canon des Écritures",
+        "description": "Quels livres forment la Bible et comment l'Église les a reconnus, des premières listes au concile de Trente."
+      },
+      "reformation": {
+        "title": "La Réforme et la Bible",
+        "description": "Comment les Réformateurs ont considéré l'Écriture et le canon, et pourquoi la plupart des Bibles protestantes ont 66 livres."
+      },
       "why-editions-differ": {
         "title": "Pourquoi les éditions diffèrent",
         "description": "Numérotation, psaumes, formes grecque et hébraïque, versets absents : ce que montre le lecteur, et pourquoi."
