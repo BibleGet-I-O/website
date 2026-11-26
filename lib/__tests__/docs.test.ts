@@ -3,13 +3,13 @@ import { DOC_PAGES, docContentLang, docHref, findPage, headingId, neighbours, sl
 
 const SLUGS = [
   "how-the-bible-reached-us", "why-editions-differ",
-  "hebrew-text", "qumran", "septuagint", "new-testament-text", "codex-sinaiticus", "codex-vaticanus", "codex-alexandrinus", "vulgate",
+  "hebrew-text", "codex-aleppo", "codex-leningrad", "qumran", "septuagint", "new-testament-text", "codex-sinaiticus", "codex-vaticanus", "codex-alexandrinus", "vulgate",
 ];
 
 describe("the docs registry", () => {
   it("pagesInOrder", () => {
     expect(DOC_PAGES.map((p) => p.slug)).toEqual(SLUGS);
-    expect(DOC_PAGES.map((p) => p.part)).toEqual([...Array(2).fill("text"), ...Array(8).fill("manuscripts")]);
+    expect(DOC_PAGES.map((p) => p.part)).toEqual([...Array(2).fill("text"), ...Array(10).fill("manuscripts")]);
   });
 
   it("slugsUnique", () => {

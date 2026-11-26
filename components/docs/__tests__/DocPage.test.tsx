@@ -35,6 +35,6 @@ describe("a docs page", () => {
   });
 
   it("everyLocaleAndPageIsPrerendered", () => {
-    expect(generateStaticParams()).toHaveLength(60);
+    expect(generateStaticParams()).toHaveLength(72);
   });
 });

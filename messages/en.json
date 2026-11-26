@@ -324,6 +324,14 @@
         "title": "The Hebrew text",
         "description": "The books, the scribes and the Masoretes; the Aleppo and Leningrad codices; the critical editions."
       },
+      "codex-aleppo": {
+        "title": "The Aleppo Codex",
+        "description": "The tenth-century Bible of Aaron ben Asher, model of the Masoretic text, and what became of it."
+      },
+      "codex-leningrad": {
+        "title": "The Leningrad Codex",
+        "description": "The oldest complete Hebrew Bible (1008), the text of today's scholarly editions."
+      },
       "qumran": {
         "title": "The Qumran scrolls",
         "description": "The Dead Sea Scrolls, and what they show of the text before the Masoretes."

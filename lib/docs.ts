@@ -15,6 +15,8 @@ export const DOC_PAGES = [
   { slug: "how-the-bible-reached-us", part: "text", langs: EN },
   { slug: "why-editions-differ", part: "text", langs: EN },
   { slug: "hebrew-text", part: "manuscripts", langs: EN },
+  { slug: "codex-aleppo", part: "manuscripts", langs: EN },
+  { slug: "codex-leningrad", part: "manuscripts", langs: EN },
   { slug: "qumran", part: "manuscripts", langs: EN },
   { slug: "septuagint", part: "manuscripts", langs: EN },
   { slug: "new-testament-text", part: "manuscripts", langs: EN },

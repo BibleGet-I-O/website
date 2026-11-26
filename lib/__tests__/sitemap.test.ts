@@ -48,7 +48,7 @@ describe("sitemap", () => {
 
   it("theDocsSitemapHasEveryPageInEveryLanguage", () => {
     const xml = docsSitemapXml("https://www.bibleget.io");
-    expect(xml.match(/<loc>/g)).toHaveLength(66);
+    expect(xml.match(/<loc>/g)).toHaveLength(78);
     expect(xml).toContain("<loc>https://www.bibleget.io/it/docs</loc>");
     expect(xml).toContain("<loc>https://www.bibleget.io/pt/docs/codex-vaticanus</loc>");
   });

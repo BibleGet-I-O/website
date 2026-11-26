@@ -324,6 +324,14 @@
         "title": "Il testo ebraico",
         "description": "I libri, gli scribi e i masoreti; i codici di Aleppo e di Leningrado; le edizioni critiche."
       },
+      "codex-aleppo": {
+        "title": "Il Codice di Aleppo",
+        "description": "La Bibbia del X secolo di Aronne ben Asher, modello del testo masoretico, e la sua storia."
+      },
+      "codex-leningrad": {
+        "title": "Il Codice di Leningrado",
+        "description": "La più antica Bibbia ebraica completa (1008), il testo delle edizioni scientifiche di oggi."
+      },
       "qumran": {
         "title": "I rotoli di Qumran",
         "description": "I manoscritti del Mar Morto, e che cosa mostrano del testo prima dei masoreti."

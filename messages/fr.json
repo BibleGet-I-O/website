@@ -324,6 +324,14 @@
         "title": "Le texte hébreu",
         "description": "Les livres, les scribes et les massorètes ; les codex d'Alep et de Leningrad ; les éditions critiques."
       },
+      "codex-aleppo": {
+        "title": "Le Codex d'Alep",
+        "description": "La Bible du Xe siècle d'Aaron ben Asher, modèle du texte massorétique, et son histoire."
+      },
+      "codex-leningrad": {
+        "title": "Le Codex de Leningrad",
+        "description": "La plus ancienne Bible hébraïque complète (1008), le texte des éditions savantes d'aujourd'hui."
+      },
       "qumran": {
         "title": "Les manuscrits de Qumrân",
         "description": "Les manuscrits de la mer Morte, et ce qu'ils montrent du texte avant les massorètes."

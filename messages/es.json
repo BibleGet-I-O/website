@@ -324,6 +324,14 @@
         "title": "El texto hebreo",
         "description": "Los libros, los escribas y los masoretas; los códices de Alepo y de Leningrado; las ediciones críticas."
       },
+      "codex-aleppo": {
+        "title": "El Códice de Alepo",
+        "description": "La Biblia del siglo X de Aarón ben Asher, modelo del texto masorético, y su historia."
+      },
+      "codex-leningrad": {
+        "title": "El Códice de Leningrado",
+        "description": "La Biblia hebrea completa más antigua (1008), el texto de las ediciones científicas actuales."
+      },
       "qumran": {
         "title": "Los rollos de Qumrán",
         "description": "Los manuscritos del mar Muerto, y lo que muestran del texto antes de los masoretas."

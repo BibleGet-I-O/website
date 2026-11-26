@@ -324,6 +324,14 @@
         "title": "Der hebräische Text",
         "description": "Die Bücher, die Schreiber und die Masoreten; die Codices von Aleppo und Leningrad; die kritischen Ausgaben."
       },
+      "codex-aleppo": {
+        "title": "Der Codex von Aleppo",
+        "description": "Die Bibel des 10. Jahrhunderts von Aaron ben Ascher, Vorbild des masoretischen Textes, und ihre Geschichte."
+      },
+      "codex-leningrad": {
+        "title": "Der Codex Leningradensis",
+        "description": "Die älteste vollständige hebräische Bibel (1008), der Text der heutigen wissenschaftlichen Ausgaben."
+      },
       "qumran": {
         "title": "Die Qumran-Rollen",
         "description": "Die Schriftrollen vom Toten Meer, und was sie vom Text vor den Masoreten zeigen."

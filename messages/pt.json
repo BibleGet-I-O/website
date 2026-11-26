@@ -324,6 +324,14 @@
         "title": "O texto hebraico",
         "description": "Os livros, os escribas e os massoretas; os códices de Alepo e de Leningrado; as edições críticas."
       },
+      "codex-aleppo": {
+        "title": "O Códice de Alepo",
+        "description": "A Bíblia do século X de Aarão ben Asher, modelo do texto massorético, e a sua história."
+      },
+      "codex-leningrad": {
+        "title": "O Códice de Leningrado",
+        "description": "A mais antiga Bíblia hebraica completa (1008), o texto das edições científicas atuais."
+      },
       "qumran": {
         "title": "Os manuscritos de Qumran",
         "description": "Os manuscritos do mar Morto, e o que mostram do texto antes dos massoretas."
