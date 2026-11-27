@@ -196,6 +196,7 @@ export function ReaderBar(p: ReaderBarProps) {
             esther={p.esther}
             routeKey={routeKey}
             onChange={go}
+            indexHref={(type) => `/${p.locale}/read/${editionSlug(p.edition)}/${type}s?back=${encodeURIComponent(target({}))}`}
           />
         </span>
       </div>

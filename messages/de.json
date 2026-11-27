@@ -85,6 +85,23 @@
       "psalmNumbering": "Warum werden die Psalmen auf zwei Arten gezählt?",
       "printedElsewhere": "Warum steht dieser Vers hier?",
       "short": "Warum?"
+    },
+    "indices": {
+      "title": "Register",
+      "persons": "Personen",
+      "places": "Orte",
+      "events": "Ereignisse",
+      "personsIn": "Personen in {edition}",
+      "placesIn": "Orte in {edition}",
+      "eventsIn": "Ereignisse in {edition}",
+      "letters": "Buchstaben",
+      "uncertain": "unsicher",
+      "uncertainTitle": "Identifizierung wird geprüft",
+      "wikidata": "Wikidata",
+      "verses": "{count, plural, one {# Vers} other {# Verse}}",
+      "empty": "Diese Ausgabe hat noch kein Register.",
+      "back": "Zurück zum Lesen",
+      "about": "Aus CBPPEDR, dem gemeinsamen Verzeichnis biblischer Personen, Orte und Ereignisse. Die Identifizierungen sind Entwürfe, die noch geprüft werden."
     }
   },
   "Notice": {
@@ -372,6 +389,10 @@
       "textual-units": {
         "title": "Textuelle Einheiten und CBTUDR",
         "description": "Kennungen für denselben Text in jeder Ausgabe, und die Zuordnungen der Verse jeder Ausgabe."
+      },
+      "persons-places-events": {
+        "title": "Personen, Orte und Ereignisse und CBPPEDR",
+        "description": "Kennungen für die Personen, Orte und Ereignisse der Bibel und die Verse, in denen sie vorkommen."
       },
       "data-and-api": {
         "title": "Die Daten und die API",

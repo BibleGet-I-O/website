@@ -27,6 +27,7 @@ export const DOC_PAGES = [
   { slug: "codex-alexandrinus", part: "manuscripts", langs: EN },
   { slug: "vulgate", part: "manuscripts", langs: EN },
   { slug: "textual-units", part: "project", langs: EN },
+  { slug: "persons-places-events", part: "project", langs: EN },
   { slug: "data-and-api", part: "project", langs: EN },
   { slug: "contributing", part: "project", langs: EN },
 ] as const satisfies readonly { slug: string; part: DocPart; langs: readonly Locale[] }[];

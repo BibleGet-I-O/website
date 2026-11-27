@@ -15,7 +15,7 @@ function leaves(t: Tree, p = ""): [string, string][] {
 }
 
 /** Strings that read the same in every language: names, and messages made only of placeholders. */
-const SAME_EVERYWHERE = new Set(["Metadata.siteName", "Home.title", "Home.bookName", "Reader.heading", "Footer.repos.api", "Footer.apiVersion", "Review.nova", "Review.chapterTitle", "Search.passageHeading", "Reader.septuagintShort", "Header.api", "Speakers.certain"]);
+const SAME_EVERYWHERE = new Set(["Metadata.siteName", "Home.title", "Home.bookName", "Reader.heading", "Footer.repos.api", "Footer.apiVersion", "Review.nova", "Review.chapterTitle", "Search.passageHeading", "Reader.septuagintShort", "Header.api", "Speakers.certain", "Reader.indices.wikidata"]);
 
 /** Words that some languages share with English (a cognate, not an untranslated string). */
 const SHARED: Record<string, string[]> = {

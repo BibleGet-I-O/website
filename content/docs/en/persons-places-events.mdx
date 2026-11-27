@@ -1,0 +1,87 @@
+# Persons, places and events and CBPPEDR
+
+Many people and places in the Bible share a name. There are four Philips in the New Testament; Libnah is both a city of
+Judah and a camp of Israel in the desert. An index of names, or a link from a name to what it means, has to know which
+one each passage means. The **Common Biblical Persons, Places and Events Data Repository** (CBPPEDR), curated by the
+Catholic Engineering Task Force of the Catholic Digital Commons Foundation, gives each person, place and event of the
+Bible a stable identifier, and says where each appears.
+
+Its identifiers are drafts pending the committee's review until its release v1.0.0.
+
+## The identifiers
+
+```text
+bpers:philippus.herodiadis-maritus   Philip, son of Herod the Great, first husband of Herodias (Mt 14:3)
+bpers:philippus.tetrarcha            Philip, son of Herod the Great, tetrarch of Ituraea (Lk 3:1)
+bplace:lobna.urbs                    Libnah, a city of the Shephelah
+bplace:lebna.castra                  Libnah, a camp of Israel in the desert
+bevent:exilium-babylonicum           the Babylonian exile
+```
+
+An identifier is `bpers:`, `bplace:` or `bevent:` followed by the entry's Latin name as the Nova Vulgata spells it, in
+lower case, with a short Latin word after a dot where the name is shared. The three types have separate catalogs, so an
+application can build a separate index of each.
+
+## What an entry holds
+
+- its **names** in Latin (the Nova Vulgata's form), Italian and English;
+- a short **description** of the repository's own, in Italian and English, written to tell the entry apart from its
+  homonyms;
+- the **textual units** where it appears, as identified by [CBTUDR](/docs/textual-units), so that the same entry serves
+  every Bible edition: a verse is listed where the text names the entry, or designates it by a title the context ties to
+  it, not where it is only meant by a pronoun;
+- **labels**, for a verse where the entry is called otherwise (Cephas for Peter, "the king of Israel" for Joram): how each
+  edition names it there, since an edition may name or designate the entry where another does not;
+- its **relations** to other entries: parent, spouse, child; the place of a people; part of a region;
+- its **Wikidata** item, where one has been settled;
+- the **evidence** for all of the above, cited by location.
+
+The repository holds no text of the works it cites, and of the Bible editions only the few words of a label (at most
+six).
+
+## Better unidentified than misidentified
+
+Each statement is recorded at the level of certainty its evidence allows, and no higher. A verse is attested, or two
+entries are the same person, only when the Bible text itself shows it, or an authoritative source states it as fact.
+What the text leaves open but scholars propose (that Thaddaeus is Judas son of James, that the beloved disciple is John)
+is recorded as a **conjecture**, with each opinion for and against it and whose it is. A conjecture never changes what
+the catalog states: there are 189, of which 96 are supported, 26 disputed, 25 doubted and 11 rejected by authoritative
+sources, while 31 rest only on leads. Where a verse could mean more than one bearer of a name, it is given to one only
+where a source states which and none doubts it; otherwise it is recorded as a conjecture, and a bearer the sources leave
+unidentified gets an entry of its own.
+
+## Sources
+
+The catalog is built from two printed works as evidence: the *Nuovo Dizionario Enciclopedico Illustrato della Bibbia*
+(Piemme 2005) and the notes and appendices of *La Bibbia di Gerusalemme* (EDB 2011). Both are under copyright: the
+repository takes facts from them (names, identities, relations, verse references), never their text, and cites them by
+headword or note and page. Catholic biblical scholarship and peer-reviewed studies are the authorities for conjectures;
+other works are recorded as leads only. STEPBible's TIPNR list was used only to find names the two works miss, each then
+checked against the Nova Vulgata's text.
+
+## Wikidata
+
+An entry's Wikidata item is matched in one of three ways: by a strict automatic rule (a candidate of the class "human
+biblical figure", or the only fitting candidate whose description is explicitly biblical); by a model that compares the
+entry's names, relatives and verses with each candidate's facts, accepted only when it judges one candidate the same with
+probability 0.8 or more and every other below 0.2, and then checked by hand; or by a reviewer. Of 4,305 entries, 778 are
+matched by the rule, 644 by the model and 12 by a reviewer; the rest are left for review. The automatic matches have not
+been reviewed yet, and some prove to be another bearer of the name, so this site links only the items set by the model
+or a reviewer.
+
+## The indices in the reader
+
+Each edition's ⚙ menu in the reader offers its indices of persons, places and events. They are made from CBPPEDR: an
+entry's textual units become that edition's verses through CBTUDR's map of the edition, using only the links made by rule
+or reviewed. A verse where the entry is called by another name or a title is listed only for the editions whose text
+was checked to name it there. An entry the repository marks for review is shown as uncertain.
+
+## Licences
+
+The data (identifiers, names, relations, verse lists) is in the public domain (CC0 1.0); the documentation and the
+registry tables are under CC BY-ND 4.0; the scripts under Apache 2.0.
+
+<Sources>
+- CatholicOS, [CBPPEDR](https://github.com/CatholicOS/cbppedr): the README, the [vocabulary](https://github.com/CatholicOS/cbppedr/blob/main/docs/vocabulary.md) and the [data format](https://github.com/CatholicOS/cbppedr/blob/main/docs/schema.md), with the data counted here (commit fb7471c, November 2026).
+- CatholicOS, [CBTUDR](https://github.com/CatholicOS/cbtudr).
+</Sources>

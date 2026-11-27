@@ -85,6 +85,23 @@
       "psalmNumbering": "¿Por qué los Salmos tienen dos numeraciones?",
       "printedElsewhere": "¿Por qué este versículo está impreso aquí?",
       "short": "¿Por qué?"
+    },
+    "indices": {
+      "title": "Índices",
+      "persons": "Personas",
+      "places": "Lugares",
+      "events": "Acontecimientos",
+      "personsIn": "Personas en {edition}",
+      "placesIn": "Lugares en {edition}",
+      "eventsIn": "Acontecimientos en {edition}",
+      "letters": "Letras",
+      "uncertain": "incierto",
+      "uncertainTitle": "Identificación en revisión",
+      "wikidata": "Wikidata",
+      "verses": "{count, plural, one {# versículo} other {# versículos}}",
+      "empty": "Esta edición todavía no tiene índice.",
+      "back": "Volver a la lectura",
+      "about": "De CBPPEDR, el repositorio común de personas, lugares y acontecimientos bíblicos. Las identificaciones son borradores pendientes de revisión."
     }
   },
   "Notice": {
@@ -372,6 +389,10 @@
       "textual-units": {
         "title": "Unidades textuales y CBTUDR",
         "description": "Identificadores del mismo texto en cada edición, y los mapas desde los versículos de cada una."
+      },
+      "persons-places-events": {
+        "title": "Personas, lugares y acontecimientos y CBPPEDR",
+        "description": "Identificadores de las personas, los lugares y los acontecimientos de la Biblia, y los versículos donde aparece cada uno."
       },
       "data-and-api": {
         "title": "Los datos y la API",
