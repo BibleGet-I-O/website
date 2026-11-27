@@ -372,7 +372,10 @@ export function renderVerse({ label, text, titles = [], titlePosition = null, he
   const at_: Insert[] = [];
   // A mention's end goes before any insertion at the same place, its start after; ends close the inner mention first.
   const marked_ = mentions.map((m, n) => ({ m, n })).filter(({ m, n }) => m.end > m.start && n < CLOSE0 - OPEN0);
-  for (const { m, n } of [...marked_].reverse()) at_.push({ pos: m.end, mark: String.fromCharCode(CLOSE0 + n), backIntoLine: true });
+  // By geometry, whatever the array's order (n stays the mention's id): the outer opens first and the inner closes
+  // first, also where moving into a line brings boundaries of different offsets together.
+  const closes = [...marked_].sort((x, y) => x.m.end - y.m.end || y.m.start - x.m.start || y.n - x.n);
+  for (const { m, n } of closes) at_.push({ pos: m.end, mark: String.fromCharCode(CLOSE0 + n), backIntoLine: true });
   if (titlePosition != null && titlePosition > 0 && titles.length > 0) {
     inserts.set(
       MARKER,
@@ -393,7 +396,8 @@ export function renderVerse({ label, text, titles = [], titlePosition = null, he
     inserts.set(mark, markerNode(m, at, `n${i}`, label ?? undefined));
     at_.push({ pos: m.position ?? 0, mark, intoLine: true });
   });
-  for (const { m, n } of marked_) at_.push({ pos: m.start, mark: String.fromCharCode(OPEN0 + n), intoLine: true });
+  const opens = [...marked_].sort((x, y) => x.m.start - y.m.start || y.m.end - x.m.end || x.n - y.n);
+  for (const { m, n } of opens) at_.push({ pos: m.start, mark: String.fromCharCode(OPEN0 + n), intoLine: true });
   // Offsets count from the stored text, leading whitespace included; it is dropped afterwards.
   const marked = withInserts(text.replace(INSERTED, ""), at_).trimStart();
   const lines = parse(marked);

@@ -318,6 +318,44 @@ describe("marks in a verse", () => {
     expect(pieces(root)).toHaveLength(2);
   });
 
+  it("nestsALabelAroundANameListedInnerFirst", () => {
+    const outerFirst = verse("Venit Ioannes Baptista.", [
+      { start: 6, end: 22, entry: "ioannes-baptista" },
+      { start: 6, end: 13, entry: "ioannes" },
+    ]);
+    const root = verse("Venit Ioannes Baptista.", [
+      { start: 6, end: 13, entry: "ioannes" },
+      { start: 6, end: 22, entry: "ioannes-baptista" },
+    ]);
+    // The same marks, the ids following the array: the label is mention 1 here.
+    const outer = root.querySelector('[data-mention="2.5|1"]')!;
+    const inner = outer.querySelector('[data-mention="2.5|0"]')!;
+    expect(pieces(root)).toHaveLength(2);
+    expect(outer).toHaveTextContent(/^Ioannes Baptista$/);
+    expect(outer).toHaveAttribute("role", "button");
+    expect(inner).toHaveTextContent(/^Ioannes$/);
+    expect(inner).toHaveAttribute("role", "button");
+    const swap = (h: string) => h.replace(/2\.5\|0/g, "X").replace(/2\.5\|1/g, "2.5|0").replace(/X/g, "2.5|1");
+    expect(swap(root.innerHTML)).toBe(outerFirst.innerHTML);
+  });
+
+  it("reviewMarkOfAnInnerMentionWithEqualEnds", () => {
+    // "Ioannes Baptista" (settled) holds "Baptista" (under review), listed first; both end at 22.
+    const root = verse("Venit Ioannes Baptista.", [
+      { start: 14, end: 22, candidates: ["a", "b"] },
+      { start: 6, end: 22, entry: "ioannes-baptista" },
+    ]);
+    const outer = root.querySelector('[data-mention="2.5|1"]')!;
+    const inner = outer.querySelector('[data-mention="2.5|0"]')!;
+    expect(pieces(root)).toHaveLength(2);
+    expect(inner).toHaveTextContent(/^Baptista$/);
+    const sup = root.querySelector("sup.bg-mention-review")!;
+    expect(inner.nextSibling).toBe(sup);
+    expect(sup.parentElement).toBe(outer);
+    expect(outer).toHaveTextContent(/^Ioannes Baptista\?$/);
+    expect(root.textContent).toBe("5Venit Ioannes Baptista?.");
+  });
+
   it("marksASpanThatOpensAnInlineTagItDoesNotClose", () => {
     // The span opens before "<i>" and ends inside it: "<i>Petrus" (9 code points from 0).
     const root = verse("<i>Petrus dixit</i> ad eos.", [{ start: 0, end: 9, entry: "petrus" }]);
