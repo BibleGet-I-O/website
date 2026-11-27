@@ -100,6 +100,8 @@
       "wikidata": "Wikidata",
       "verses": "{count, plural, one {# verse} other {# verses}}",
       "empty": "This edition has no index yet.",
+      "signIn": "The indices of this edition are for signed-in readers: their verses open the whole chapter, which visitors see only in part. Sign in to use them.",
+      "verify": "Verify your email address to use the indices of this edition: we sent you a link when you signed up. Then sign out and sign in again.",
       "back": "Back to the reader",
       "about": "From CBPPEDR, the Common Biblical Persons, Places and Events Data Repository. Identifications are drafts pending review."
     }

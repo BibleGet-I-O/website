@@ -1,3 +1,4 @@
+import type { ReactNode } from "react";
 import { useTranslations } from "next-intl";
 import { Link } from "@/i18n/navigation";
 import { byLetter, compactRefs, description, displayName, otherName, showsWikidata, type Entity, type EntityType } from "@/lib/entities";
@@ -21,6 +22,11 @@ export type EntityIndexProps = {
   locale: string;
   /** The reader page the index was opened from, already checked; every letter link keeps it. */
   back: string | null;
+  /**
+   * A copyrighted edition's index for someone without the reader key: why it is closed (`signIn`, or `verify` for a
+   * reader whose email is unverified) and the sign-in button, in place of the entries.
+   */
+  gate?: { kind: "signIn" | "verify"; signIn?: ReactNode };
 };
 
 /**
@@ -43,7 +49,12 @@ export function EntityIndex(p: EntityIndexProps) {
       )}
       <h1 className="mt-2 font-serif text-2xl font-semibold">{t(HEADING[p.type], { edition: p.editionName })}</h1>
       <p className="mt-1 font-sans text-sm text-slate-600 dark:text-slate-400">{t("about")}</p>
-      {current === null ? (
+      {p.gate ? (
+        <aside role="note" className="mt-6 rounded-lg border border-amber-300 bg-amber-50 p-4 font-sans dark:border-amber-700 dark:bg-amber-950">
+          <p>{t(p.gate.kind)}</p>
+          {p.gate.signIn && <div className="mt-3">{p.gate.signIn}</div>}
+        </aside>
+      ) : current === null ? (
         <p className="mt-6">{t("empty")}</p>
       ) : (
         <>

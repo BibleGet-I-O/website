@@ -100,6 +100,8 @@
       "wikidata": "Wikidata",
       "verses": "{count, plural, one {# Vers} other {# Verse}}",
       "empty": "Diese Ausgabe hat noch kein Register.",
+      "signIn": "Die Register dieser Ausgabe stehen angemeldeten Lesern zur Verfügung: Ihre Verse öffnen das ganze Kapitel, das Besucher nur zum Teil sehen. Melden Sie sich an, um sie zu nutzen.",
+      "verify": "Bestätigen Sie Ihre E-Mail-Adresse, um die Register dieser Ausgabe zu nutzen: Wir haben Ihnen bei der Registrierung einen Link geschickt. Melden Sie sich danach ab und wieder an.",
       "back": "Zurück zum Lesen",
       "about": "Aus CBPPEDR, dem gemeinsamen Verzeichnis biblischer Personen, Orte und Ereignisse. Die Identifizierungen sind Entwürfe, die noch geprüft werden."
     }

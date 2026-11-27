@@ -4,6 +4,8 @@ import { getTranslations, setRequestLocale } from "next-intl/server";
 import { notFound } from "next/navigation";
 import { routing } from "@/i18n/routing";
 import { EntityIndex } from "@/components/EntityIndex";
+import { SignInButton } from "@/components/SignInButton";
+import { getAccess } from "@/lib/access";
 import { getEditions, getIndex, NotFound } from "@/lib/api";
 import { getEntityIndex, type EntityType } from "@/lib/entities";
 import { editionSlug } from "@/lib/slug";
@@ -57,7 +59,17 @@ export async function EntityIndexPage({ params, searchParams, type }: { params: 
     throw err;
   }
   const search = (await searchParams) ?? {};
-  const entities = await getEntityIndex(edition.sigla, type);
+  const back = backTo(one(search.back), locale, edition.sigla);
+  // A copyrighted edition's verses open whole chapters only with the reader key (signed in, email verified): its
+  // index is for those readers. A public-domain edition's index is open to everyone.
+  const info = edition.copyright ? await getAccess() : null;
+  const gate =
+    info && info.access !== "reader"
+      ? info.signedIn
+        ? { kind: "verify" as const }
+        : { kind: "signIn" as const, signIn: await SignInButton({ redirectTo: `/${locale}/read/${editionSlug(edition.sigla)}/${type}s${back ? `?back=${encodeURIComponent(back)}` : ""}` }) }
+      : undefined;
+  const entities = gate ? [] : await getEntityIndex(edition.sigla, type);
   const letter = one(search.letter)?.toUpperCase() ?? null;
   return (
     <main className="mx-auto w-full max-w-3xl p-4 sm:p-6">
@@ -70,7 +82,8 @@ export async function EntityIndexPage({ params, searchParams, type }: { params: 
         books={books}
         letter={letter}
         locale={locale}
-        back={backTo(one(search.back), locale, edition.sigla)}
+        back={back}
+        gate={gate}
       />
     </main>
   );

@@ -50,6 +50,7 @@ export async function IntroductionPage({ locale, edition, editions, index, book,
       withSiglas={withSiglas}
       view={view}
       esther={false}
+      indices={!edition.copyright || reader}
     />
   );
   const readBook = (

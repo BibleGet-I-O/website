@@ -29,6 +29,11 @@ export type ReaderBarProps = {
   tradition?: Tradition;
   /** A page of the book other than a chapter (its introduction, "introduction:pentateuch"), whose bar shows `chapter`. */
   part?: string;
+  /**
+   * Whether the ⚙ menu offers the edition's indices: a public-domain edition's to everyone, a copyrighted one's only
+   * with the reader key (its verses open whole chapters only then).
+   */
+  indices?: boolean;
 };
 
 const selectClass = "rounded border border-slate-300 bg-white px-2 py-1 dark:border-slate-700 dark:bg-slate-900";
@@ -196,7 +201,7 @@ export function ReaderBar(p: ReaderBarProps) {
             esther={p.esther}
             routeKey={routeKey}
             onChange={go}
-            indexHref={(type) => `/${p.locale}/read/${editionSlug(p.edition)}/${type}s?back=${encodeURIComponent(target({}))}`}
+            indexHref={p.indices ? (type) => `/${p.locale}/read/${editionSlug(p.edition)}/${type}s?back=${encodeURIComponent(target({}))}` : undefined}
           />
         </span>
       </div>
