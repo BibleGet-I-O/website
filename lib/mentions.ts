@@ -95,17 +95,20 @@ export function withKnownEntities(mentions: Mention[] | undefined, entities: Rec
   return out.length ? out : undefined;
 }
 
+/** What a mark names, in the edition (sigla, language) whose text it is in. */
+export type MarkTarget = { entry?: string; candidates?: string[]; sigla: string; lang: string };
+
 /**
- * What each mark on a page names, by the key its pieces carry (`data-mention`, lib/formatted mentionKey): the card
- * layer's lookup, so the pieces stay data-only. A key met twice keeps the first.
+ * What each mark of one edition's rows names, by the key its pieces carry (`data-mention`, mentionKey): the card
+ * layer's lookup, so the pieces stay data-only. Called once per side of the page, each with its own edition.
  */
-export function mentionMarks(rows: VerseRow[]): Record<string, { entry?: string; candidates?: string[] }> {
-  const out: Record<string, { entry?: string; candidates?: string[] }> = {};
+export function mentionMarks(rows: VerseRow[], edition: { sigla: string; lang: string }): Record<string, MarkTarget> {
+  const out: Record<string, MarkTarget> = {};
   for (const row of rows) {
     (row.mentions ?? []).forEach((m, n) => {
       const key = mentionKey(row, n);
       if (key in out) return;
-      out[key] = m.entry !== undefined ? { entry: m.entry } : { candidates: m.candidates ?? [] };
+      out[key] = { ...(m.entry !== undefined ? { entry: m.entry } : { candidates: m.candidates ?? [] }), ...edition };
     });
   }
   return out;

@@ -15,11 +15,11 @@ describe("mention marks", () => {
       row(3, "Venit Iacobus.", { segment: "a", tradition: "HEBREW", mentions: [{ start: 6, end: 13, entry: "bpers:iacobus" }] }),
       row(4, "Nemo."),
     ];
-    const marks = mentionMarks(rows);
+    const marks = mentionMarks(rows, { sigla: "NVBSE", lang: "la" });
     expect(marks).toEqual({
-      "2.1|0": { entry: "bpers:petrus" },
-      "2.1|1": { candidates: ["a", "b"] },
-      "2.3a-hebrew|0": { entry: "bpers:iacobus" },
+      "2.1|0": { entry: "bpers:petrus", sigla: "NVBSE", lang: "la" },
+      "2.1|1": { candidates: ["a", "b"], sigla: "NVBSE", lang: "la" },
+      "2.3a-hebrew|0": { entry: "bpers:iacobus", sigla: "NVBSE", lang: "la" },
     });
     const { container } = render(<p>{rows.map((r, i) => <span key={i}>{renderVerse({ label: r.label, text: r.text, at: r, mentions: r.mentions })}</span>)}</p>);
     const keys = new Set(Array.from(container.querySelectorAll("[data-mention]"), (el) => el.getAttribute("data-mention")));

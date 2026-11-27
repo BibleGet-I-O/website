@@ -3,18 +3,19 @@
 import { useTranslations } from "next-intl";
 import { Link } from "@/i18n/navigation";
 import { description, displayName, indexEntryHref, otherName } from "@/lib/entity-names";
+import type { MarkTarget } from "@/lib/mentions";
 import type { MentionEntity } from "@/lib/types";
 
-/** What a mark names: one settled entry, or the candidates of a mention under review. */
-export type MarkTarget = { entry?: string; candidates?: string[] };
+/**
+ * What a mark names (one settled entry, or the candidates of a mention under review) and the edition whose text it is
+ * in: its sigla, for the index link, and its language, which of CBPPEDR's names is shown (lib/entity-names displayName).
+ * A compared side's marks carry their own edition, not the page's.
+ */
+export type { MarkTarget };
 
 export type MentionCardProps = {
   mark: MarkTarget;
   entities: Record<string, MentionEntity>;
-  /** The edition's sigla, for the index link. */
-  sigla: string;
-  /** The edition's language: which of CBPPEDR's names is shown (lib/entities displayName). */
-  editionLang: string;
   /** The interface language. */
   locale: string;
 };
@@ -26,8 +27,8 @@ export function markEntities(mark: MarkTarget, entities: Record<string, MentionE
 }
 
 /** The card's accessible name: the displayed names of what the mark names (each once). */
-export function cardLabel(mark: MarkTarget, entities: Record<string, MentionEntity>, editionLang: string): string {
-  return [...new Set(markEntities(mark, entities).map((e) => displayName(e, editionLang)))].join(" / ");
+export function cardLabel(mark: MarkTarget, entities: Record<string, MentionEntity>): string {
+  return [...new Set(markEntities(mark, entities).map((e) => displayName(e, mark.lang)))].join(" / ");
 }
 
 const commonsName = (file: string) => encodeURIComponent(file.replace(/ /g, "_"));
@@ -39,7 +40,7 @@ const isWeb = (url: string) => /^https?:\/\//i.test(url);
  * article and a link to its entry on the index. A mention under review opens with the review line, then a section per
  * candidate (two columns where the card has room).
  */
-export function MentionCard({ mark, entities, ...p }: MentionCardProps) {
+export function MentionCard({ mark, entities, locale }: MentionCardProps) {
   const t = useTranslations("Reader.mentions");
   const shown = markEntities(mark, entities);
   const review = mark.entry === undefined;
@@ -54,7 +55,7 @@ export function MentionCard({ mark, entities, ...p }: MentionCardProps) {
       <div className={shown.length > 1 ? "grid gap-3 sm:grid-cols-2 sm:divide-x sm:divide-slate-200 dark:sm:divide-slate-700" : ""}>
         {shown.map((e, i) => (
           <div key={e.id} className={i > 0 ? "border-t border-slate-200 pt-3 sm:border-t-0 sm:pl-3 sm:pt-0 dark:border-slate-700" : ""}>
-            <EntitySection e={e} {...p} />
+            <EntitySection e={e} sigla={mark.sigla} editionLang={mark.lang} locale={locale} />
           </div>
         ))}
       </div>
@@ -62,7 +63,7 @@ export function MentionCard({ mark, entities, ...p }: MentionCardProps) {
   );
 }
 
-function EntitySection({ e, sigla, editionLang, locale }: { e: MentionEntity } & Omit<MentionCardProps, "mark" | "entities">) {
+function EntitySection({ e, sigla, editionLang, locale }: { e: MentionEntity; sigla: string; editionLang: string; locale: string }) {
   const t = useTranslations("Reader.mentions");
   const name = displayName(e, editionLang);
   const other = otherName(e, editionLang, locale);

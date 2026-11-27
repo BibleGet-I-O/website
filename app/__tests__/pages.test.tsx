@@ -389,6 +389,32 @@ describe("chapter", () => {
     getEditions.mockResolvedValue([ed("DRB", "en", "Douay-Rheims"), ed("NABRE", "en"), ed("LUZZI", "it")]);
   });
 
+  it("cardOfAComparedSideUsesThatSidesEdition", async () => {
+    localStorage.setItem("reader.annotations", "1");
+    getEditions.mockResolvedValue([ed("CEI2008", "it", "CEI 2008"), ed("NVBSE", "la", "Nova Vulgata", "1979", "Holder", false)]);
+    getIndex.mockImplementation(async (sigla: string) => ({ sigla, books: [book(17, "Tobias", "Tob", 14)] }));
+    const petrus = {
+      id: "bpers:petrus", type: "person", kind: "individual", names: { la: "Petrus", it: "Pietro", en: "Peter" },
+      description: { en: "An apostle" }, uncertain: false, verseCount: 7,
+    };
+    getChapter.mockImplementation(async (p: { sigla: string }) =>
+      p.sigla === "NVBSE"
+        ? { rows: [verse(2, 1, { text: "Dixit Petrus.", mentions: [{ start: 6, end: 12, entry: "bpers:petrus" }] })], truncated: false, expectedVerses: 1, entities: { "bpers:petrus": petrus } }
+        : { rows: [verse(2, 1, { text: "Disse Pietro." })], truncated: false, expectedVerses: 1 },
+    );
+    getVerses.mockResolvedValue([]);
+    try {
+      const { container } = render(wrap(await ChapterPage(params("cei2008", "tobias", "2", { with: "NVBSE" }))));
+      fireEvent.click(container.querySelector('[data-mention="2.1|0"]')!);
+      const card = screen.getByRole("dialog", { name: "Petrus" });
+      expect(within(card).getByText("(Peter)")).toBeInTheDocument();
+      expect(within(card).getByText("Petrus")).toHaveAttribute("lang", "la");
+      expect(within(card).getByRole("link", { name: "All 7 verses in the index" })).toHaveAttribute("href", "/en/read/nvbse/persons?letter=P#bpers:petrus");
+    } finally {
+      localStorage.clear();
+    }
+  });
+
   it("chapterPageRemembersItself", async () => {
     localStorage.clear();
     getIndex.mockResolvedValue(drbIndex);

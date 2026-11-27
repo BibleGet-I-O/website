@@ -18,7 +18,8 @@ const entities: Record<string, MentionEntity> = {
   "bpers:simon-1": person("bpers:simon-1", "Simon", { description: { en: "A tanner" } }),
   "bpers:simon-2": person("bpers:simon-2", "Simon", { description: { en: "A sorcerer" }, uncertain: true }),
 };
-const marks = { "1.1|0": { entry: "bpers:petrus" }, "1.2|0": { candidates: ["bpers:simon-1", "bpers:simon-2"] } };
+const nv = { sigla: "NVBSE", lang: "la" };
+const marks = { "1.1|0": { entry: "bpers:petrus", ...nv }, "1.2|0": { candidates: ["bpers:simon-1", "bpers:simon-2"], ...nv } };
 
 function setup() {
   render(
@@ -30,7 +31,7 @@ function setup() {
           <span className="bg-mention" data-mention="1.2|0" data-review="" data-mention-first="" tabIndex={0} role="button">Simon</span>
           <sup className="bg-mention-review">?</sup> <span data-testid="plain">et alii</span>
         </p>
-        <MentionLayer marks={marks} entities={entities} sigla="NVBSE" editionLang="la" locale="en" />
+        <MentionLayer marks={marks} entities={entities} locale="en" />
       </main>
     </NextIntlClientProvider>,
   );

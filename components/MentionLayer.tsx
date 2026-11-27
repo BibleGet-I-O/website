@@ -13,11 +13,10 @@ export const OPEN_DELAY = 300;
 export const CLOSE_DELAY = 200;
 
 export type MentionLayerProps = {
-  /** What each mark names, by its pieces' `data-mention` key (lib/formatted mentionKey). */
+  /** What each mark names and in which edition, by its pieces' `data-mention` key (lib/mentions mentionKey). */
   marks: Record<string, MarkTarget>;
   entities: Record<string, MentionEntity>;
-  sigla: string;
-  editionLang: string;
+  /** The interface language. */
   locale: string;
 };
 
@@ -44,7 +43,7 @@ function firstPiece(root: ParentNode, key: string): HTMLElement | null {
  * focus inside. Escape or a pointer down outside the card and the mark closes it, focus going back to the mark when it
  * was in the card. While the Annotations switch is off nothing answers.
  */
-export function MentionLayer({ marks, entities, sigla, editionLang, locale }: MentionLayerProps) {
+export function MentionLayer({ marks, entities, locale }: MentionLayerProps) {
   const t = useTranslations("Reader.mentions");
   const on = useSyncExternalStore(subscribeAnnotations, loadAnnotations, () => false);
   const here = useRef<HTMLSpanElement>(null);
@@ -211,7 +210,7 @@ export function MentionLayer({ marks, entities, sigla, editionLang, locale }: Me
         <div
           ref={card}
           role="dialog"
-          aria-label={cardLabel(mark, entities, editionLang)}
+          aria-label={cardLabel(mark, entities)}
           tabIndex={-1}
           onPointerEnter={enter}
           onPointerLeave={leave}
@@ -222,7 +221,7 @@ export function MentionLayer({ marks, entities, sigla, editionLang, locale }: Me
             "focus-visible:ring-2 focus-visible:ring-slate-500/60 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100"
           }
         >
-          <MentionCard mark={mark} entities={entities} sigla={sigla} editionLang={editionLang} locale={locale} />
+          <MentionCard mark={mark} entities={entities} locale={locale} />
           <button
             type="button"
             onClick={close}

@@ -223,11 +223,19 @@ export default async function ChapterPage({ params, searchParams }: { params: Pr
   const notesHint = !reader && [edition.sigla, ...withSiglas].some((s) => NOTE_EDITIONS.has(s));
 
   // The Annotations switch is offered when any text on the page has marked persons or places.
-  const shownSeconds = seconds.flatMap((s) => (s.mode === "aligned" || s.mode === "whole-chapter" ? [s] : []));
+  // Each compared side that shows rows, with its edition.
+  const shownSeconds = seconds.flatMap((s, i) => (s.mode === "aligned" || s.mode === "whole-chapter" ? [{ ...s, edition: compared[i] }] : []));
   const marked = (rs: VerseRow[]) => rs.some((r) => (r.mentions?.length ?? 0) > 0);
   const hasMentions = marked(rows) || marked(masoreticRows) || shownSeconds.some((s) => marked(s.rows));
-  // The cards: what each mark names, by its pieces' key, from every text the page shows, and the entities named.
-  const marks = hasMentions ? mentionMarks([...rows, ...masoreticRows, ...shownSeconds.flatMap((s) => s.rows)]) : {};
+  // The cards: what each mark names, by its pieces' key, from every text the page shows (each in its own edition, for
+  // the name shown and the index link), and the entities named.
+  const own = { sigla: edition.sigla, lang: edition.language };
+  const marks = hasMentions
+    ? Object.assign(
+        mentionMarks([...rows, ...masoreticRows], own),
+        ...shownSeconds.map((s) => mentionMarks(s.rows, { sigla: s.edition.sigla, lang: s.edition.language })),
+      )
+    : {};
   const entities: Record<string, MentionEntity> = hasMentions
     ? Object.assign({}, main.entities, typeof masoretic === "object" ? masoretic?.entities : undefined, ...shownSeconds.map((s) => s.entities))
     : {};
@@ -289,7 +297,7 @@ export default async function ChapterPage({ params, searchParams }: { params: Pr
         indices={!edition.copyright || info.access === "reader"}
         annotations={hasMentions}
       />
-      {hasMentions && <MentionLayer marks={marks} entities={entities} sigla={edition.sigla} editionLang={edition.language} locale={locale} />}
+      {hasMentions && <MentionLayer marks={marks} entities={entities} locale={locale} />}
       {/* Keyed by the chapter (and its query), so each chapter mounts a fresh, unturned page. */}
       <PageTurn key={`${base}/${slugFor(book, index.books)}/${chapter}${qs}`} {...turnTargets}>
         {shown && compared.length > 0 && await TraditionSwitch({
