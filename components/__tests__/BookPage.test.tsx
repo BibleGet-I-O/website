@@ -64,6 +64,24 @@ describe("BookPage", () => {
     expect(screen.getAllByText("[omissis]")).toHaveLength(1);
   });
 
+  it("marksARowTheApiSendsAsOmitted", () => {
+    const rows = [row(24, 6), row(24, 7, { text: "", omitted: true }), row(24, 8)];
+    const { container } = render(wrap(<BookPage heading="Actus Apostolorum 24" chapter={24} rows={rows} />));
+    expect(container.querySelector("#v24\\.7")!.querySelector("sup")).toHaveTextContent(/^7$/);
+    expect(screen.getAllByText("[omissis]")).toHaveLength(1);
+    expect(container.querySelectorAll("#v24\\.7")).toHaveLength(1);
+    expect(Array.from(container.querySelectorAll("sup")).map((e) => e.textContent)).toEqual(["6", "7", "8"]);
+  });
+
+  it("marksTwoOmittedRowsOnOneLineWithAnAnchorForEach", () => {
+    const rows = [row(9, 9), row(9, 10, { text: "", omitted: true }), row(9, 11, { text: "", omitted: true }), row(9, 12)];
+    const { container } = render(wrap(<BookPage heading="Ecclesiasticus 9" chapter={9} rows={rows} />));
+    expect(container.querySelector("#v9\\.10")!.querySelector("sup")).toHaveTextContent("10–11");
+    expect(container.querySelector("#v9\\.11")).not.toBeNull();
+    expect(screen.getAllByText("[omissis]")).toHaveLength(1);
+    expect(Array.from(container.querySelectorAll("sup")).map((e) => e.textContent)).toEqual(["9", "10–11", "12"]);
+  });
+
   it("rendersHeadingsWhereTheyFallAndSuperscriptVerseNumbers", () => {
     const rows = [
       row(1, 1, { titles: ["The Creation"], text: "In the beginning God created heaven, and earth." }),

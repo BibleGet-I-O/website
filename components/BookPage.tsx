@@ -2,7 +2,7 @@ import { Fragment, type ReactNode } from "react";
 import { StickyHead } from "@/components/StickyHead";
 import { renderTitle, renderVerse } from "@/lib/formatted";
 import { printedLabel, verseAnchor } from "@/lib/placement";
-import { omittedAfter, printedElsewhere } from "@/lib/why";
+import { omittedAfter, omittedRuns, printedElsewhere } from "@/lib/why";
 import { WhyLink } from "@/components/WhyLink";
 import type { VerseRow } from "@/lib/types";
 
@@ -22,8 +22,10 @@ export function BookPage({ heading, chapter, rows, lang, tools }: { heading: str
     sections[sections.length - 1].rows.push(r);
     sections[sections.length - 1].at.push(i);
   });
-  // Numbers the edition skips (the Nova Vulgata's bracketed verses) get a line of their own after the verse before them.
+  // Numbers the edition prints without text (the Nova Vulgata's bracketed verses) get the rubric: rows the API marks
+  // omitted, one rubric per run of consecutive numbers; numbers missing from the rows, after the verse before them.
   const omitted = omittedAfter(rows, chapter);
+  const runs = omittedRuns(rows, chapter);
   return (
     <article lang={lang} className="font-serif text-lg leading-relaxed">
       {/* The title and the current section stay at the top while the chapter scrolls. */}
@@ -38,18 +40,26 @@ export function BookPage({ heading, chapter, rows, lang, tools }: { heading: str
           <p className="bg-text mb-4">
             {s.rows.map((r, j) => (
               <Fragment key={j}>
-                <span id={verseAnchor(r)} className="verse-target">
-                  {renderVerse({
-                    label: printedLabel(r, chapter),
-                    text: r.text,
-                    titles: r.titlePosition == null ? [] : r.titles,
-                    titlePosition: r.titlePosition,
-                    headCol: 0,
-                    notes: r.notes,
-                    at: r,
-                    why: printedElsewhere(r, chapter) ? <WhyLink topic="printed-elsewhere" /> : undefined,
-                  })}{" "}
-                </span>
+                {r.omitted && r.chapter === chapter ? (
+                  runs.has(s.at[j]) ? (
+                    <Omitted chapter={chapter} span={runs.get(s.at[j])!} />
+                  ) : (
+                    <span id={verseAnchor(r)} className="verse-target" />
+                  )
+                ) : (
+                  <span id={verseAnchor(r)} className="verse-target">
+                    {renderVerse({
+                      label: printedLabel(r, chapter),
+                      text: r.text,
+                      titles: r.titlePosition == null ? [] : r.titles,
+                      titlePosition: r.titlePosition,
+                      headCol: 0,
+                      notes: r.notes,
+                      at: r,
+                      why: printedElsewhere(r, chapter) ? <WhyLink topic="printed-elsewhere" /> : undefined,
+                    })}{" "}
+                  </span>
+                )}
                 {omitted.has(s.at[j]) && <Omitted chapter={chapter} span={omitted.get(s.at[j])!} />}
               </Fragment>
             ))}
