@@ -100,6 +100,8 @@
       "wikidata": "Wikidata",
       "verses": "{count, plural, one {# versetto} other {# versetti}}",
       "empty": "Questa edizione non ha ancora un indice.",
+      "signIn": "Gli indici di questa edizione sono riservati ai lettori che hanno effettuato l'accesso: i loro versetti aprono l'intero capitolo, che i visitatori vedono solo in parte. Accedi per usarli.",
+      "verify": "Verifica il tuo indirizzo email per usare gli indici di questa edizione: ti abbiamo inviato un link al momento della registrazione. Poi esci e accedi di nuovo.",
       "back": "Torna alla lettura",
       "about": "Da CBPPEDR, il repertorio comune delle persone, dei luoghi e degli eventi biblici. Le identificazioni sono bozze in attesa di revisione."
     }

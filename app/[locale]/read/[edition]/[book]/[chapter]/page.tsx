@@ -271,6 +271,7 @@ export default async function ChapterPage({ params, searchParams }: { params: Pr
         view={shownView}
         esther={hasBothEstherTexts(book)}
         tradition={shown}
+        indices={!edition.copyright || info.access === "reader"}
       />
       {/* Keyed by the chapter (and its query), so each chapter mounts a fresh, unturned page. */}
       <PageTurn key={`${base}/${slugFor(book, index.books)}/${chapter}${qs}`} {...turnTargets}>
