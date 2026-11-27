@@ -10,7 +10,7 @@ import { DocsPager } from "@/components/docs/DocsPager";
 describe("DocsPager", () => {
   it("linksThePreviousAndNextPages", () => {
     render(<DocsPager slug="why-editions-differ" />);
-    expect(screen.getByRole("link", { name: /How the Bible reached us/ })).toHaveAttribute("href", "/docs/how-the-bible-reached-us");
+    expect(screen.getByRole("link", { name: /The Reformation and the Bible/ })).toHaveAttribute("href", "/docs/reformation");
     expect(screen.getByRole("link", { name: /The Hebrew text/ })).toHaveAttribute("href", "/docs/hebrew-text");
   });
 

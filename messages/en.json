@@ -317,6 +317,14 @@
         "title": "How the Bible reached us",
         "description": "From the Hebrew scriptures to the editions on this site, in one page."
       },
+      "canon": {
+        "title": "The canon of Scripture",
+        "description": "Which books make up the Bible, and how the Church came to know them, from the first lists to the Council of Trent."
+      },
+      "reformation": {
+        "title": "The Reformation and the Bible",
+        "description": "How the Reformers approached Scripture and the canon, and why most Protestant Bibles have 66 books."
+      },
       "why-editions-differ": {
         "title": "Why editions differ",
         "description": "Numbering, the Psalms, Greek and Hebrew forms, missing verses: what the reader shows, and why."

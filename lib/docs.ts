@@ -13,6 +13,8 @@ const EN: readonly Locale[] = ["en"];
 
 export const DOC_PAGES = [
   { slug: "how-the-bible-reached-us", part: "text", langs: EN },
+  { slug: "canon", part: "text", langs: EN },
+  { slug: "reformation", part: "text", langs: EN },
   { slug: "why-editions-differ", part: "text", langs: EN },
   { slug: "hebrew-text", part: "manuscripts", langs: EN },
   { slug: "codex-aleppo", part: "manuscripts", langs: EN },
