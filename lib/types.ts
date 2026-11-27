@@ -108,6 +108,24 @@ export type VerseRow = {
   notes?: NoteMarker[];
   /** A number the edition prints without text (the Nova Vulgata's bracketed verses): the API's `omitted`. */
   omitted?: true;
+  /** Persons and places named in `text`, by code-point offsets, ordered by start (NVBSE only). */
+  mentions?: Mention[];
 };
 
-export type Chapter = { rows: VerseRow[]; truncated: boolean; expectedVerses: number };
+/** A span of a row's `text` naming an entity (`entry`, settled) or one of several (`candidates`, under review). */
+export type Mention = { start: number; end: number; entry?: string; candidates?: string[] };
+
+export type MentionEntity = {
+  id: string;
+  type: "person" | "place";
+  kind: string;
+  names: Partial<Record<"la" | "it" | "en", string>>;
+  description: Partial<Record<"it" | "en", string>>;
+  uncertain: boolean;
+  verseCount: number;
+  image?: { file: string; author: string; license: string; licenseUrl: string };
+  wikipedia?: Record<string, string>;
+  coords?: { lat: number; lon: number };
+};
+
+export type Chapter = { rows: VerseRow[]; truncated: boolean; expectedVerses: number; entities?: Record<string, MentionEntity> };
