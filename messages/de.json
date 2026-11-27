@@ -390,6 +390,10 @@
         "title": "Textuelle Einheiten und CBTUDR",
         "description": "Kennungen für denselben Text in jeder Ausgabe, und die Zuordnungen der Verse jeder Ausgabe."
       },
+      "persons-places-events": {
+        "title": "Personen, Orte und Ereignisse und CBPPEDR",
+        "description": "Kennungen für die Personen, Orte und Ereignisse der Bibel und die Verse, in denen sie vorkommen."
+      },
       "data-and-api": {
         "title": "Die Daten und die API",
         "description": "Was die BibleGet-API bietet, wie man sie nutzt, und die Register, auf denen sie aufbaut."
