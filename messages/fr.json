@@ -48,7 +48,10 @@
       "imageAlt": "Image de {name}",
       "wikipedia": "Wikipédia",
       "close": "Fermer",
-      "reviewLabel": "en cours de révision"
+      "reviewLabel": "en cours de révision",
+      "siteUncertain": "site incertain",
+      "mapLabel": "Carte de {name}",
+      "mapCredits": "Crédits de la carte"
     },
     "edition": "Édition",
     "book": "Livre",

@@ -48,7 +48,10 @@
       "imageAlt": "Imagen de {name}",
       "wikipedia": "Wikipedia",
       "close": "Cerrar",
-      "reviewLabel": "en revisión"
+      "reviewLabel": "en revisión",
+      "siteUncertain": "lugar incierto",
+      "mapLabel": "Mapa de {name}",
+      "mapCredits": "Créditos del mapa"
     },
     "edition": "Edición",
     "book": "Libro",

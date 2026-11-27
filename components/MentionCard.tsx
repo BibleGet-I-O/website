@@ -1,5 +1,6 @@
 "use client";
 
+import { lazy, Suspense } from "react";
 import { useTranslations } from "next-intl";
 import { Link } from "@/i18n/navigation";
 import { description, displayName, indexEntryHref, otherName } from "@/lib/entity-names";
@@ -30,6 +31,9 @@ export function markEntities(mark: MarkTarget, entities: Record<string, MentionE
 export function cardLabel(mark: MarkTarget, entities: Record<string, MentionEntity>): string {
   return [...new Set(markEntities(mark, entities).map((e) => displayName(e, mark.lang)))].join(" / ");
 }
+
+// Leaflet comes with the first card of a place with coordinates, not with the reader.
+const MentionMap = lazy(() => import("@/components/MentionMap"));
 
 const commonsName = (file: string) => encodeURIComponent(file.replace(/ /g, "_"));
 const isWeb = (url: string) => /^https?:\/\//i.test(url);
@@ -107,7 +111,11 @@ function EntitySection({ e, sigla, editionLang, locale }: { e: MentionEntity; si
           </figcaption>
         </figure>
       )}
-      {/* A place's map goes here (Task 15). */}
+      {e.type === "place" && e.coords && (
+        <Suspense fallback={<div className="mt-2 h-40 w-full rounded bg-slate-100 dark:bg-slate-800" />}>
+          <MentionMap lat={e.coords.lat} lon={e.coords.lon} label={t("mapLabel", { name })} uncertain={e.uncertain} />
+        </Suspense>
+      )}
       {(e.verseCount > 0 || wiki) && (
         <p className="mt-2 flex flex-wrap gap-x-3 gap-y-1 text-sm">
           {e.verseCount > 0 && (

@@ -48,7 +48,10 @@
       "imageAlt": "Bild von {name}",
       "wikipedia": "Wikipedia",
       "close": "Schließen",
-      "reviewLabel": "wird geprüft"
+      "reviewLabel": "wird geprüft",
+      "siteUncertain": "Ort unsicher",
+      "mapLabel": "Karte von {name}",
+      "mapCredits": "Kartennachweise"
     },
     "edition": "Ausgabe",
     "book": "Buch",
