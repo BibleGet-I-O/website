@@ -26,6 +26,26 @@ export function psalmNote(rows: VerseRow[], chapter: number): string | null {
 }
 
 /**
+ * The rows of this chapter the API marks omitted, grouped into runs of consecutive numbers ("(10. 11)", Sir 9),
+ * keyed by the index of each run's first row: that row prints the run's rubric, the others only their anchors.
+ */
+export function omittedRuns(rows: VerseRow[], chapter: number): Map<number, [number, number]> {
+  const runs = new Map<number, [number, number]>();
+  let first = -1;
+  rows.forEach((r, i) => {
+    const prev = rows[i - 1];
+    const continues = first >= 0 && prev?.omitted && prev.chapter === chapter && r.verse === prev.verse + 1;
+    if (!r.omitted || r.chapter !== chapter) first = -1;
+    else if (continues) runs.set(first, [runs.get(first)![0], r.verse]);
+    else {
+      first = i;
+      runs.set(i, [r.verse, r.verse]);
+    }
+  });
+  return runs;
+}
+
+/**
  * The numbers an edition skips inside a chapter, keyed by the index of the row after which each run falls: the
  * verses its critical text omits, which the Nova Vulgata prints as a bracketed number ("(7)", Acts 24; "(10. 11)",
  * Sir 9). Only this chapter's rows count, so a chapter that starts later or ends sooner has none; a run is left out

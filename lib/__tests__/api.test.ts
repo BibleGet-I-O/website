@@ -72,6 +72,14 @@ describe("getChapter", () => {
     expect((await getChapter(base)).truncated).toBe(false);
   });
 
+  it("marksARowTheEditionOmits", async () => {
+    mockFetch(() => json(quote([raw(6), raw(7, { text: "", omitted: true }), raw(8, { omitted: false })])), 8);
+    const [six, seven, eight] = (await getChapter(base)).rows;
+    expect(seven.omitted).toBe(true);
+    expect(six).not.toHaveProperty("omitted");
+    expect(eight).not.toHaveProperty("omitted");
+  });
+
   it("mapsPrintedChapterAndLabel", async () => {
     mockFetch(() => json(quote([
       raw(1, { printed_chapter: 10, verse_label: "1a", title1: "T1", title2: "T2", psalm_hebrew: "23:1" }),

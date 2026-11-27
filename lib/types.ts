@@ -106,6 +106,8 @@ export type VerseRow = {
   tradition?: "HEBREW";
   /** The row's note markers, in printed order (signed-in readers only; absent when none). */
   notes?: NoteMarker[];
+  /** A number the edition prints without text (the Nova Vulgata's bracketed verses): the API's `omitted`. */
+  omitted?: true;
 };
 
 export type Chapter = { rows: VerseRow[]; truncated: boolean; expectedVerses: number };

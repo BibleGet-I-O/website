@@ -2,7 +2,7 @@ import { Fragment, type ReactNode } from "react";
 import { StickyHead } from "@/components/StickyHead";
 import { renderTitle, renderVerse } from "@/lib/formatted";
 import { printedLabel, verseAnchor } from "@/lib/placement";
-import { omittedAfter, printedElsewhere } from "@/lib/why";
+import { omittedAfter, omittedRuns, printedElsewhere } from "@/lib/why";
 import { WhyLink } from "@/components/WhyLink";
 import type { VerseRow } from "@/lib/types";
 
@@ -22,8 +22,10 @@ export function BookPage({ heading, chapter, rows, lang, tools }: { heading: str
     sections[sections.length - 1].rows.push(r);
     sections[sections.length - 1].at.push(i);
   });
-  // Numbers the edition skips (the Nova Vulgata's bracketed verses) get a line of their own after the verse before them.
+  // Numbers the edition prints without text (the Nova Vulgata's bracketed verses) get the rubric: rows the API marks
+  // omitted, one rubric per run of consecutive numbers; numbers missing from the rows, after the verse before them.
   const omitted = omittedAfter(rows, chapter);
+  const runs = omittedRuns(rows, chapter);
   return (
     <article lang={lang} className="font-serif text-lg leading-relaxed">
       {/* The title and the current section stay at the top while the chapter scrolls. */}
@@ -38,18 +40,30 @@ export function BookPage({ heading, chapter, rows, lang, tools }: { heading: str
           <p className="bg-text mb-4">
             {s.rows.map((r, j) => (
               <Fragment key={j}>
-                <span id={verseAnchor(r)} className="verse-target">
-                  {renderVerse({
-                    label: printedLabel(r, chapter),
-                    text: r.text,
-                    titles: r.titlePosition == null ? [] : r.titles,
-                    titlePosition: r.titlePosition,
-                    headCol: 0,
-                    notes: r.notes,
-                    at: r,
-                    why: printedElsewhere(r, chapter) ? <WhyLink topic="printed-elsewhere" /> : undefined,
-                  })}{" "}
-                </span>
+                {r.omitted && r.chapter === chapter ? (
+                  runs.has(s.at[j]) ? (
+                    <Omitted chapter={chapter} span={runs.get(s.at[j])!} anchor={verseAnchor(r)}>
+                      {markersOf(r)}
+                    </Omitted>
+                  ) : (
+                    <span id={verseAnchor(r)} className="verse-target">
+                      {markersOf(r)}
+                    </span>
+                  )
+                ) : (
+                  <span id={verseAnchor(r)} className="verse-target">
+                    {renderVerse({
+                      label: printedLabel(r, chapter),
+                      text: r.text,
+                      titles: r.titlePosition == null ? [] : r.titles,
+                      titlePosition: r.titlePosition,
+                      headCol: 0,
+                      notes: r.notes,
+                      at: r,
+                      why: printedElsewhere(r, chapter) ? <WhyLink topic="printed-elsewhere" /> : undefined,
+                    })}{" "}
+                  </span>
+                )}
                 {omitted.has(s.at[j]) && <Omitted chapter={chapter} span={omitted.get(s.at[j])!} />}
               </Fragment>
             ))}
@@ -60,12 +74,21 @@ export function BookPage({ heading, chapter, rows, lang, tools }: { heading: str
   );
 }
 
-/** A number the edition keeps without text: the number, a red rubric `[omissis]` and the ⓘ that explains it. */
-function Omitted({ chapter, span: [from, to] }: { chapter: number; span: [number, number] }) {
+/** An omitted row's note markers (no number, no text): the notes list links back to them. */
+function markersOf(r: VerseRow): ReactNode {
+  return r.notes?.length ? renderVerse({ label: null, text: "", notes: r.notes, at: r }) : null;
+}
+
+/**
+ * A number the edition keeps without text: the number, a red rubric `[omissis]` and the ⓘ that explains it. An omitted
+ * row passes its own anchor (with its segment) and its note markers; a number absent from the rows gets the bare one.
+ */
+function Omitted({ chapter, span: [from, to], anchor, children }: { chapter: number; span: [number, number]; anchor?: string; children?: ReactNode }) {
   return (
-    <span id={verseAnchor({ chapter, verse: from })} className="verse-target">
+    <span id={anchor ?? verseAnchor({ chapter, verse: from })} className="verse-target">
       <sup className="mr-0.5 font-sans text-xs text-red-700 dark:text-red-400">{from === to ? from : `${from}–${to}`}</sup>
       <span lang="la" className="italic text-red-700 dark:text-red-400">[omissis]</span>
+      {children}
       <WhyLink topic="missing-verses" />{" "}
     </span>
   );
