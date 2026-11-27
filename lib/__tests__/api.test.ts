@@ -67,6 +67,18 @@ describe("getChapter", () => {
     expect(c.expectedVerses).toBe(48);
   });
 
+  it("marksAChapterTheApiSaysItCappedAsTruncated", async () => {
+    // NVBSE Esther 4: 52 rows (1-17, then 17a-17z); the index counts 17, and the 30th row is a lettered 17.
+    const lettered = [...rows(17), ...Array.from({ length: 13 }, (_, i) => raw(17, { verse_segment: String.fromCharCode(97 + i) }))];
+    mockFetch(() => json({ ...quote(lettered), notices: [{ code: "VERSES_CAPPED", version: "DRB", limit: 30 }] }), 17);
+    expect((await getChapter(base)).truncated).toBe(true);
+  });
+
+  it("ignoresAnotherEditionsCapNotice", async () => {
+    mockFetch(() => json({ ...quote(rows(30)), notices: [{ code: "VERSES_CAPPED", version: "NABRE", limit: 30 }] }), 30);
+    expect((await getChapter(base)).truncated).toBe(false);
+  });
+
   it("doesNotMarkAnExactly30VerseChapterAsTruncated", async () => {
     mockFetch(() => json(quote(rows(30))), 30);
     expect((await getChapter(base)).truncated).toBe(false);

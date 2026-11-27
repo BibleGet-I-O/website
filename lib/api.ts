@@ -380,7 +380,7 @@ type RawRef = {
 };
 type RawNote = { kind: string; marker: string | null; label: string | null; title: string | null; body: string; refs: RawRef[] };
 type RawNotes = Record<string, RawNote>;
-type QuoteBody = { results?: RawRow[]; errors?: unknown[]; notes?: RawNotes };
+type QuoteBody = { results?: RawRow[]; errors?: unknown[]; notes?: RawNotes; notices?: { code?: string; version?: string }[] };
 
 function toNote(id: string, n: RawNote): Note {
   return {
@@ -505,7 +505,10 @@ export async function getChapter(p: ChapterParams): Promise<Chapter> {
   // Esther with both texts: count the verses of the text requested (Greek, the API's default, unless HEBREW).
   const expectedVerses = book && versesIn(book, p.chapter, p.tradition);
   if (expectedVerses === undefined) throw new NotFound(`${p.bookAbbrev} ${p.chapter} is not in ${p.sigla}`);
-  return { rows, truncated: rows[rows.length - 1].verse < expectedVerses, expectedVerses };
+  // The API's notice is the authority: a chapter with lettered verses (NVBSE Esther 4, 17a-17z) can be cut at a
+  // row whose verse number already equals the index's count. The count stays as a fallback.
+  const capped = (body.notices ?? []).some((n) => n.code === "VERSES_CAPPED" && n.version === p.sigla);
+  return { rows, truncated: capped || rows[rows.length - 1].verse < expectedVerses, expectedVerses };
 }
 
 /**
