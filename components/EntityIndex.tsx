@@ -103,7 +103,8 @@ function Item({ e, ...p }: { e: Entity } & EntityIndexProps) {
     </span>
   );
   return (
-    <li>
+    // The entry's id is its CBPPEDR id, the fragment a mention card links to (`?letter=P#bpers:petrus`).
+    <li id={e.id} className="scroll-mt-24 rounded target:bg-red-50 dark:target:bg-red-950/40">
       <p>
         <span lang={p.editionLang} className="font-serif text-lg font-semibold">{displayName(e, p.editionLang)}</span>
         {other && <span className="ml-1 text-slate-600 dark:text-slate-400">({other})</span>}

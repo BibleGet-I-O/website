@@ -44,6 +44,17 @@ describe("EntityIndex", () => {
     expect(screen.getByRole("link", { name: "4:2–3" })).toHaveAttribute("href", "/en/read/nvbse/genesis/4#v4.2");
   });
 
+  it("anchorsEachIndexEntry", () => {
+    // A card's "All N verses" link lands on its entry: `?letter=A#bpers:abel`. An id with a colon is a valid fragment
+    // target (only a CSS selector would need it escaped), so it is looked up by id, not by selector.
+    const entities = [entity("bpers:abel", "Abel"), entity("bpers:adam", "Adam")];
+    render(wrap(<EntityIndex {...base} entities={entities} letter="A" />));
+    const [abel, adam] = screen.getAllByRole("listitem");
+    expect(abel).toHaveAttribute("id", "bpers:abel");
+    expect(adam).toHaveAttribute("id", "bpers:adam");
+    expect(document.getElementById("bpers:abel")).toBe(abel);
+  });
+
   it("marksUncertainEntriesAndHidesAutomaticWikidataLinks", () => {
     const entities = [
       entity("bpers:a1", "Aa", { uncertain: true, qid: "Q1", qidStatus: "auto" }),
