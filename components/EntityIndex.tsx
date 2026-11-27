@@ -51,7 +51,7 @@ export function EntityIndex(p: EntityIndexProps) {
             {[...letters.keys()].map((l) => (
               <a
                 key={l}
-                href={`?letter=${l}${keep}`}
+                href={`?letter=${encodeURIComponent(l)}${keep}`}
                 aria-current={l === current ? "page" : undefined}
                 className={`rounded px-2 py-1 ${l === current ? "bg-red-700 text-white dark:bg-red-400 dark:text-slate-950" : "hover:bg-slate-100 dark:hover:bg-slate-800"}`}
               >

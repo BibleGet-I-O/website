@@ -14,13 +14,23 @@ export type IndexSearch = { letter?: string | string[]; back?: string | string[]
 const one = (v: string | string[] | undefined) => (Array.isArray(v) ? v[0] : v);
 const HEADING = { person: "personsIn", place: "placesIn", event: "eventsIn" } as const;
 
+/** Any fixed origin: a back path is resolved against it only to see where the browser would take it. */
+const ORIGIN = "https://bibleget.invalid";
+
 /**
- * The reader page an index was opened from: only a path of this edition's reader on this site (no other site, no
- * scheme), else none.
+ * The reader page an index was opened from: only a path of this edition's reader on this site, checked once resolved
+ * (so "/en/read/nvbse/../nabre/…", plain or percent-encoded, does not pass), with its query and fragment; else none.
  */
 export function backTo(back: string | undefined, locale: string, sigla: string): string | null {
+  if (!back || !back.startsWith("/") || back.includes("//") || back.includes("\\")) return null;
+  let url: URL;
+  try {
+    url = new URL(back, ORIGIN);
+  } catch {
+    return null;
+  }
   const prefix = `/${locale}/read/${editionSlug(sigla)}/`;
-  return back && back.startsWith(prefix) && !back.includes("//") && !back.includes("\\") ? back : null;
+  return url.origin === ORIGIN && url.pathname.startsWith(prefix) ? `${url.pathname}${url.search}${url.hash}` : null;
 }
 
 /** The tab's title: "Places in Nova Vulgata", as the page's heading; none for an edition that does not exist. */

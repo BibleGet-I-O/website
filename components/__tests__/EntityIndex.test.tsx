@@ -74,6 +74,11 @@ describe("EntityIndex", () => {
     expect(screen.queryByRole("navigation", { name: "Letters" })).toBeNull();
   });
 
+  it("keepsTheBackLinkOnALetterThatIsNotALetter", () => {
+    render(wrap(<EntityIndex {...base} entities={[entity("bpers:n", "123")]} letter={null} back="/en/read/nvbse/genesis/4" />));
+    expect(screen.getByRole("navigation", { name: "Letters" }).querySelector("a")).toHaveAttribute("href", `?letter=%23&back=${encodeURIComponent("/en/read/nvbse/genesis/4")}`);
+  });
+
   it("linksBackToTheReaderPageItWasOpenedFrom", () => {
     render(wrap(<EntityIndex {...base} entities={[entity("bpers:a", "Abel")]} letter={null} back="/en/read/nvbse/genesis/4?with=DRB" />));
     expect(screen.getByRole("link", { name: "Back to the reader" })).toHaveAttribute("href", "/en/read/nvbse/genesis/4?with=DRB");
@@ -89,6 +94,10 @@ describe("backTo", () => {
     expect(backTo("/en/read/nvbse//evil.example", "en", "NVBSE")).toBeNull();
     expect(backTo("/en/read/drb/genesis/4", "en", "NVBSE")).toBeNull();
     expect(backTo(undefined, "en", "NVBSE")).toBeNull();
+    // A parent segment, plain or percent-encoded, would leave the edition once the browser resolves it.
+    expect(backTo("/en/read/nvbse/../nabre/genesis/1", "en", "NVBSE")).toBeNull();
+    expect(backTo("/en/read/nvbse/%2e%2e/nabre/genesis/1", "en", "NVBSE")).toBeNull();
+    expect(backTo("/en/read/nvbse/genesis/4?with=DRB&tradition=GREEK#v4.2", "en", "NVBSE")).toBe("/en/read/nvbse/genesis/4?with=DRB&tradition=GREEK#v4.2");
   });
 });
 
