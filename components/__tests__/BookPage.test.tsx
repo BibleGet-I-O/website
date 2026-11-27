@@ -2,7 +2,8 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 import { render, screen, fireEvent } from "@testing-library/react";
 import { NextIntlClientProvider } from "next-intl";
 import en from "@/messages/en.json";
-import type { VerseRow } from "@/lib/types";
+import type { Note, VerseRow } from "@/lib/types";
+import { markerDomId } from "@/lib/notes";
 
 vi.mock("server-only", () => ({}));
 vi.mock("@/auth", () => ({ auth: vi.fn(), signIn: vi.fn(), signOut: vi.fn() }));
@@ -80,6 +81,26 @@ describe("BookPage", () => {
     expect(container.querySelector("#v9\\.11")).not.toBeNull();
     expect(screen.getAllByText("[omissis]")).toHaveLength(1);
     expect(Array.from(container.querySelectorAll("sup")).map((e) => e.textContent)).toEqual(["9", "10–11", "12"]);
+  });
+
+  it("keepsTheNoteMarkersOfOmittedRows", () => {
+    const note = (id: string): Note => ({ id, edition: "NABRE", kind: "footnote", marker: "*", label: null, title: null, body: "Omitted.", refs: [] });
+    const rows = [
+      row(8, 36),
+      row(8, 37, { text: "", omitted: true, notes: [{ note: note("NABRE:44008037-1"), field: "text", position: null }] }),
+      row(8, 38, { text: "", omitted: true, notes: [{ note: note("NABRE:44008038-1"), field: "text", position: null }] }),
+      row(8, 39),
+    ];
+    const { container } = render(wrap(<BookPage heading="Acts 8" chapter={8} rows={rows} />));
+    expect(container.querySelector("#v8\\.37")!.querySelector(`[id="${markerDomId("NABRE:44008037-1", rows[1])}"]`)).not.toBeNull();
+    expect(container.querySelector("#v8\\.38")!.querySelector(`[id="${markerDomId("NABRE:44008038-1", rows[2])}"]`)).not.toBeNull();
+    expect(screen.getAllByText("[omissis]")).toHaveLength(1);
+  });
+
+  it("anchorsAnOmittedRowWithItsSegment", () => {
+    const rows = [row(24, 7, { segment: "a" }), row(24, 7, { segment: "b", text: "", omitted: true }), row(24, 8)];
+    const { container } = render(wrap(<BookPage heading="Actus Apostolorum 24" chapter={24} rows={rows} />));
+    expect(container.querySelector("#v24\\.7b")).toContainElement(screen.getByText("[omissis]"));
   });
 
   it("rendersHeadingsWhereTheyFallAndSuperscriptVerseNumbers", () => {

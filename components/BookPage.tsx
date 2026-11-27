@@ -42,9 +42,13 @@ export function BookPage({ heading, chapter, rows, lang, tools }: { heading: str
               <Fragment key={j}>
                 {r.omitted && r.chapter === chapter ? (
                   runs.has(s.at[j]) ? (
-                    <Omitted chapter={chapter} span={runs.get(s.at[j])!} />
+                    <Omitted chapter={chapter} span={runs.get(s.at[j])!} anchor={verseAnchor(r)}>
+                      {markersOf(r)}
+                    </Omitted>
                   ) : (
-                    <span id={verseAnchor(r)} className="verse-target" />
+                    <span id={verseAnchor(r)} className="verse-target">
+                      {markersOf(r)}
+                    </span>
                   )
                 ) : (
                   <span id={verseAnchor(r)} className="verse-target">
@@ -70,12 +74,21 @@ export function BookPage({ heading, chapter, rows, lang, tools }: { heading: str
   );
 }
 
-/** A number the edition keeps without text: the number, a red rubric `[omissis]` and the ⓘ that explains it. */
-function Omitted({ chapter, span: [from, to] }: { chapter: number; span: [number, number] }) {
+/** An omitted row's note markers (no number, no text): the notes list links back to them. */
+function markersOf(r: VerseRow): ReactNode {
+  return r.notes?.length ? renderVerse({ label: null, text: "", notes: r.notes, at: r }) : null;
+}
+
+/**
+ * A number the edition keeps without text: the number, a red rubric `[omissis]` and the ⓘ that explains it. An omitted
+ * row passes its own anchor (with its segment) and its note markers; a number absent from the rows gets the bare one.
+ */
+function Omitted({ chapter, span: [from, to], anchor, children }: { chapter: number; span: [number, number]; anchor?: string; children?: ReactNode }) {
   return (
-    <span id={verseAnchor({ chapter, verse: from })} className="verse-target">
+    <span id={anchor ?? verseAnchor({ chapter, verse: from })} className="verse-target">
       <sup className="mr-0.5 font-sans text-xs text-red-700 dark:text-red-400">{from === to ? from : `${from}–${to}`}</sup>
       <span lang="la" className="italic text-red-700 dark:text-red-400">[omissis]</span>
+      {children}
       <WhyLink topic="missing-verses" />{" "}
     </span>
   );
