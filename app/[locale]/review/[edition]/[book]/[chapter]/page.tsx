@@ -50,7 +50,7 @@ async function chapterTexts(
     for (const c of chapters) {
       for (const tradition of traditions) {
         try {
-          const rows = (await getChapter({ sigla, bookAbbrev: book.abbrev, chapter: c, access, ...(tradition && { tradition }) })).rows;
+          const rows = (await getChapter({ sigla, bookAbbrev: book.abbrev, chapter: c, access, mentions: false, ...(tradition && { tradition }) })).rows;
           for (const [k, v] of texts(rows, tradition)) out.set(k, v);
         } catch {
           // A chapter that cannot be fetched leaves its texts empty; the links still show.

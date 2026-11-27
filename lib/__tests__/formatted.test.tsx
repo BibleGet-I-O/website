@@ -3,7 +3,7 @@ import { render, screen } from "@testing-library/react";
 import { NextIntlClientProvider } from "next-intl";
 import en from "@/messages/en.json";
 import { renderFormatted, renderTitle, renderVerse } from "@/lib/formatted";
-import type { Note, NoteMarker } from "@/lib/types";
+import type { Mention, Note, NoteMarker } from "@/lib/types";
 
 // Synthetic or public-domain (KJV, Douay-Rheims) text only.
 const html = (node: React.ReactNode) => render(<div>{node}</div>).container.firstElementChild as HTMLElement;
@@ -249,5 +249,125 @@ describe("notes in a verse", () => {
     expect(root.querySelector(".bg-note-foot")).toBeNull();
     const h = render(<NextIntlClientProvider locale="en" messages={en}><h2>{renderTitle("The Fall", [{ note: note("1", "footnote", "*"), field: "title", titleIndex: 0, position: 3 }], 0, at)}</h2></NextIntlClientProvider>).container;
     expect(h.textContent).toBe("The* Fall");
+  });
+});
+
+describe("marks in a verse", () => {
+  // Invented Latin sentences only.
+  const at = { chapter: 2, verse: 5 };
+  const note: Note = { id: "NVBSE:1", edition: "NVBSE", kind: "footnote", marker: "*", label: "2:5", title: null, body: "Nota.", refs: [] };
+  const verse = (text: string, mentions: Mention[] | undefined, notes: NoteMarker[] = [], extra: { titles?: string[]; titlePosition?: number } = {}) =>
+    render(<NextIntlClientProvider locale="en" messages={en}><div>{renderVerse({ label: "5", text, notes, at, mentions, ...extra })}</div></NextIntlClientProvider>)
+      .container.firstElementChild as HTMLElement;
+  const pieces = (root: HTMLElement) => Array.from(root.querySelectorAll<HTMLElement>(".bg-mention"));
+
+  it("marksASettledName", () => {
+    const root = verse("Et dixit Petrus ad eos.", [{ start: 9, end: 15, entry: "petrus" }]);
+    const [p, ...rest] = pieces(root);
+    expect(rest).toHaveLength(0);
+    expect(p.tagName).toBe("SPAN");
+    expect(p).toHaveTextContent(/^Petrus$/);
+    expect(p).toHaveAttribute("data-mention", "2.5|0");
+    expect(p).toHaveAttribute("tabindex", "0");
+    expect(p).toHaveAttribute("role", "button");
+    expect(p).toHaveAttribute("aria-haspopup", "dialog");
+    expect(p).not.toHaveAttribute("data-review");
+    expect(root.querySelector(".bg-mention-review")).toBeNull();
+    expect(root.textContent).toBe("5Et dixit Petrus ad eos.");
+  });
+
+  it("marksAReviewNameWithAQuestionMark", () => {
+    const root = verse("Venit Iacobus in urbem.", [{ start: 6, end: 13, candidates: ["iacobus-a", "iacobus-b"] }]);
+    const [p] = pieces(root);
+    expect(p).toHaveTextContent(/^Iacobus$/);
+    expect(p).toHaveAttribute("data-review", "");
+    const sup = root.querySelector("sup.bg-mention-review")!;
+    expect(sup).toHaveTextContent("?");
+    expect(sup).toHaveAttribute("aria-label", "under review");
+    expect(p.nextSibling).toBe(sup);
+    expect(root.textContent).toBe("5Venit Iacobus? in urbem.");
+  });
+
+  it("splitsAMarkAcrossALineAndANoteMarker", () => {
+    // The mark runs from "Simon" (after "<po>", 4 code points) over the line break and a note after "Iona" (37) to "Barionas".
+    const text = "<po>Simon Petrus</po>\n<po>filius Iona Barionas</po>";
+    const start = 4;
+    const end = Array.from(text).length - 5;
+    const root = verse(text, [{ start, end, entry: "petrus" }], [{ note, field: "text", position: 37 }]);
+    const ps = pieces(root);
+    expect(ps.map((p) => p.textContent)).toEqual(["Simon Petrus", "filius Iona", " Barionas"]);
+    expect(ps.every((p) => p.closest(".bg-line") !== null && p.querySelector(".bg-line, .bg-note-foot") === null)).toBe(true);
+    expect(ps[0]).toHaveAttribute("role", "button");
+    expect(ps.slice(1).every((p) => !p.hasAttribute("role") && !p.hasAttribute("tabindex"))).toBe(true);
+    expect(root.querySelectorAll(".bg-line")).toHaveLength(2);
+    expect(root.querySelector(".bg-note-foot")?.closest(".bg-mention")).toBeNull();
+  });
+
+  it("nestsALabelAroundAName", () => {
+    // "Ioannes Baptista" (a label) holds "Ioannes" (a name): the inner span lies within the outer piece.
+    const root = verse("Venit Ioannes Baptista.", [
+      { start: 6, end: 22, entry: "ioannes-baptista" },
+      { start: 6, end: 13, entry: "ioannes" },
+    ]);
+    const outer = root.querySelector('[data-mention="2.5|0"]')!;
+    const inner = outer.querySelector('[data-mention="2.5|1"]')!;
+    expect(outer).toHaveTextContent(/^Ioannes Baptista$/);
+    expect(inner).toHaveTextContent(/^Ioannes$/);
+    expect(outer).toHaveAttribute("role", "button");
+    expect(inner).toHaveAttribute("role", "button");
+    expect(pieces(root)).toHaveLength(2);
+  });
+
+  it("marksASpanThatOpensAnInlineTagItDoesNotClose", () => {
+    // The span opens before "<i>" and ends inside it: "<i>Petrus" (9 code points from 0).
+    const root = verse("<i>Petrus dixit</i> ad eos.", [{ start: 0, end: 9, entry: "petrus" }]);
+    const ps = pieces(root);
+    expect(ps.map((p) => p.textContent)).toEqual(["Petrus"]);
+    expect(ps[0].closest("i")).not.toBeNull();
+    expect(root.querySelector("i")).toHaveTextContent(/^Petrus dixit$/);
+    expect(root.textContent).toBe("5Petrus dixit ad eos.");
+  });
+
+  it("marksASpanThatClosesOutsideTheInlineTagItOpens", () => {
+    // Opens inside "<i>" and ends after "</i>": two pieces, one inside the italics, one after.
+    const root = verse("Dixit <i>Simon</i> Petrus.", [{ start: 9, end: 25, entry: "petrus" }]);
+    const ps = pieces(root);
+    expect(ps.map((p) => p.textContent)).toEqual(["Simon", " Petrus"]);
+    expect(ps[0].closest("i")).not.toBeNull();
+    expect(ps[1].closest("i")).toBeNull();
+    expect(root.querySelector("i")).toHaveTextContent(/^Simon$/);
+  });
+
+  it("aMarkAcrossANoteMarkerLeavesTheMarkerOutside", () => {
+    const root = verse("Et Simon Petrus ait.", [{ start: 3, end: 15, entry: "petrus" }], [{ note, field: "text", position: 8 }]);
+    const ps = pieces(root);
+    expect(ps.map((p) => p.textContent)).toEqual(["Simon", " Petrus"]);
+    expect(root.querySelector(".bg-note-foot")?.closest(".bg-mention")).toBeNull();
+    expect(root.textContent).toBe("5Et Simon* Petrus ait.");
+  });
+
+  it("putsTheReviewMarkAfterTheLastPieceOnly", () => {
+    const root = verse("Et Simon Petrus ait.", [{ start: 3, end: 15, candidates: ["a", "b"] }], [{ note, field: "text", position: 8 }]);
+    const ps = pieces(root);
+    expect(ps).toHaveLength(2);
+    expect(ps.every((p) => p.hasAttribute("data-review"))).toBe(true);
+    const sups = root.querySelectorAll("sup.bg-mention-review");
+    expect(sups).toHaveLength(1);
+    expect(ps[1].nextSibling).toBe(sups[0]);
+    expect(root.textContent).toBe("5Et Simon* Petrus? ait.");
+  });
+
+  it("namesAMarkByItsSegmentAndTradition", () => {
+    const root = render(<div>{renderVerse({ label: "5", text: "Petrus ait.", at: { chapter: 2, verse: 5, segment: "a", tradition: "LXX" }, mentions: [{ start: 0, end: 6, entry: "petrus" }] })}</div>).container;
+    expect(root.querySelector(".bg-mention")).toHaveAttribute("data-mention", "2.5a-lxx|0");
+  });
+
+  it("noMentionsRendersAsBefore", () => {
+    const text = "\n<pof>Beatus vir, <i>qui</i> ambulat</pof>\n<pol>in lege <sm>Domini</sm>.</pol>";
+    const notes: NoteMarker[] = [{ note, field: "text", position: 17 }];
+    const extra = { titles: ["Titulus"], titlePosition: 42 };
+    const before = verse(text, undefined, notes, extra).innerHTML;
+    expect(verse(text, [], notes, extra).innerHTML).toBe(before);
+    expect(before).toMatchInlineSnapshot(`"<span class="bg-line bg-pof"><sup class="font-sans text-xs text-red-700 dark:text-red-400 bg-vnum-hang">5</sup>Beatus vir,<a id="m-NVBSE-1-v2.5" href="#note-NVBSE-1" aria-label="Footnote *" class="bg-note bg-note-foot">*</a> <i>qui</i> ambulat</span><span role="heading" aria-level="2" class="mt-6 mb-2 block text-xl font-semibold">Titulus</span><span class="bg-line bg-pol">in lege <span class="bg-sm">Domini</span>.</span>"`);
   });
 });

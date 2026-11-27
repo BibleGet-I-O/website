@@ -20,3 +20,11 @@ describe("VerseLine", () => {
     expect(first?.textContent).toBe("10:10The helpless are crushed, laid low;");
   });
 });
+
+describe("VerseLine marks", () => {
+  it("marksTheRowsMentions", () => {
+    const row: VerseRow = { chapter: 3, verse: 4, label: null, printedChapter: null, titles: [], text: "Et dixit Petrus.", mentions: [{ start: 9, end: 15, entry: "petrus" }] };
+    const { container } = render(<VerseLine row={row} chapter={3} />);
+    expect(container.querySelector(".bg-mention")).toHaveAttribute("data-mention", "3.4|0");
+  });
+});

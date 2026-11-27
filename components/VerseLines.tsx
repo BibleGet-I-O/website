@@ -39,7 +39,7 @@ export function VerseLine({ row, chapter, headings = true, anchor = false, headC
     <>
       {headings && <Headings titles={headingsBefore(row)} col={headCol} row={row} />}
       <p data-testid="verse-line" id={anchor ? verseAnchor(row) : undefined} className={`bg-text bg-compact${anchor ? " verse-target" : ""}`}>
-        {renderVerse({ label: printedLabel(row, chapter), text: row.text, titles: mid ? row.titles : [], titlePosition: row.titlePosition, headingClass: midHeadingClass, headCol, notes: row.notes, at: row, hang: false, why: printedElsewhere(row, chapter) ? <WhyLink topic="printed-elsewhere" /> : undefined })}
+        {renderVerse({ label: printedLabel(row, chapter), text: row.text, titles: mid ? row.titles : [], titlePosition: row.titlePosition, headingClass: midHeadingClass, headCol, notes: row.notes, at: row, mentions: row.mentions, hang: false, why: printedElsewhere(row, chapter) ? <WhyLink topic="printed-elsewhere" /> : undefined })}
       </p>
     </>
   );

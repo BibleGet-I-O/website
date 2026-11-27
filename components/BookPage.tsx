@@ -60,6 +60,7 @@ export function BookPage({ heading, chapter, rows, lang, tools }: { heading: str
                       headCol: 0,
                       notes: r.notes,
                       at: r,
+                      mentions: r.mentions,
                       why: printedElsewhere(r, chapter) ? <WhyLink topic="printed-elsewhere" /> : undefined,
                     })}{" "}
                   </span>

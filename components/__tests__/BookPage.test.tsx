@@ -239,3 +239,14 @@ describe("error boundary", () => {
     expect(retry).toHaveBeenCalled();
   });
 });
+
+describe("marks", () => {
+  it("marksTheRowsMentions", () => {
+    const rows = [row(1, 1, { text: "Et dixit Petrus." }), row(1, 2, { text: "Venit Iacobus.", mentions: [{ start: 6, end: 13, candidates: ["a", "b"] }] })];
+    rows[0].mentions = [{ start: 9, end: 15, entry: "petrus" }];
+    const { container } = render(wrap(<BookPage heading="Liber 1" chapter={1} rows={rows} />));
+    const marks = Array.from(container.querySelectorAll(".bg-mention"));
+    expect(marks.map((m) => [m.textContent, m.getAttribute("data-mention")])).toEqual([["Petrus", "1.1|0"], ["Iacobus", "1.2|0"]]);
+    expect(container.querySelectorAll("sup.bg-mention-review")).toHaveLength(1);
+  });
+});
