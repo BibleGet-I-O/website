@@ -1,8 +1,8 @@
-import type { ReactNode } from "react";
+import { Fragment, type ReactNode } from "react";
 import { StickyHead } from "@/components/StickyHead";
 import { renderTitle, renderVerse } from "@/lib/formatted";
 import { printedLabel, verseAnchor } from "@/lib/placement";
-import { printedElsewhere } from "@/lib/why";
+import { omittedAfter, printedElsewhere } from "@/lib/why";
 import { WhyLink } from "@/components/WhyLink";
 import type { VerseRow } from "@/lib/types";
 
@@ -15,12 +15,15 @@ import type { VerseRow } from "@/lib/types";
 export function BookPage({ heading, chapter, rows, lang, tools }: { heading: string; chapter: number; rows: VerseRow[]; lang?: string; tools?: ReactNode }) {
   // A heading closes the running paragraph: group the verses into sections, each opened by its headings.
   // A mid-verse heading (`titlePosition` set) is printed inside its verse instead.
-  const sections: { titles: string[]; rows: VerseRow[] }[] = [];
-  for (const r of rows) {
+  const sections: { titles: string[]; rows: VerseRow[]; at: number[] }[] = [];
+  rows.forEach((r, i) => {
     const before = r.titlePosition == null ? r.titles : [];
-    if (sections.length === 0 || before.length > 0) sections.push({ titles: before, rows: [] });
+    if (sections.length === 0 || before.length > 0) sections.push({ titles: before, rows: [], at: [] });
     sections[sections.length - 1].rows.push(r);
-  }
+    sections[sections.length - 1].at.push(i);
+  });
+  // Numbers the edition skips (the Nova Vulgata's bracketed verses) get a line of their own after the verse before them.
+  const omitted = omittedAfter(rows, chapter);
   return (
     <article lang={lang} className="font-serif text-lg leading-relaxed">
       {/* The title and the current section stay at the top while the chapter scrolls. */}
@@ -34,22 +37,36 @@ export function BookPage({ heading, chapter, rows, lang, tools }: { heading: str
           ))}
           <p className="bg-text mb-4">
             {s.rows.map((r, j) => (
-              <span key={j} id={verseAnchor(r)} className="verse-target">
-                {renderVerse({
-                  label: printedLabel(r, chapter),
-                  text: r.text,
-                  titles: r.titlePosition == null ? [] : r.titles,
-                  titlePosition: r.titlePosition,
-                  headCol: 0,
-                  notes: r.notes,
-                  at: r,
-                  why: printedElsewhere(r, chapter) ? <WhyLink topic="printed-elsewhere" /> : undefined,
-                })}{" "}
-              </span>
+              <Fragment key={j}>
+                <span id={verseAnchor(r)} className="verse-target">
+                  {renderVerse({
+                    label: printedLabel(r, chapter),
+                    text: r.text,
+                    titles: r.titlePosition == null ? [] : r.titles,
+                    titlePosition: r.titlePosition,
+                    headCol: 0,
+                    notes: r.notes,
+                    at: r,
+                    why: printedElsewhere(r, chapter) ? <WhyLink topic="printed-elsewhere" /> : undefined,
+                  })}{" "}
+                </span>
+                {omitted.has(s.at[j]) && <Omitted chapter={chapter} span={omitted.get(s.at[j])!} />}
+              </Fragment>
             ))}
           </p>
         </section>
       ))}
     </article>
+  );
+}
+
+/** A number the edition keeps without text: the number, a red rubric `[omissis]` and the ⓘ that explains it. */
+function Omitted({ chapter, span: [from, to] }: { chapter: number; span: [number, number] }) {
+  return (
+    <span id={verseAnchor({ chapter, verse: from })} className="verse-target">
+      <sup className="mr-0.5 font-sans text-xs text-red-700 dark:text-red-400">{from === to ? from : `${from}–${to}`}</sup>
+      <span lang="la" className="italic text-red-700 dark:text-red-400">[omissis]</span>
+      <WhyLink topic="missing-verses" />{" "}
+    </span>
   );
 }

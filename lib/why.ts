@@ -24,3 +24,24 @@ export function psalmNote(rows: VerseRow[], chapter: number): string | null {
   if (sameVerses) return psalms[0] === chapter ? null : `(${psalms[0]})`;
   return `(${psalms[0]}:${pairs[0].h[1]}–${pairs.at(-1)!.h[1]})`;
 }
+
+/**
+ * The numbers an edition skips inside a chapter, keyed by the index of the row after which each run falls: the
+ * verses its critical text omits, which the Nova Vulgata prints as a bracketed number ("(7)", Acts 24; "(10. 11)",
+ * Sir 9). Only this chapter's rows count, so a chapter that starts later or ends sooner has none; a run is left out
+ * when any of its numbers is printed elsewhere in the chapter (transposed verses).
+ */
+export function omittedAfter(rows: VerseRow[], chapter: number): Map<number, [number, number]> {
+  const own = rows.flatMap((r, i) => (r.chapter === chapter ? [{ r, i }] : []));
+  const present = new Set(own.map((o) => o.r.verse));
+  const gaps = new Map<number, [number, number]>();
+  for (let k = 1; k < own.length; k++) {
+    const from = own[k - 1].r.verse + 1;
+    const to = own[k].r.verse - 1;
+    if (to < from) continue;
+    let printed = false;
+    for (let v = from; v <= to && !printed; v++) printed = present.has(v);
+    if (!printed) gaps.set(own[k - 1].i, [from, to]);
+  }
+  return gaps;
+}
