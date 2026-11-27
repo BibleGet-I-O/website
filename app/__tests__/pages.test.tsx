@@ -415,6 +415,32 @@ describe("chapter", () => {
     }
   });
 
+  it("marksOnlyTheNovaVulgataSide", async () => {
+    // CEI 2008 read with the Nova Vulgata second, side by side and interlinear: getChapter asks mentions only for
+    // NVBSE (lib/api), and only its side carries marks; the Italian side's "Pietro" stays plain text.
+    getEditions.mockResolvedValue([ed("CEI2008", "it", "CEI 2008"), ed("NVBSE", "la", "Nova Vulgata", "1979", "Holder", false)]);
+    getIndex.mockImplementation(async (sigla: string) => ({ sigla, books: [book(17, "Tobias", "Tob", 14)] }));
+    const petrus = {
+      id: "bpers:petrus", type: "person", kind: "individual", names: { la: "Petrus", it: "Pietro" },
+      description: {}, uncertain: false, verseCount: 7,
+    };
+    getChapter.mockImplementation(async (p: { sigla: string }) =>
+      p.sigla === "NVBSE"
+        ? { rows: [verse(2, 1, { text: "Dixit Petrus.", mentions: [{ start: 6, end: 12, entry: "bpers:petrus" }] })], truncated: false, expectedVerses: 1, entities: { "bpers:petrus": petrus } }
+        : { rows: [verse(2, 1, { text: "Disse Pietro." })], truncated: false, expectedVerses: 1 },
+    );
+    getVerses.mockResolvedValue([]);
+    for (const view of [{}, { view: "interlinear" }] as Record<string, string>[]) {
+      const { container, unmount } = render(wrap(await ChapterPage(params("cei2008", "tobias", "2", { with: "NVBSE", ...view }))));
+      const marked = [...container.querySelectorAll("[data-mention]")];
+      expect(marked.map((m) => m.textContent)).toEqual(["Petrus"]);
+      expect(marked[0].closest("[lang]")).toHaveAttribute("lang", "la");
+      expect(screen.getByText(/Disse Pietro/).querySelector("[data-mention]")).toBeNull();
+      expect(screen.getByText(/Disse Pietro/).closest("[data-mention]")).toBeNull();
+      unmount();
+    }
+  });
+
   it("chapterPageRemembersItself", async () => {
     localStorage.clear();
     getIndex.mockResolvedValue(drbIndex);
