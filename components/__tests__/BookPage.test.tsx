@@ -44,6 +44,26 @@ describe("BookPage", () => {
     expect(container.querySelector("#v4\\.1")).not.toBeNull();
   });
 
+  it("marksANumberTheEditionOmitsWithARubricAndAWhyLink", () => {
+    const { container } = render(wrap(<BookPage heading="Actus Apostolorum 24" chapter={24} rows={[row(24, 6), row(24, 8)]} />));
+    const line = container.querySelector("#v24\\.7")!;
+    expect(line.querySelector("sup")).toHaveTextContent(/^7$/);
+    expect(line.querySelector("sup")).toHaveClass("text-red-700");
+    const rubric = screen.getByText("[omissis]");
+    expect(rubric).toHaveAttribute("lang", "la");
+    expect(rubric).toHaveClass("text-red-700");
+    expect(line).toContainElement(screen.getByRole("link", { name: "Why does this edition lack this verse?" }));
+    expect(screen.getByRole("link", { name: "Why does this edition lack this verse?" })).toHaveAttribute("href", "/en/docs/why-editions-differ#missing-verses");
+    expect(container.querySelector("#v24\\.6")).not.toContainElement(line as HTMLElement);
+    expect(Array.from(container.querySelectorAll("sup")).map((e) => e.textContent)).toEqual(["6", "7", "8"]);
+  });
+
+  it("marksTwoConsecutiveOmittedNumbersOnOneLine", () => {
+    const { container } = render(wrap(<BookPage heading="Ecclesiasticus 9" chapter={9} rows={[row(9, 9), row(9, 12)]} />));
+    expect(container.querySelector("#v9\\.10")!.querySelector("sup")).toHaveTextContent("10–11");
+    expect(screen.getAllByText("[omissis]")).toHaveLength(1);
+  });
+
   it("rendersHeadingsWhereTheyFallAndSuperscriptVerseNumbers", () => {
     const rows = [
       row(1, 1, { titles: ["The Creation"], text: "In the beginning God created heaven, and earth." }),
