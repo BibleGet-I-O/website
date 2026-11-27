@@ -85,6 +85,23 @@
       "psalmNumbering": "Why are the Psalms numbered two ways?",
       "printedElsewhere": "Why is this verse printed here?",
       "short": "Why?"
+    },
+    "indices": {
+      "title": "Indices",
+      "persons": "Persons",
+      "places": "Places",
+      "events": "Events",
+      "personsIn": "Persons in {edition}",
+      "placesIn": "Places in {edition}",
+      "eventsIn": "Events in {edition}",
+      "letters": "Letters",
+      "uncertain": "uncertain",
+      "uncertainTitle": "Identification under review",
+      "wikidata": "Wikidata",
+      "verses": "{count, plural, one {# verse} other {# verses}}",
+      "empty": "This edition has no index yet.",
+      "back": "Back to the reader",
+      "about": "From CBPPEDR, the Common Biblical Persons, Places and Events Data Repository. Identifications are drafts pending review."
     }
   },
   "Notice": {

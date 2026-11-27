@@ -3,6 +3,7 @@
 import { useEffect, useId, useRef, useState } from "react";
 import { useTranslations } from "next-intl";
 import { MAX_COMPARED, type View } from "@/lib/compare";
+import type { EntityType } from "@/lib/entities";
 
 export type SettingsChange = { with?: string[]; view?: View };
 
@@ -18,7 +19,11 @@ export type ReaderSettingsProps = {
   /** Changes whenever the page shows something else (edition, book, chapter, query): the menu then closes. */
   routeKey: string;
   onChange: (o: SettingsChange) => void;
+  /** The edition's index of persons, places or events, linked back to this page; no indices group without it. */
+  indexHref?: (type: EntityType) => string;
 };
+
+const INDICES = [["person", "persons"], ["place", "places"], ["event", "events"]] as const;
 
 const itemClass = "w-full rounded px-3 py-2 text-left hover:bg-slate-100 disabled:opacity-50 disabled:hover:bg-transparent dark:hover:bg-slate-800";
 const selectClass = "rounded border border-slate-300 bg-white px-2 py-1 dark:border-slate-700 dark:bg-slate-900";
@@ -169,6 +174,15 @@ export function ReaderSettings(p: ReaderSettingsProps) {
               <button type="button" className={itemClass} onClick={() => apply({ with: [] })}>{t("stopComparing")}</button>
             </>
           ))}
+
+          {slot === null && p.indexHref && (
+            <div role="group" aria-labelledby={`${panelId}-indices`} className="mt-1 border-t border-slate-200 pt-1 dark:border-slate-800">
+              <p id={`${panelId}-indices`} className="px-3 py-1 text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">{t("indices.title")}</p>
+              {INDICES.map(([type, key]) => (
+                <a key={type} href={p.indexHref!(type)} className={`block ${itemClass}`}>{t(`indices.${key}`)}</a>
+              ))}
+            </div>
+          )}
 
           {slot !== null && (
             <div

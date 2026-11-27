@@ -461,3 +461,14 @@ describe("ReaderBar", () => {
     expect(container.querySelector("form[role=search] input[name=from]")).toHaveAttribute("value", "/en/read/nabre/tobit/3?with=DRB&view=interlinear");
   });
 });
+
+describe("the edition's indices in the ⚙ menu", () => {
+  it("offersTheEditionsThreeIndices", () => {
+    render(wrap(<ReaderBar {...props} withSiglas={["DRB"]} />));
+    openMenu();
+    const back = encodeURIComponent("/en/read/nabre/tobit/3?with=DRB");
+    expect(screen.getByRole("link", { name: "Persons" })).toHaveAttribute("href", `/en/read/nabre/persons?back=${back}`);
+    expect(screen.getByRole("link", { name: "Places" })).toHaveAttribute("href", `/en/read/nabre/places?back=${back}`);
+    expect(screen.getByRole("link", { name: "Events" })).toHaveAttribute("href", `/en/read/nabre/events?back=${back}`);
+  });
+});

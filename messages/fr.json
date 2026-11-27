@@ -85,6 +85,23 @@
       "psalmNumbering": "Pourquoi les psaumes ont-ils deux numérotations ?",
       "printedElsewhere": "Pourquoi ce verset est-il imprimé ici ?",
       "short": "Pourquoi ?"
+    },
+    "indices": {
+      "title": "Index",
+      "persons": "Personnes",
+      "places": "Lieux",
+      "events": "Événements",
+      "personsIn": "Personnes dans {edition}",
+      "placesIn": "Lieux dans {edition}",
+      "eventsIn": "Événements dans {edition}",
+      "letters": "Lettres",
+      "uncertain": "incertain",
+      "uncertainTitle": "Identification en cours de révision",
+      "wikidata": "Wikidata",
+      "verses": "{count, plural, one {# verset} other {# versets}}",
+      "empty": "Cette édition n’a pas encore d’index.",
+      "back": "Retour à la lecture",
+      "about": "D’après CBPPEDR, le référentiel commun des personnes, lieux et événements bibliques. Les identifications sont des brouillons en attente de révision."
     }
   },
   "Notice": {
