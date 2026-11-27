@@ -77,7 +77,12 @@ export async function getEntityIndex(sigla: string, type: EntityType): Promise<E
   try {
     const res = await apiResponse(`/metadata/entities?version=${encodeURIComponent(sigla)}&type=${type}`, "visitor", { next: { revalidate: 86400 } });
     if (!res.ok) return [];
-    const body: unknown = await res.json();
+    let body: unknown;
+    try {
+      body = await res.json();
+    } catch {
+      throw new ApiUnavailable("endpoint returned an unreadable body");
+    }
     const entries = isRecord(body) && Array.isArray(body.entries) ? body.entries : [];
     return entries.flatMap((x: unknown) => toEntity(x) ?? []);
   } catch (err) {
@@ -155,7 +160,9 @@ export function compactRefs(refs: EntityRef[], books: Book[], sigla: string): Re
     }
     const group: RefGroup = sameBook && open ? open.group : { book: book.abbrev, parts: [] };
     if (group !== open?.group) groups.push(group);
-    const prefix = sameChapter && r.printedChapter === null ? "" : `${r.chapter}:`;
+    // The chapter is left out only after an ordinary number of the same chapter ("11:26–27, 29"), never after a
+    // printed label ("E:21, 8:14").
+    const prefix = sameChapter && r.printedChapter === null && prev?.label === null ? "" : `${r.chapter}:`;
     const query = r.tradition ? `?tradition=${r.tradition}` : "";
     const part = {
       label: r.label ?? `${prefix}${r.verse}${r.segment ?? ""}`,

@@ -74,6 +74,9 @@ describe("an edition's index of persons, places and events", () => {
     const [est] = compactRefs([v(8, 12, "E:20", null), v(8, 13, "E:21", null)], BOOKS, "NABRE");
     expect(est.parts.map((p) => p.label)).toEqual(["E:20", "E:21"]);
     expect(est.parts[1].href).toBe("/read/nabre/esther/8?tradition=GREEK#v8.13");
+    // An ordinary verse after a labelled one keeps its chapter: "E:21, 8:14", not "E:21, 14".
+    const [mixed] = compactRefs([v(8, 13, "E:21", null), v(8, 14, null, null)], BOOKS, "NABRE");
+    expect(mixed.parts.map((p) => p.label)).toEqual(["E:21", "8:14"]);
     // NABRE Wis 12:1 is printed at the end of chapter 11: the link opens chapter 11, at the verse's own anchor.
     const [wis] = compactRefs([{ book: 27, chapter: 12, verse: 1, segment: null, tradition: null, label: "12:1", printedChapter: 11 }], BOOKS, "NABRE");
     expect(wis.parts).toEqual([{ label: "12:1", href: "/read/nabre/wisdom/11#v12.1" }]);
@@ -111,6 +114,11 @@ describe("getEntityIndex", () => {
     vi.stubGlobal("fetch", vi.fn(async () => json({ title: "Not Found" }, 404, "application/problem+json")));
     expect(await getEntityIndex("NVBSE", "person")).toEqual([]);
     vi.stubGlobal("fetch", vi.fn(async () => { throw new TypeError("network"); }));
+    expect(await getEntityIndex("NVBSE", "person")).toEqual([]);
+    // The body fails after the headers arrived.
+    const broken = new Response("{}", { status: 200 });
+    vi.spyOn(broken, "json").mockRejectedValue(new TypeError("body stream failed"));
+    vi.stubGlobal("fetch", vi.fn(async () => broken));
     expect(await getEntityIndex("NVBSE", "person")).toEqual([]);
   });
 });
