@@ -6,8 +6,20 @@ import type { Book } from "@/lib/types";
 export const ENTITY_TYPES = ["person", "place", "event"] as const;
 export type EntityType = (typeof ENTITY_TYPES)[number];
 
-/** A verse of the edition where an entry is attested; `tradition` is Esther's text in editions that print both. */
-export type EntityRef = { book: number; chapter: number; verse: number; segment: string | null; tradition: "GREEK" | "HEBREW" | null };
+/**
+ * A verse of the edition where an entry is attested; `tradition` is Esther's text in editions that print both; `label`
+ * what the edition prints for it when not its number (NABRE's Greek Esther "E:21", "12:1"); `printedChapter` the chapter
+ * under whose heading it is printed, when not its own (NABRE Wis 12:1 under 11).
+ */
+export type EntityRef = {
+  book: number;
+  chapter: number;
+  verse: number;
+  segment: string | null;
+  tradition: "GREEK" | "HEBREW" | null;
+  label: string | null;
+  printedChapter: number | null;
+};
 
 /** An entry of an edition's index, as /metadata/entities sends it (`qid_status` → `qidStatus`, refs as objects). */
 export type Entity = {
@@ -30,14 +42,16 @@ function strings<K extends string>(x: unknown, keys: readonly K[]): Partial<Reco
   return out;
 }
 
-/** A verse tuple [book, chapter, verse, segment, tradition]; null when malformed. */
+/** A verse tuple [book, chapter, verse, segment, tradition] or with [label, printed chapter] after; null when malformed. */
 function toRef(x: unknown): EntityRef | null {
-  if (!Array.isArray(x) || x.length !== 5) return null;
-  const [book, chapter, verse, segment, tradition] = x;
+  if (!Array.isArray(x) || (x.length !== 5 && x.length !== 7)) return null;
+  const [book, chapter, verse, segment, tradition, label = null, printedChapter = null] = x;
   if (!whole(book) || !whole(chapter) || !whole(verse)) return null;
   if (segment !== null && typeof segment !== "string") return null;
   if (tradition !== null && tradition !== "GREEK" && tradition !== "HEBREW") return null;
-  return { book, chapter, verse, segment, tradition };
+  if (label !== null && typeof label !== "string") return null;
+  if (printedChapter !== null && !whole(printedChapter)) return null;
+  return { book, chapter, verse, segment, tradition, label, printedChapter };
 }
 
 /** One entry of the endpoint's answer; null when malformed (an index is never worth a broken page). */
@@ -119,6 +133,8 @@ export type RefGroup = { book: string; parts: { label: string; href: string }[] 
 /**
  * The verses grouped by book, in the order given, in the edition's abbreviations: consecutive whole verses of one
  * chapter merge ("11:26–27"), a later verse of the same chapter is its number alone ("29"); each links to the reader.
+ * A verse the edition prints otherwise shows what it prints ("E:21"), never merged, and links to the chapter that prints
+ * it, at its own anchor.
  */
 export function compactRefs(refs: EntityRef[], books: Book[], sigla: string): RefGroup[] {
   const groups: RefGroup[] = [];
@@ -131,18 +147,19 @@ export function compactRefs(refs: EntityRef[], books: Book[], sigla: string): Re
     const prev: EntityRef | undefined = open?.last;
     const sameBook = prev !== undefined && prev.book === r.book;
     const sameChapter = prev !== undefined && sameBook && prev.chapter === r.chapter && prev.tradition === r.tradition;
-    if (open && prev && sameChapter && !r.segment && !prev.segment && r.verse === prev.verse + 1) {
+    const plain = (x: EntityRef) => !x.segment && x.label === null && x.printedChapter === null;
+    if (open && prev && sameChapter && plain(r) && plain(prev) && r.verse === prev.verse + 1) {
       open.part.label = `${open.prefix}${open.from}–${r.verse}`;
       open.last = r;
       continue;
     }
     const group: RefGroup = sameBook && open ? open.group : { book: book.abbrev, parts: [] };
     if (group !== open?.group) groups.push(group);
-    const prefix = sameChapter ? "" : `${r.chapter}:`;
+    const prefix = sameChapter && r.printedChapter === null ? "" : `${r.chapter}:`;
     const query = r.tradition ? `?tradition=${r.tradition}` : "";
     const part = {
-      label: `${prefix}${r.verse}${r.segment ?? ""}`,
-      href: `/read/${editionSlug(sigla)}/${slugFor(book, books)}/${r.chapter}${query}#v${r.chapter}.${r.verse}${r.segment ?? ""}`,
+      label: r.label ?? `${prefix}${r.verse}${r.segment ?? ""}`,
+      href: `/read/${editionSlug(sigla)}/${slugFor(book, books)}/${r.printedChapter ?? r.chapter}${query}#v${r.chapter}.${r.verse}${r.segment ?? ""}`,
     };
     group.parts.push(part);
     open = { group, part, prefix, from: r.verse, last: r };

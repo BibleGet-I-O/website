@@ -6,6 +6,14 @@ import type { Entity, EntityRef } from "@/lib/entities";
 import type { Book } from "@/lib/types";
 
 vi.mock("server-only", () => ({}));
+vi.mock("next-intl/server", () => ({
+  getTranslations: async () => (key: string, v: { edition: string }) => `${key}:${v.edition}`,
+  setRequestLocale: () => {},
+}));
+vi.mock("@/lib/api", async (orig) => ({
+  ...(await orig<object>()),
+  getEditions: async () => [{ sigla: "NVBSE", fullname: "Nova Vulgata", language: "la" }],
+}));
 const { EntityIndex } = await import("@/components/EntityIndex");
 
 const wrap = (ui: React.ReactNode) => (
@@ -13,7 +21,7 @@ const wrap = (ui: React.ReactNode) => (
     {ui}
   </NextIntlClientProvider>
 );
-const ref = (chapter: number, verse: number): EntityRef => ({ book: 1, chapter, verse, segment: null, tradition: null });
+const ref = (chapter: number, verse: number): EntityRef => ({ book: 1, chapter, verse, segment: null, tradition: null, label: null, printedChapter: null });
 const entity = (id: string, la: string, extra: Partial<Entity> = {}): Entity => ({
   id, kind: "individual", names: { la, en: la }, description: { en: `about ${la}` }, qid: null, qidStatus: null, uncertain: false, refs: [ref(1, 1)], ...extra,
 });
@@ -81,5 +89,13 @@ describe("backTo", () => {
     expect(backTo("/en/read/nvbse//evil.example", "en", "NVBSE")).toBeNull();
     expect(backTo("/en/read/drb/genesis/4", "en", "NVBSE")).toBeNull();
     expect(backTo(undefined, "en", "NVBSE")).toBeNull();
+  });
+});
+
+describe("indexMetadata", () => {
+  it("titlesThePageWithTheEditionsFullName", async () => {
+    const { indexMetadata } = await import("@/components/EntityIndexPage");
+    expect(await indexMetadata(Promise.resolve({ locale: "en", edition: "nvbse" }), "place")).toEqual({ title: "placesIn:Nova Vulgata" });
+    expect(await indexMetadata(Promise.resolve({ locale: "en", edition: "nope" }), "place")).toEqual({});
   });
 });

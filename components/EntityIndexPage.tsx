@@ -23,10 +23,13 @@ export function backTo(back: string | undefined, locale: string, sigla: string):
   return back && back.startsWith(prefix) && !back.includes("//") && !back.includes("\\") ? back : null;
 }
 
+/** The tab's title: "Places in Nova Vulgata", as the page's heading; none for an edition that does not exist. */
 export async function indexMetadata(params: Promise<IndexParams>, type: EntityType): Promise<Metadata> {
-  const { locale, edition } = await params;
+  const { locale, edition: slug } = await params;
+  const edition = (await getEditions()).find((e) => editionSlug(e.sigla) === slug.toLowerCase());
+  if (!edition) return {};
   const t = await getTranslations({ locale: hasLocale(routing.locales, locale) ? locale : routing.defaultLocale, namespace: "Reader.indices" });
-  return { title: t(HEADING[type], { edition: edition.toUpperCase() }) };
+  return { title: t(HEADING[type], { edition: edition.fullname }) };
 }
 
 /** /read/[edition]/persons, /places, /events: the edition's index of one type (components/EntityIndex). */

@@ -9,13 +9,17 @@ const entity = (extra: Partial<Entity> = {}): Entity => ({
   qid: "Q1", qidStatus: "reviewed", uncertain: false, refs: [], ...extra,
 });
 const book = (bookNum: number, name: string, abbrev: string): Book => ({ bookNum, name, abbrev, chapters: 50, versesPerChapter: [], prologue: 0 });
-const BOOKS = [book(1, "Genesis", "Gn"), book(17, "Esther", "Est")];
+const BOOKS = [book(1, "Genesis", "Gn"), book(19, "Esther", "Est"), book(27, "Wisdom", "Wis")];
 
 describe("an edition's index of persons, places and events", () => {
   it("readsTheEndpointsEntriesAndDropsMalformedOnes", () => {
-    expect(toEntity({ id: "bpers:x", kind: "individual", names: { la: "Isaac" }, description: { en: "son" }, qid: null, qid_status: "auto", uncertain: true, refs: [[1, 21, 3, null, null], [17, 1, 1, "a", "GREEK"]] })).toEqual({
+    expect(toEntity({ id: "bpers:x", kind: "individual", names: { la: "Isaac" }, description: { en: "son" }, qid: null, qid_status: "auto", uncertain: true, refs: [[1, 21, 3, null, null], [19, 1, 1, "a", "GREEK"], [27, 12, 1, null, null, "12:1", 11]] })).toEqual({
       id: "bpers:x", kind: "individual", names: { la: "Isaac" }, description: { en: "son" }, qid: null, qidStatus: "auto", uncertain: true,
-      refs: [{ book: 1, chapter: 21, verse: 3, segment: null, tradition: null }, { book: 17, chapter: 1, verse: 1, segment: "a", tradition: "GREEK" }],
+      refs: [
+        { book: 1, chapter: 21, verse: 3, segment: null, tradition: null, label: null, printedChapter: null },
+        { book: 19, chapter: 1, verse: 1, segment: "a", tradition: "GREEK", label: null, printedChapter: null },
+        { book: 27, chapter: 12, verse: 1, segment: null, tradition: null, label: "12:1", printedChapter: 11 },
+      ],
     });
     expect(toEntity({ id: 3 })).toBeNull();
     expect(toEntity({ id: "bpers:y", kind: "k", names: {}, description: {}, qid: null, qid_status: null, uncertain: false, refs: [[1, "x"]] })?.refs).toEqual([]);
@@ -56,15 +60,27 @@ describe("an edition's index of persons, places and events", () => {
   });
 
   it("compactsConsecutiveVersesAndLinksThem", () => {
-    const r = (chapter: number, verse: number) => ({ book: 1, chapter, verse, segment: null, tradition: null });
+    const r = (chapter: number, verse: number) => ({ book: 1, chapter, verse, segment: null, tradition: null, label: null, printedChapter: null });
     const groups = compactRefs([r(11, 26), r(11, 27), r(11, 29), r(12, 1)], BOOKS, "NVBSE");
     expect(groups.map((g) => [g.book, g.parts.map((p) => p.label)])).toEqual([["Gn", ["11:26–27", "29", "12:1"]]]);
     expect(groups[0].parts[0].href).toBe("/read/nvbse/genesis/11#v11.26");
     expect(groups[0].parts[1].href).toBe("/read/nvbse/genesis/11#v11.29");
   });
 
+  it("showsAndLinksAVerseAsTheEditionPrintsIt", () => {
+    const v = (chapter: number, verse: number, label: string | null, printedChapter: number | null, book = 19) =>
+      ({ book, chapter, verse, segment: null, tradition: "GREEK" as const, label, printedChapter });
+    // NABRE's Greek Esther prints letters: 8:12v is "E:21"; a labelled verse is never merged into a range.
+    const [est] = compactRefs([v(8, 12, "E:20", null), v(8, 13, "E:21", null)], BOOKS, "NABRE");
+    expect(est.parts.map((p) => p.label)).toEqual(["E:20", "E:21"]);
+    expect(est.parts[1].href).toBe("/read/nabre/esther/8?tradition=GREEK#v8.13");
+    // NABRE Wis 12:1 is printed at the end of chapter 11: the link opens chapter 11, at the verse's own anchor.
+    const [wis] = compactRefs([{ book: 27, chapter: 12, verse: 1, segment: null, tradition: null, label: "12:1", printedChapter: 11 }], BOOKS, "NABRE");
+    expect(wis.parts).toEqual([{ label: "12:1", href: "/read/nabre/wisdom/11#v12.1" }]);
+  });
+
   it("linksAGreekEstherVerseWithItsTradition", () => {
-    const [g] = compactRefs([{ book: 17, chapter: 1, verse: 1, segment: "a", tradition: "GREEK" }], BOOKS, "NVBSE");
+    const [g] = compactRefs([{ book: 19, chapter: 1, verse: 1, segment: "a", tradition: "GREEK", label: null, printedChapter: null }], BOOKS, "NVBSE");
     expect(g.parts).toEqual([{ label: "1:1a", href: "/read/nvbse/esther/1?tradition=GREEK#v1.1a" }]);
   });
 });
