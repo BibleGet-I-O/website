@@ -1,4 +1,16 @@
-import type { Mention, MentionEntity } from "@/lib/types";
+import type { Mention, MentionEntity, VerseRow } from "@/lib/types";
+
+/** Where a mark is: its row's chapter, verse, letter and Esther text (a VerseRow, or lib/formatted's place). */
+type Place = { chapter: number; verse: number; segment?: string | null; tradition?: string };
+
+/**
+ * The key every piece of a row's mention `n` carries in `data-mention` ("{chapter}.{verse}{segment}[-{tradition}]|{n}"),
+ * which lib/formatted renders and the card layer looks the mark up by.
+ */
+export function mentionKey(at: Place | undefined, n: number): string {
+  const row = at ? `${at.chapter}.${at.verse}${at.segment ?? ""}${at.tradition ? `-${at.tradition.toLowerCase()}` : ""}` : "";
+  return `${row}|${n}`;
+}
 
 /** Editions whose rows the endpoint marks with persons and places (CBPPEDR mentions). */
 export const MENTION_EDITIONS: ReadonlySet<string> = new Set(["NVBSE"]);
@@ -81,4 +93,20 @@ export function withKnownEntities(mentions: Mention[] | undefined, entities: Rec
     }
   }
   return out.length ? out : undefined;
+}
+
+/**
+ * What each mark on a page names, by the key its pieces carry (`data-mention`, lib/formatted mentionKey): the card
+ * layer's lookup, so the pieces stay data-only. A key met twice keeps the first.
+ */
+export function mentionMarks(rows: VerseRow[]): Record<string, { entry?: string; candidates?: string[] }> {
+  const out: Record<string, { entry?: string; candidates?: string[] }> = {};
+  for (const row of rows) {
+    (row.mentions ?? []).forEach((m, n) => {
+      const key = mentionKey(row, n);
+      if (key in out) return;
+      out[key] = m.entry !== undefined ? { entry: m.entry } : { candidates: m.candidates ?? [] };
+    });
+  }
+  return out;
 }

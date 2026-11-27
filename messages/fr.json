@@ -39,6 +39,17 @@
   "Reader": {
     "toolbar": "Options de lecture",
     "annotations": { "label": "Annotations", "title": "Marquer les personnes et les lieux nommés dans le texte" },
+    "mentions": {
+      "underReview": "Cette identification est encore en cours de révision",
+      "allVerses": "{count, plural, one {# verset dans l'index} other {Les # versets dans l'index}}",
+      "uncertain": "incertain",
+      "uncertainTitle": "Identification en cours de révision",
+      "imageCredit": "Image : {author}",
+      "imageAlt": "Image de {name}",
+      "wikipedia": "Wikipédia",
+      "close": "Fermer",
+      "reviewLabel": "en cours de révision"
+    },
     "edition": "Édition",
     "book": "Livre",
     "chapter": "Chapitre",

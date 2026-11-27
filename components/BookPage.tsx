@@ -12,7 +12,11 @@ import type { VerseRow } from "@/lib/types";
  * its layout tags rendered (poetic lines, small capitals, speakers: see lib/formatted.tsx and the `.bg-`
  * rules in app/globals.css).
  */
-export function BookPage({ heading, chapter, rows, lang, tools }: { heading: string; chapter: number; rows: VerseRow[]; lang?: string; tools?: ReactNode }) {
+export function BookPage({ heading, chapter, rows, lang, tools, reviewLabel }: {
+  heading: string; chapter: number; rows: VerseRow[]; lang?: string; tools?: ReactNode;
+  /** The accessible name of a mark's "?" (a mention under review), in the interface language. */
+  reviewLabel?: string;
+}) {
   // A heading closes the running paragraph: group the verses into sections, each opened by its headings.
   // A mid-verse heading (`titlePosition` set) is printed inside its verse instead.
   const sections: { titles: string[]; rows: VerseRow[]; at: number[] }[] = [];
@@ -61,6 +65,7 @@ export function BookPage({ heading, chapter, rows, lang, tools }: { heading: str
                       notes: r.notes,
                       at: r,
                       mentions: r.mentions,
+                      reviewLabel,
                       why: printedElsewhere(r, chapter) ? <WhyLink topic="printed-elsewhere" /> : undefined,
                     })}{" "}
                   </span>

@@ -1,6 +1,7 @@
 import { Fragment, type ReactNode } from "react";
 import { NoteMarker } from "@/components/NoteMarker";
 import { SpeakerTag } from "@/components/SpeakerTag";
+import { mentionKey } from "@/lib/mentions";
 import { markerDomId } from "@/lib/notes";
 import type { Mention, NoteMarker as Marker } from "@/lib/types";
 
@@ -108,7 +109,7 @@ function parse(text: string): { nodes: Node[]; plain: boolean }[] {
 }
 
 /** The row's mentions while its text is walked: those open at this point (outer first) and those already marked. */
-type Marks = { mentions: Mention[]; open: number[]; seen: Set<number>; id: string; reviewLabel: string; pieces: number };
+type Marks = { mentions: Mention[]; open: number[]; seen: Set<number>; at: Place | undefined; reviewLabel: string; pieces: number };
 type Opts = { inserts?: Map<string, ReactNode>; lead?: ReactNode; marks?: Marks };
 
 /** The mention a boundary opens (`open`) or closes, if `part` is one. */
@@ -132,7 +133,7 @@ function piece(f: Frame, marks: Marks, key: string): ReactNode {
     <span
       key={key}
       className="bg-mention"
-      data-mention={`${marks.id}|${f.n}`}
+      data-mention={mentionKey(marks.at, f.n)}
       data-review={marks.mentions[f.n].candidates?.length ? "" : undefined}
       data-mention-first={first ? "" : undefined}
     >
@@ -407,7 +408,6 @@ export function renderVerse({ label, text, titles = [], titlePosition = null, he
   // The hanging number is spaced by its padding (app/globals.css), so "12:1" still fits the indent.
   const number = whole[0] && label ? <NoteMarker note={whole[0].note} id={at ? markerDomId(whole[0].note.id, at) : ""}>{label}</NoteMarker> : label;
   const lead = label ? <sup className={hang ? `${labelClass} bg-vnum-hang` : `${labelClass} mr-0.5`}>{number}{why}</sup> : undefined;
-  const id = at ? `${at.chapter}.${at.verse}${at.segment ?? ""}${at.tradition ? `-${at.tradition.toLowerCase()}` : ""}` : "";
-  const marks = marked_.length > 0 ? { mentions, open: [], seen: new Set<number>(), id, reviewLabel, pieces: 0 } : undefined;
+  const marks = marked_.length > 0 ? { mentions, open: [], seen: new Set<number>(), at, reviewLabel, pieces: 0 } : undefined;
   return renderParsed(lines, { inserts, lead, marks });
 }

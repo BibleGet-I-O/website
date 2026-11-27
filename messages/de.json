@@ -39,6 +39,17 @@
   "Reader": {
     "toolbar": "Leseoptionen",
     "annotations": { "label": "Anmerkungen", "title": "Die im Text genannten Personen und Orte markieren" },
+    "mentions": {
+      "underReview": "Diese Identifizierung wird noch geprüft",
+      "allVerses": "{count, plural, one {# Vers im Register} other {Alle # Verse im Register}}",
+      "uncertain": "unsicher",
+      "uncertainTitle": "Identifizierung wird geprüft",
+      "imageCredit": "Bild: {author}",
+      "imageAlt": "Bild von {name}",
+      "wikipedia": "Wikipedia",
+      "close": "Schließen",
+      "reviewLabel": "wird geprüft"
+    },
     "edition": "Ausgabe",
     "book": "Buch",
     "chapter": "Kapitel",

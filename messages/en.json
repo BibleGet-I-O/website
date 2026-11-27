@@ -39,6 +39,17 @@
   "Reader": {
     "toolbar": "Reading options",
     "annotations": { "label": "Annotations", "title": "Mark the persons and places named in the text" },
+    "mentions": {
+      "underReview": "This identification is still under review",
+      "allVerses": "{count, plural, one {# verse in the index} other {All # verses in the index}}",
+      "uncertain": "uncertain",
+      "uncertainTitle": "Identification under review",
+      "imageCredit": "Image: {author}",
+      "imageAlt": "Image of {name}",
+      "wikipedia": "Wikipedia",
+      "close": "Close",
+      "reviewLabel": "under review"
+    },
     "edition": "Edition",
     "book": "Book",
     "chapter": "Chapter",

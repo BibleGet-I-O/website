@@ -39,6 +39,17 @@
   "Reader": {
     "toolbar": "Opzioni di lettura",
     "annotations": { "label": "Annotazioni", "title": "Segna le persone e i luoghi nominati nel testo" },
+    "mentions": {
+      "underReview": "Questa identificazione è ancora in revisione",
+      "allVerses": "{count, plural, one {# versetto nell'indice} other {Tutti i # versetti nell'indice}}",
+      "uncertain": "incerto",
+      "uncertainTitle": "Identificazione in revisione",
+      "imageCredit": "Immagine: {author}",
+      "imageAlt": "Immagine di {name}",
+      "wikipedia": "Wikipedia",
+      "close": "Chiudi",
+      "reviewLabel": "in revisione"
+    },
     "edition": "Edizione",
     "book": "Libro",
     "chapter": "Capitolo",

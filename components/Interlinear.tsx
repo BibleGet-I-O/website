@@ -41,6 +41,7 @@ export type InterlinearProps = {
  */
 export async function Interlinear(p: InterlinearProps) {
   const t = await getTranslations("Reader");
+  const reviewLabel = t("mentions.reviewLabel");
   const { chapter } = p;
   const names = (o: Compared) => ({ main: p.main.name, second: o.side.name, book: p.bookName, chapter });
   const note = (key: string, text: string) => <p key={key} role="note" className={noteClass}>{text}</p>;
@@ -50,7 +51,7 @@ export async function Interlinear(p: InterlinearProps) {
   if (p.others.every((o) => o.second.mode === "unavailable")) {
     return (
       <>
-        <BookPage heading={p.heading} chapter={chapter} rows={p.rows} lang={p.main.lang} tools={p.tools} />
+        <BookPage heading={p.heading} chapter={chapter} rows={p.rows} lang={p.main.lang} tools={p.tools} reviewLabel={reviewLabel} />
         {p.others.map((o) => note(o.side.sigla, t("secondUnavailable", names(o))))}
       </>
     );
@@ -76,7 +77,7 @@ export async function Interlinear(p: InterlinearProps) {
           {note(`${k}-note`, t("dividedDifferently", names(o)))}
           <h2 className="mt-6 mb-1 text-center text-2xl font-semibold">{t("heading", { book: s.book.name, chapter })}</h2>
           <p className="mb-4 text-center font-sans text-sm text-slate-600 dark:text-slate-400">{o.side.name}</p>
-          <VerseLines rows={s.rows} chapter={chapter} lang={o.side.lang} />
+          <VerseLines rows={s.rows} chapter={chapter} lang={o.side.lang} reviewLabel={reviewLabel} />
           {await capped(o)}
         </section>,
       );
@@ -96,13 +97,14 @@ export async function Interlinear(p: InterlinearProps) {
             truncated={[p.truncated, ...aligned.map(truncatedOf)]}
             view={p.view}
             psalms={p.bookNum === PSALMS}
+            reviewLabel={reviewLabel}
           />
           {(await Promise.all(aligned.map(capped))).map((n, i) => <Fragment key={aligned[i].side.sigla}>{n}</Fragment>)}
         </>
       ) : (
         <>
           <StickyHead title={p.heading} columns={[]} gridClass="" running={1} tools={p.tools} />
-          <VerseLines rows={p.rows} chapter={chapter} lang={p.main.lang} headCol={0} />
+          <VerseLines rows={p.rows} chapter={chapter} lang={p.main.lang} headCol={0} reviewLabel={reviewLabel} />
         </>
       )}
       {below}

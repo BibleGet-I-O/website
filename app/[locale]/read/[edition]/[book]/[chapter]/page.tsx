@@ -27,7 +27,9 @@ import { editionsCited, withNoteLinks } from "@/lib/note-links";
 import { IntroductionLink, TitleIndex } from "@/components/TitleIndex";
 import { IntroductionPage } from "@/components/IntroductionPage";
 import { TraditionSwitch } from "@/components/TraditionSwitch";
-import type { Chapter, EditionIndex, VerseRow } from "@/lib/types";
+import { MentionLayer } from "@/components/MentionLayer";
+import { mentionMarks } from "@/lib/mentions";
+import type { Chapter, EditionIndex, MentionEntity, VerseRow } from "@/lib/types";
 
 type Params = { locale: string; edition: string; book: string; chapter: string };
 type Search = { with?: string | string[]; view?: string | string[]; tradition?: string | string[]; part?: string | string[] };
@@ -56,9 +58,12 @@ async function comparedEstherTexts(bookNum: number, siglas: string[]): Promise<"
   return each.includes("both") ? "both" : each.includes("unknown") ? "unknown" : "none";
 }
 
+/** A text of the page: its rows, whether capped, and the entities its marks name (lib/api getChapter). */
+type Printed = { rows: VerseRow[]; truncated: boolean; entities?: Record<string, MentionEntity> };
+
 async function masoreticText(
-  printed: (t: Tradition, chapterMissing: "404" | "throw") => Promise<{ rows: VerseRow[]; truncated: boolean }>,
-): Promise<{ rows: VerseRow[]; truncated: boolean } | "unavailable"> {
+  printed: (t: Tradition, chapterMissing: "404" | "throw") => Promise<Printed>,
+): Promise<Printed | "unavailable"> {
   try {
     return await printed("HEBREW", "throw");
   } catch (err) {
@@ -140,7 +145,7 @@ export default async function ChapterPage({ params, searchParams }: { params: Pr
    * print the previous chapter's last verse at the start of this one (NABRE John 7:53 opens John 8) and the
    * next chapter's first verse at the end of this one (NABRE Wis 12:1 closes Wis 11).
    */
-  const printed = async (text?: Tradition, chapterMissing: "404" | "throw" = "404"): Promise<{ rows: VerseRow[]; truncated: boolean }> => {
+  const printed = async (text?: Tradition, chapterMissing: "404" | "throw" = "404"): Promise<Printed> => {
     const request = { sigla: edition.sigla, bookAbbrev: book.abbrev, access: info.access, ...(text && { tradition: text }) };
     const counts = text === "GREEK" && book.greekVersesPerChapter ? book.greekVersesPerChapter : book.versesPerChapter;
     const prevVerses = chapter > 1 ? counts[chapter - 2] : undefined;
@@ -158,7 +163,7 @@ export default async function ChapterPage({ params, searchParams }: { params: Pr
       chapter !== PROLOGUE && chapter < book.chapters && !current.truncated
         ? await neighbourVerse(getVerses({ ...request, chapter: chapter + 1, verse: 1 }))
         : [];
-    return { rows: placeAsPrinted(prevLast, current.rows, nextFirst, chapter), truncated: current.truncated };
+    return { rows: placeAsPrinted(prevLast, current.rows, nextFirst, chapter), truncated: current.truncated, ...(current.entities && { entities: current.entities }) };
   };
   // Asked at the same time as the chapter; awaited where its icon is built.
   const outline = getBookOutline(edition.sigla, book.bookNum, info.access);
@@ -218,9 +223,14 @@ export default async function ChapterPage({ params, searchParams }: { params: Pr
   const notesHint = !reader && [edition.sigla, ...withSiglas].some((s) => NOTE_EDITIONS.has(s));
 
   // The Annotations switch is offered when any text on the page has marked persons or places.
+  const shownSeconds = seconds.flatMap((s) => (s.mode === "aligned" || s.mode === "whole-chapter" ? [s] : []));
   const marked = (rs: VerseRow[]) => rs.some((r) => (r.mentions?.length ?? 0) > 0);
-  const hasMentions =
-    marked(rows) || marked(masoreticRows) || seconds.some((s) => (s.mode === "aligned" || s.mode === "whole-chapter") && marked(s.rows));
+  const hasMentions = marked(rows) || marked(masoreticRows) || shownSeconds.some((s) => marked(s.rows));
+  // The cards: what each mark names, by its pieces' key, from every text the page shows, and the entities named.
+  const marks = hasMentions ? mentionMarks([...rows, ...masoreticRows, ...shownSeconds.flatMap((s) => s.rows)]) : {};
+  const entities: Record<string, MentionEntity> = hasMentions
+    ? Object.assign({}, main.entities, typeof masoretic === "object" ? masoretic?.entities : undefined, ...shownSeconds.map((s) => s.entities))
+    : {};
 
   const qs = compareQuery({ with: withSiglas, view, tradition: shown, twoTexts });
   const base = `/read/${editionSlug(edition.sigla)}`;
@@ -279,6 +289,7 @@ export default async function ChapterPage({ params, searchParams }: { params: Pr
         indices={!edition.copyright || info.access === "reader"}
         annotations={hasMentions}
       />
+      {hasMentions && <MentionLayer marks={marks} entities={entities} sigla={edition.sigla} editionLang={edition.language} locale={locale} />}
       {/* Keyed by the chapter (and its query), so each chapter mounts a fresh, unturned page. */}
       <PageTurn key={`${base}/${slugFor(book, index.books)}/${chapter}${qs}`} {...turnTargets}>
         {shown && compared.length > 0 && await TraditionSwitch({
@@ -299,11 +310,12 @@ export default async function ChapterPage({ params, searchParams }: { params: Pr
               truncated={[main.truncated, masoretic.truncated]}
               view={view}
               gapNotes={false}
+              reviewLabel={t("mentions.reviewLabel")}
             />
           </article>
         ) : masoretic === "unavailable" ? (
           <>
-            <BookPage heading={heading} chapter={chapter} rows={rows} lang={edition.language || undefined} tools={tools} />
+            <BookPage heading={heading} chapter={chapter} rows={rows} lang={edition.language || undefined} tools={tools} reviewLabel={t("mentions.reviewLabel")} />
             <p role="note" className="my-4 rounded-lg border border-slate-300 bg-slate-50 p-3 text-sm dark:border-slate-700 dark:bg-slate-900">
               {t("secondUnavailable", { second: t("masoretic") })}
             </p>
@@ -331,7 +343,7 @@ export default async function ChapterPage({ params, searchParams }: { params: Pr
             redirectTo,
           })
         ) : (
-          <BookPage heading={heading} chapter={chapter} rows={rows} lang={edition.language || undefined} tools={tools} />
+          <BookPage heading={heading} chapter={chapter} rows={rows} lang={edition.language || undefined} tools={tools} reviewLabel={t("mentions.reviewLabel")} />
         )}
         {notice && await CappedNotice({ kind: notice, redirectTo, ...(compared.length > 0 && { edition: edition.fullname }) })}
         {notesHint && (

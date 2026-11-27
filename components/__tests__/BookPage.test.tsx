@@ -249,4 +249,10 @@ describe("marks", () => {
     expect(marks.map((m) => [m.textContent, m.getAttribute("data-mention")])).toEqual([["Petrus", "1.1|0"], ["Iacobus", "1.2|0"]]);
     expect(container.querySelectorAll("sup.bg-mention-review")).toHaveLength(1);
   });
+
+  it("namesTheReviewMarkAsGiven", () => {
+    const rows = [row(1, 2, { text: "Venit Iacobus.", mentions: [{ start: 6, end: 13, candidates: ["a", "b"] }] })];
+    const { container } = render(wrap(<BookPage heading="Liber 1" chapter={1} rows={rows} reviewLabel="in revisione" />));
+    expect(container.querySelector("sup.bg-mention-review")).toHaveAttribute("aria-label", "in revisione");
+  });
 });

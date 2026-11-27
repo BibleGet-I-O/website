@@ -3,13 +3,16 @@ import { hasChapter, PROLOGUE } from "@/lib/chapters";
 import { ApiUnavailable, getChapter, getIndex, getVerses, NotFound } from "./api";
 import { hasBothEstherTexts } from "./esther";
 import { hebrewRef, pairingMode, psalmChapters, PSALMS } from "./parallel";
-import type { Access, Book, EditionIndex, VerseRow } from "./types";
+import type { Access, Book, EditionIndex, MentionEntity, VerseRow } from "./types";
+
+/** The entities the second edition's marks name (lib/api getChapter), for their cards; absent without marks. */
+type Named = { entities?: Record<string, MentionEntity> };
 
 export type Second =
   /** Verse beside verse. `truncated`: the second edition stops early (capped), so its empty side has no notes. */
-  | { mode: "aligned"; rows: VerseRow[]; truncated: boolean; book: Book }
+  | ({ mode: "aligned"; rows: VerseRow[]; truncated: boolean; book: Book } & Named)
   /** The editions divide the book's chapters differently: the second's chapter whole, below (none: no such chapter). */
-  | { mode: "whole-chapter"; rows: VerseRow[]; truncated: boolean; book: Book }
+  | ({ mode: "whole-chapter"; rows: VerseRow[]; truncated: boolean; book: Book } & Named)
   /** No such book or chapter; or Esther 11-16 of a Vulgate-numbered main edition, which the second prints as additions. */
   | { mode: "missing"; reason: "book" | "chapter" | "prologue" | "esther-additions" }
   /** The endpoint could not be reached for the second edition. */
@@ -108,8 +111,9 @@ async function load(p: SecondParams): Promise<Second> {
   const mode = pairingMode(p.mainIndex, bIndex, p.bookNum, p.chapter, p.tradition);
   const second = await orMissing(getChapter({ ...request, chapter: p.chapter }));
   if (!second) return mode === "whole-chapter" ? { mode, rows: [], truncated: false, book } : { mode: "missing", reason: "chapter" };
-  if (mode === "whole-chapter") return { mode, rows: second.rows, truncated: second.truncated, book };
-  return { mode, rows: await withForeignVerses(p, request, second.rows), truncated: second.truncated, book };
+  const named = second.entities ? { entities: second.entities } : {};
+  if (mode === "whole-chapter") return { mode, rows: second.rows, truncated: second.truncated, book, ...named };
+  return { mode, rows: await withForeignVerses(p, request, second.rows), truncated: second.truncated, book, ...named };
 }
 
 /**

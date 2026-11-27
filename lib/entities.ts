@@ -1,10 +1,9 @@
 import { ApiUnavailable, apiResponse, slugFor } from "@/lib/api";
 import { editionSlug } from "@/lib/slug";
+import { displayName, fold, letterOf, type EntityType } from "@/lib/entity-names";
 import type { Book } from "@/lib/types";
 
-/** The three catalogs of CBPPEDR (CatholicOS/cbppedr). */
-export const ENTITY_TYPES = ["person", "place", "event"] as const;
-export type EntityType = (typeof ENTITY_TYPES)[number];
+export { ENTITY_TYPES, INDEX_PATHS, description, displayName, fold, indexEntryHref, letterOf, otherName, type EntityType } from "@/lib/entity-names";
 
 /**
  * A verse of the edition where an entry is attested; `tradition` is Esther's text in editions that print both; `label`
@@ -91,43 +90,16 @@ export async function getEntityIndex(sigla: string, type: EntityType): Promise<E
   }
 }
 
-const NAME_LANGS = ["la", "it", "en"] as const;
-type NameLang = (typeof NAME_LANGS)[number];
-/** The catalog's name for an edition's language: Latin for any language CBPPEDR has no names in (BLPD). */
-const nameLang = (lang: string): NameLang => ((NAME_LANGS as readonly string[]).includes(lang) ? (lang as NameLang) : "la");
-
-/** The entry's name as the edition's language has it, else the English, else the Italian. */
-export function displayName(e: Entity, editionLang: string): string {
-  return e.names[nameLang(editionLang)] || e.names.en || e.names.it || e.names.la || e.id;
-}
-
-/** The name in the interface language (Italian or English), where it differs from the displayed one. */
-export function otherName(e: Entity, editionLang: string, locale: string): string | null {
-  if (locale !== "it" && locale !== "en") return null;
-  const name = e.names[locale];
-  return name && name !== displayName(e, editionLang) ? name : null;
-}
-
-/** CBPPEDR's description in Italian for an Italian reader, otherwise in English. */
-export function description(e: Entity, locale: string): string | null {
-  return (locale === "it" ? e.description.it || e.description.en : e.description.en || e.description.it) ?? null;
-}
 
 /** Only a reviewed or adjudicated Wikidata item is shown: the automatic matches are still unreviewed. */
 export const showsWikidata = (e: Entity): boolean => e.qid !== null && (e.qidStatus === "reviewed" || e.qidStatus === "adjudicated");
 
-/** A name for sorting and filing: no accents, no ʾ ʿ ', lower case. */
-export function fold(s: string): string {
-  return s.normalize("NFD").replace(/\p{M}/gu, "").replace(/[ʾʿ'’]/g, "").toLowerCase();
-}
-
 /** The entries by initial (A–Z, in order), each letter sorted by folded name, then id. */
 export function byLetter(entities: Entity[], editionLang: string): Map<string, Entity[]> {
-  const keyed = entities.map((e) => ({ e, key: fold(displayName(e, editionLang)) }));
+  const keyed = entities.map((e) => ({ e, key: fold(displayName(e, editionLang)), letter: letterOf(e, editionLang) }));
   keyed.sort((a, b) => (a.key < b.key ? -1 : a.key > b.key ? 1 : a.e.id < b.e.id ? -1 : a.e.id > b.e.id ? 1 : 0));
   const letters = new Map<string, Entity[]>();
-  for (const { e, key } of keyed) {
-    const letter = (key.match(/[a-z]/)?.[0] ?? "#").toUpperCase();
+  for (const { e, letter } of keyed) {
     letters.set(letter, [...(letters.get(letter) ?? []), e]);
   }
   return new Map([...letters].sort(([a], [b]) => (a < b ? -1 : 1)));
