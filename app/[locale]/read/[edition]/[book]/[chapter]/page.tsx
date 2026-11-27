@@ -217,6 +217,11 @@ export default async function ChapterPage({ params, searchParams }: { params: Pr
   // Visitors are told the notes exist where an edition on the page has them.
   const notesHint = !reader && [edition.sigla, ...withSiglas].some((s) => NOTE_EDITIONS.has(s));
 
+  // The Annotations switch is offered when any text on the page has marked persons or places.
+  const marked = (rs: VerseRow[]) => rs.some((r) => (r.mentions?.length ?? 0) > 0);
+  const hasMentions =
+    marked(rows) || marked(masoreticRows) || seconds.some((s) => (s.mode === "aligned" || s.mode === "whole-chapter") && marked(s.rows));
+
   const qs = compareQuery({ with: withSiglas, view, tradition: shown, twoTexts });
   const base = `/read/${editionSlug(edition.sigla)}`;
   // Each text stops at its own cap; one notice tells it.
@@ -272,6 +277,7 @@ export default async function ChapterPage({ params, searchParams }: { params: Pr
         esther={hasBothEstherTexts(book)}
         tradition={shown}
         indices={!edition.copyright || info.access === "reader"}
+        annotations={hasMentions}
       />
       {/* Keyed by the chapter (and its query), so each chapter mounts a fresh, unturned page. */}
       <PageTurn key={`${base}/${slugFor(book, index.books)}/${chapter}${qs}`} {...turnTargets}>

@@ -268,9 +268,10 @@ describe("marks in a verse", () => {
     expect(p.tagName).toBe("SPAN");
     expect(p).toHaveTextContent(/^Petrus$/);
     expect(p).toHaveAttribute("data-mention", "2.5|0");
-    expect(p).toHaveAttribute("tabindex", "0");
-    expect(p).toHaveAttribute("role", "button");
-    expect(p).toHaveAttribute("aria-haspopup", "dialog");
+    expect(p).toHaveAttribute("data-mention-first", "");
+    expect(p).not.toHaveAttribute("tabindex");
+    expect(p).not.toHaveAttribute("role");
+    expect(p).not.toHaveAttribute("aria-haspopup");
     expect(p).not.toHaveAttribute("data-review");
     expect(root.querySelector(".bg-mention-review")).toBeNull();
     expect(root.textContent).toBe("5Et dixit Petrus ad eos.");
@@ -297,8 +298,8 @@ describe("marks in a verse", () => {
     const ps = pieces(root);
     expect(ps.map((p) => p.textContent)).toEqual(["Simon Petrus", "filius Iona", " Barionas"]);
     expect(ps.every((p) => p.closest(".bg-line") !== null && p.querySelector(".bg-line, .bg-note-foot") === null)).toBe(true);
-    expect(ps[0]).toHaveAttribute("role", "button");
-    expect(ps.slice(1).every((p) => !p.hasAttribute("role") && !p.hasAttribute("tabindex"))).toBe(true);
+    expect(ps[0]).toHaveAttribute("data-mention-first", "");
+    expect(ps.slice(1).every((p) => !p.hasAttribute("data-mention-first"))).toBe(true);
     expect(root.querySelectorAll(".bg-line")).toHaveLength(2);
     expect(root.querySelector(".bg-note-foot")?.closest(".bg-mention")).toBeNull();
   });
@@ -313,8 +314,8 @@ describe("marks in a verse", () => {
     const inner = outer.querySelector('[data-mention="2.5|1"]')!;
     expect(outer).toHaveTextContent(/^Ioannes Baptista$/);
     expect(inner).toHaveTextContent(/^Ioannes$/);
-    expect(outer).toHaveAttribute("role", "button");
-    expect(inner).toHaveAttribute("role", "button");
+    expect(outer).toHaveAttribute("data-mention-first", "");
+    expect(inner).toHaveAttribute("data-mention-first", "");
     expect(pieces(root)).toHaveLength(2);
   });
 
@@ -332,9 +333,9 @@ describe("marks in a verse", () => {
     const inner = outer.querySelector('[data-mention="2.5|0"]')!;
     expect(pieces(root)).toHaveLength(2);
     expect(outer).toHaveTextContent(/^Ioannes Baptista$/);
-    expect(outer).toHaveAttribute("role", "button");
+    expect(outer).toHaveAttribute("data-mention-first", "");
     expect(inner).toHaveTextContent(/^Ioannes$/);
-    expect(inner).toHaveAttribute("role", "button");
+    expect(inner).toHaveAttribute("data-mention-first", "");
     const swap = (h: string) => h.replace(/2\.5\|0/g, "X").replace(/2\.5\|1/g, "2.5|0").replace(/X/g, "2.5|1");
     expect(swap(root.innerHTML)).toBe(outerFirst.innerHTML);
   });

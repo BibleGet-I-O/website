@@ -10,6 +10,7 @@ import { ReaderSettings, type SettingsChange } from "@/components/ReaderSettings
 import { SearchLens, SearchPanel, SearchPanelProvider } from "@/components/SearchForm";
 import { compareQuery, type View } from "@/lib/compare";
 import { editionSlug } from "@/lib/slug";
+import { AnnotationsSwitch } from "@/components/AnnotationsSwitch";
 import { ESTHER, type Tradition } from "@/lib/esther";
 
 export type ReaderBarProps = {
@@ -34,6 +35,8 @@ export type ReaderBarProps = {
    * with the reader key (its verses open whole chapters only then).
    */
   indices?: boolean;
+  /** Whether the chapter has marked persons and places: then the Annotations switch shows. */
+  annotations?: boolean;
 };
 
 const selectClass = "rounded border border-slate-300 bg-white px-2 py-1 dark:border-slate-700 dark:bg-slate-900";
@@ -192,6 +195,7 @@ export function ReaderBar(p: ReaderBarProps) {
         />
 
         <span className="ml-auto flex shrink-0 items-center">
+          {p.annotations && <AnnotationsSwitch />}
           <SearchLens />
           <ReaderSettings
             editions={p.editions}

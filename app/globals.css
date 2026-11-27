@@ -61,6 +61,22 @@
     white-space: nowrap;
   }
 
+  /* Marked persons and places (the Annotations switch sets data-annotations on the reader): invisible while off. */
+  .bg-mention-review { display: none; }
+  [data-annotations="on"] .bg-mention {
+    cursor: pointer;
+    text-decoration: underline dotted;
+    text-decoration-color: #5b7f95;
+    text-decoration-thickness: 1px;
+    text-underline-offset: 0.2em;
+    @variant dark { text-decoration-color: #8fb3c9; }
+  }
+  [data-annotations="on"] .bg-mention:hover { background-color: rgb(91 127 149 / 0.12); }
+  [data-annotations="on"] .bg-mention-review {
+    display: inline; color: #c62828; font-size: 0.7em; font-weight: 600; line-height: 0; vertical-align: super;
+    @variant dark { color: #ef7b7b; }
+  }
+
   /* Inline tags. L<sm>ORD</sm> reads LORD in small capitals. */
   .bg-sm { font-variant-caps: small-caps; text-transform: lowercase; }
   /* A verified misprint's note, "[sic! expected: …]": in the rubrics' red, a size below the text, upright. */

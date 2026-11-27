@@ -122,7 +122,8 @@ function boundary(part: string, marks: Marks): { n: number; open: boolean } | nu
 
 type Frame = { n: number; children: ReactNode[] };
 
-/** A piece of mention `f.n`: the first one is the mention's single stop for focus and the card. */
+/** A piece of mention `f.n`: the first one (`data-mention-first`) is the mention's single stop for focus and the card: the Annotations switch gives it
+ * its button attributes while the marks are on. */
 function piece(f: Frame, marks: Marks, key: string): ReactNode {
   if (f.children.length === 0) return null;
   const first = !marks.seen.has(f.n);
@@ -133,7 +134,7 @@ function piece(f: Frame, marks: Marks, key: string): ReactNode {
       className="bg-mention"
       data-mention={`${marks.id}|${f.n}`}
       data-review={marks.mentions[f.n].candidates?.length ? "" : undefined}
-      {...(first && { tabIndex: 0, role: "button", "aria-haspopup": "dialog" as const })}
+      data-mention-first={first ? "" : undefined}
     >
       {f.children}
     </span>

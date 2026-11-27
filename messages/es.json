@@ -38,6 +38,7 @@
   },
   "Reader": {
     "toolbar": "Opciones de lectura",
+    "annotations": { "label": "Anotaciones", "title": "Marca las personas y los lugares nombrados en el texto" },
     "edition": "Edición",
     "book": "Libro",
     "chapter": "Capítulo",
