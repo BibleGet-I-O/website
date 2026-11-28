@@ -203,7 +203,7 @@ regenerate `data/{persons,places,events}.json`, `docs/build-report.md`.
 `->toText(int $startUtf16, int $endUtf16): ?array{0:int,1:int}` (code points of `$text`, snapped outward; null
 when out of range).
 
-- [ ] **Step 1: Failing tests:** `testDropsVariantSigns`, `testDropsInlineTags` (text `et <i>Pe</i>trus`: plain `et Petrus`, `toText(3, 9) === [3, 15]`, the whole
+- [ ] **Step 1: Failing tests:** `testDropsVariantSigns`, `testDropsInlineTags` (text `et <i>Pe</i>trus`: plain `et Petrus`, `toText(3, 9) === [3, 16]`, the whole
   `<i>Pe</i>trus`), `testLineTagsBecomeSpaces`,
   `testCollapsesWhitespaceAndTrims`, `testCountsUtf16In` (astral char), `testSnapsOutOfATag`, `testOutOfRangeIsNull`.
   Integration: `testEveryNvbseRowRoundTrips`: for every NVBSE row, `of($text)->plain() === $text_plain` and, for
