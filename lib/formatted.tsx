@@ -1,8 +1,9 @@
 import { Fragment, type ReactNode } from "react";
 import { NoteMarker } from "@/components/NoteMarker";
 import { SpeakerTag } from "@/components/SpeakerTag";
+import { mentionKey } from "@/lib/mentions";
 import { markerDomId } from "@/lib/notes";
-import type { NoteMarker as Marker } from "@/lib/types";
+import type { Mention, NoteMarker as Marker } from "@/lib/types";
 
 /**
  * Renders a verse's formatted `text` as React elements, a port of the endpoint's
@@ -28,6 +29,15 @@ const HANGING = new Set([...LINE_TAGS].filter((t) => t !== "pr"));
 const MARKER = "";
 const INSERTED = /[-]/g;
 const SPLIT = /([-])/;
+/**
+ * A mention's boundaries, inserted the same way: U+E100+n opens the row's mention n, U+E900+n closes it. A span may open
+ * an inline tag it does not close, or cross a line or a note marker: the text inside it is marked piece by piece.
+ */
+const OPEN0 = 0xe100;
+const CLOSE0 = 0xe900;
+const MARKS_END = 0xf100;
+/** Text of nothing but whitespace and mention boundaries (none without mentions: then the same as `isBlank`). */
+const MARKS_ONLY = /^[\s\ue100-\uf0ff]*$/;
 
 type Node = { k: "text"; s: string } | { k: "el"; tag: string; children: Node[] };
 type Raw = { k: "open" | "close"; tag: string; raw: string };
@@ -98,24 +108,125 @@ function parse(text: string): { nodes: Node[]; plain: boolean }[] {
   return out;
 }
 
-type Opts = { inserts?: Map<string, ReactNode>; lead?: ReactNode };
+/** The row's mentions while its text is walked: those open at this point (outer first) and those already marked. */
+type Marks = { mentions: Mention[]; open: number[]; seen: Set<number>; at: Place | undefined; reviewLabel: string; pieces: number };
+type Opts = { inserts?: Map<string, ReactNode>; lead?: ReactNode; marks?: Marks };
+
+/** The mention a boundary opens (`open`) or closes, if `part` is one. */
+function boundary(part: string, marks: Marks): { n: number; open: boolean } | null {
+  const cp = part.length === 1 ? part.charCodeAt(0) : -1;
+  if (cp < OPEN0 || cp >= MARKS_END) return null;
+  const open = cp < CLOSE0;
+  const n = cp - (open ? OPEN0 : CLOSE0);
+  return n < marks.mentions.length ? { n, open } : null;
+}
+
+type Frame = { n: number; children: ReactNode[] };
+
+/** A piece of mention `f.n`: the first one (`data-mention-first`) is the mention's single stop for focus and the card: the Annotations switch gives it
+ * its button attributes while the marks are on. */
+function piece(f: Frame, marks: Marks, key: string): ReactNode {
+  if (f.children.length === 0) return null;
+  const first = !marks.seen.has(f.n);
+  marks.seen.add(f.n);
+  return (
+    <span
+      key={key}
+      className="bg-mention"
+      data-mention={mentionKey(marks.at, f.n)}
+      data-review={marks.mentions[f.n].candidates?.length ? "" : undefined}
+      data-mention-first={first ? "" : undefined}
+    >
+      {f.children}
+    </span>
+  );
+}
+
+/**
+ * A text node with mention boundaries: its runs inside open mentions become pieces (nested when one lies inside
+ * another), split at every insertion (a note marker, a heading), which stays outside them. Mentions still open at the
+ * end carry on into the next text node.
+ */
+function renderMarked(s: string, opts: Opts, marks: Marks, key: string): ReactNode {
+  const root: Frame = { n: -1, children: [] };
+  const stack: Frame[] = [root, ...marks.open.map((n) => ({ n, children: [] }))];
+  const closeTop = () => {
+    const p = piece(stack.pop()!, marks, `${key}.m${marks.pieces++}`);
+    if (p) stack[stack.length - 1].children.push(p);
+  };
+  for (const part of s.split(SPLIT)) {
+    if (part === "") continue;
+    const b = boundary(part, marks);
+    if (b?.open) {
+      stack.push({ n: b.n, children: [] });
+      marks.open.push(b.n);
+    } else if (b) {
+      const at = stack.findIndex((f) => f !== root && f.n === b.n);
+      if (at < 0) continue;
+      const inner = stack.slice(at + 1).map((f) => f.n);
+      while (stack.length > at + 1) closeTop();
+      // A mention under review: a question mark after its last piece, hidden from screen readers (a name on a <sup>
+      // is not announced), which read the review label inside that piece, with the mark.
+      const review = (marks.mentions[b.n].candidates?.length ?? 0) > 0;
+      const label = review && <span key={`${key}.l${b.n}`} className="bg-mention-review-label sr-only">{marks.reviewLabel}</span>;
+      const inLast = review && stack[at].children.length > 0;
+      if (inLast) stack[at].children.push(label);
+      closeTop();
+      marks.open.splice(marks.open.indexOf(b.n), 1);
+      if (review) {
+        // The last piece ended in an earlier text node: the label goes beside the question mark.
+        if (!inLast) stack[stack.length - 1].children.push(label);
+        stack[stack.length - 1].children.push(<sup key={`${key}.r${b.n}`} className="bg-mention-review" aria-hidden="true">?</sup>);
+      }
+      for (const n of inner) stack.push({ n, children: [] });
+    } else if (SPLIT.test(part) && part.length === 1) {
+      while (stack.length > 1) closeTop();
+      root.children.push(<Fragment key={`${key}.i${root.children.length}`}>{opts.inserts?.get(part)}</Fragment>);
+      for (const n of marks.open) stack.push({ n, children: [] });
+    } else {
+      stack[stack.length - 1].children.push(part);
+    }
+  }
+  while (stack.length > 1) closeTop();
+  return root.children;
+}
+
+/** `s` without mention boundaries, which still open and close their mentions (a speaker's label is not marked). */
+function skipMarks(s: string, marks: Marks | undefined): string {
+  if (!marks) return s;
+  return s
+    .split(SPLIT)
+    .filter((part) => {
+      const b = boundary(part, marks);
+      if (b?.open) marks.open.push(b.n);
+      else if (b && marks.open.includes(b.n)) marks.open.splice(marks.open.indexOf(b.n), 1);
+      return !b;
+    })
+    .join("");
+}
 
 function renderText(s: string, opts: Opts, key: string): ReactNode {
+  if (opts.marks) return renderMarked(s, opts, opts.marks, key);
   if (!opts.inserts?.size || !SPLIT.test(s)) return s;
   return s.split(SPLIT).map((part, i) => <Fragment key={`${key}.${i}`}>{i % 2 === 1 ? opts.inserts!.get(part) : part}</Fragment>);
 }
 
 /** An opening line tag at the start of `s`: an insertion there goes inside the line, after the tag. */
 const LINE_OPEN = new RegExp(`^<(${[...LINE_TAGS].join("|")})>`);
+/** A closing line tag at the end of `s`: a mention's end there goes back inside the line, before the tag. */
+const LINE_CLOSE = new RegExp(`</(${[...LINE_TAGS].join("|")})>$`);
 
 /**
  * `text` with each insertion's private-use code point at its offset (code points, tags included); several at one
- * offset keep their order. A marker `intoLine` just before a line's opening tag moves after it, into the line.
+ * offset keep their order. A marker `intoLine` just before a line's opening tag moves after it, into the line; one
+ * `backIntoLine` just after a line's closing tag (and whitespace) moves before it.
  */
-function withInserts(text: string, at: { pos: number; mark: string; intoLine?: boolean }[]): string {
+type Insert = { pos: number; mark: string; intoLine?: boolean; backIntoLine?: boolean };
+
+function withInserts(text: string, at: Insert[]): string {
   const cps = Array.from(text);
   const before = new Map<number, string>();
-  for (const { pos, mark, intoLine } of at) {
+  for (const { pos, mark, intoLine, backIntoLine } of at) {
     let p = Math.min(Math.max(pos, 0), cps.length);
     // A heading stays between lines; a note marker goes into the line it begins (past whitespace before it,
     // which the lines drop: many rows open with "\n").
@@ -125,6 +236,15 @@ function withInserts(text: string, at: { pos: number; mark: string; intoLine?: b
       for (let m = LINE_OPEN.exec(cps.slice(q, q + 8).join("")); m; m = LINE_OPEN.exec(cps.slice(q, q + 8).join(""))) {
         q += m[0].length;
         p = q;
+      }
+    }
+    if (backIntoLine) {
+      let q = p;
+      while (q > 0 && /\s/.test(cps[q - 1])) q--;
+      for (let m = LINE_CLOSE.exec(cps.slice(Math.max(q - 8, 0), q).join("")); m; m = LINE_CLOSE.exec(cps.slice(Math.max(q - 8, 0), q).join(""))) {
+        q -= m[0].length;
+        p = q;
+        while (q > 0 && /\s/.test(cps[q - 1])) q--;
       }
     }
     before.set(p, (before.get(p) ?? "") + mark);
@@ -161,9 +281,14 @@ function renderNodes(nodes: Node[], opts: Opts, key: string, lead?: ReactNode): 
   return nodes.map((n, i) => {
     const k = `${key}.${i}`;
     if (n.k === "text") return <Fragment key={k}>{renderText(n.s, opts, k)}</Fragment>;
+    // A speaker tag explains itself (who speaks; "?" = uncertain): its text is the label, as printed. Handled before
+    // any rendering of its children, so the marks' boundaries in it are passed over once (not opened, then skipped).
+    if (n.tag === "speaker" && n.children.every((c) => c.k === "text")) {
+      return <SpeakerTag key={k} tag={skipMarks(n.children.map((c) => (c.k === "text" ? c.s : "")).join(""), opts.marks).trim()} />;
+    }
     const children = renderNodes(n.children, opts, k);
     if (LINE_TAGS.has(n.tag)) {
-      const first = n.children.find((c) => !isBlank(c));
+      const first = n.children.find((c) => !(c.k === "text" && MARKS_ONLY.test(c.s)));
       const speaker = first?.k === "el" && first.tag === "speaker" ? " bg-has-speaker" : "";
       return (
         <span key={k} className={`bg-line bg-${n.tag}${speaker}`}>
@@ -174,10 +299,6 @@ function renderNodes(nodes: Node[], opts: Opts, key: string, lead?: ReactNode): 
     }
     if (n.tag === "i") return <i key={k}>{children}</i>;
     if (n.tag === "sup") return <sup key={k}>{children}</sup>;
-    // A speaker tag explains itself (who speaks; "?" = uncertain): its text is the label, as printed.
-    if (n.tag === "speaker" && n.children.every((c) => c.k === "text")) {
-      return <SpeakerTag key={k} tag={n.children.map((c) => (c.k === "text" ? c.s : "")).join("").trim()} />;
-    }
     return (
       <span key={k} className={`bg-${n.tag}`}>
         {children}
@@ -231,7 +352,7 @@ const labelClass = "font-sans text-xs text-red-700 dark:text-red-400";
  * tags included, and the verse reads `text[:pos]` + headings + `text[pos:]`. With no position the caller
  * prints the headings before the verse. `headCol` makes them feed that column's running head (StickyHead).
  */
-export function renderVerse({ label, text, titles = [], titlePosition = null, headingClass = defaultHeadingClass, headCol, notes = [], at, why, hang: hangable = true }: {
+export function renderVerse({ label, text, titles = [], titlePosition = null, headingClass = defaultHeadingClass, headCol, notes = [], at, why, hang: hangable = true, mentions = [], reviewLabel = "under review" }: {
   label: string | null;
   text: string;
   titles?: string[];
@@ -249,9 +370,23 @@ export function renderVerse({ label, text, titles = [], titlePosition = null, he
    * lines have no gutter, so the number stays inside the line and the text moves right to make room for it.
    */
   hang?: boolean;
+  /**
+   * The row's mentions (code points of `text`, tags included): each is marked `<span class="bg-mention"
+   * data-mention="{chapter}.{verse}{segment}[-{tradition}]|{index}">`, in pieces where it crosses a line, a tag or a
+   * note marker; one under review gets `data-review` and a "?" after its last piece.
+   */
+  mentions?: Mention[];
+  /** The "?" mark's accessible name. */
+  reviewLabel?: string;
 }): ReactNode {
   const inserts = new Map<string, ReactNode>();
-  const at_: { pos: number; mark: string; intoLine?: boolean }[] = [];
+  const at_: Insert[] = [];
+  // A mention's end goes before any insertion at the same place, its start after; ends close the inner mention first.
+  const marked_ = mentions.map((m, n) => ({ m, n })).filter(({ m, n }) => m.end > m.start && n < CLOSE0 - OPEN0);
+  // By geometry, whatever the array's order (n stays the mention's id): the outer opens first and the inner closes
+  // first, also where moving into a line brings boundaries of different offsets together.
+  const closes = [...marked_].sort((x, y) => x.m.end - y.m.end || y.m.start - x.m.start || y.n - x.n);
+  for (const { m, n } of closes) at_.push({ pos: m.end, mark: String.fromCharCode(CLOSE0 + n), backIntoLine: true });
   if (titlePosition != null && titlePosition > 0 && titles.length > 0) {
     inserts.set(
       MARKER,
@@ -272,6 +407,8 @@ export function renderVerse({ label, text, titles = [], titlePosition = null, he
     inserts.set(mark, markerNode(m, at, `n${i}`, label ?? undefined));
     at_.push({ pos: m.position ?? 0, mark, intoLine: true });
   });
+  const opens = [...marked_].sort((x, y) => x.m.start - y.m.start || y.m.end - x.m.end || x.n - y.n);
+  for (const { m, n } of opens) at_.push({ pos: m.start, mark: String.fromCharCode(OPEN0 + n), intoLine: true });
   // Offsets count from the stored text, leading whitespace included; it is dropped afterwards.
   const marked = withInserts(text.replace(INSERTED, ""), at_).trimStart();
   const lines = parse(marked);
@@ -280,5 +417,6 @@ export function renderVerse({ label, text, titles = [], titlePosition = null, he
   // The hanging number is spaced by its padding (app/globals.css), so "12:1" still fits the indent.
   const number = whole[0] && label ? <NoteMarker note={whole[0].note} id={at ? markerDomId(whole[0].note.id, at) : ""}>{label}</NoteMarker> : label;
   const lead = label ? <sup className={hang ? `${labelClass} bg-vnum-hang` : `${labelClass} mr-0.5`}>{number}{why}</sup> : undefined;
-  return renderParsed(lines, { inserts, lead });
+  const marks = marked_.length > 0 ? { mentions, open: [], seen: new Set<number>(), at, reviewLabel, pieces: 0 } : undefined;
+  return renderParsed(lines, { inserts, lead, marks });
 }

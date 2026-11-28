@@ -15,13 +15,13 @@ function leaves(t: Tree, p = ""): [string, string][] {
 }
 
 /** Strings that read the same in every language: names, and messages made only of placeholders. */
-const SAME_EVERYWHERE = new Set(["Metadata.siteName", "Home.title", "Home.bookName", "Reader.heading", "Footer.repos.api", "Footer.apiVersion", "Review.nova", "Review.chapterTitle", "Search.passageHeading", "Reader.septuagintShort", "Header.api", "Speakers.certain", "Reader.indices.wikidata"]);
+const SAME_EVERYWHERE = new Set(["Metadata.siteName", "Home.title", "Home.bookName", "Reader.heading", "Footer.repos.api", "Footer.apiVersion", "Review.nova", "Review.chapterTitle", "Search.passageHeading", "Reader.septuagintShort", "Header.api", "Speakers.certain", "Reader.indices.wikidata", "Reader.mentions.wikipedia"]);
 
 /** Words that some languages share with English (a cognate, not an untranslated string). */
 const SHARED: Record<string, string[]> = {
   it: ["GoTo.prologueShort", "Notes.inEdition", "Notes.inEditionShort"],
   es: [],
-  fr: ["Reader.introduction", "Docs.index.title", "Docs.sources", "Notes.heading", "Notes.count", "GoTo.prologue", "GoTo.prologueShort", "Home.notes", "Footer.siteVersion", "Search.suggestions", "Copyright.source"],
+  fr: ["Reader.introduction", "Reader.annotations.label", "Docs.index.title", "Docs.sources", "Notes.heading", "Notes.count", "GoTo.prologue", "GoTo.prologueShort", "Home.notes", "Footer.siteVersion", "Search.suggestions", "Copyright.source"],
   de: ["Notes.inEdition", "Notes.inEditionShort", "GoTo.prologueShort", "Reader.interlinear", "Footer.repos.website", "Reader.masoreticShort", "Search.modes.hybrid", "GoTo.sections.pentateuch"],
   pt: ["Reader.interlinear", "Footer.siteVersion"],
 };

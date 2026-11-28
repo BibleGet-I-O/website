@@ -38,6 +38,23 @@
   },
   "Reader": {
     "toolbar": "Leseoptionen",
+    "annotations": { "label": "Anmerkungen", "title": "Die im Text genannten Personen und Orte markieren" },
+    "mentions": {
+      "underReview": "Diese Identifizierung wird noch geprüft",
+      "allVerses": "{count, plural, one {# Vers im Register} other {Alle # Verse im Register}}",
+      "uncertain": "unsicher",
+      "uncertainTitle": "Die Identifizierung ist unsicher",
+      "imageCredit": "Bild: {author}",
+      "imageAlt": "Bild von {name}",
+      "wikipedia": "Wikipedia",
+      "close": "Schließen",
+      "reviewLabel": "wird geprüft",
+      "siteUncertain": "Ort unsicher",
+      "mapLabel": "Karte von {name}",
+      "mapCredits": "Kartennachweise",
+      "zoomIn": "Vergrößern",
+      "zoomOut": "Verkleinern"
+    },
     "edition": "Ausgabe",
     "book": "Buch",
     "chapter": "Kapitel",

@@ -1,6 +1,7 @@
 import "server-only";
 import { versesIn } from "@/lib/chapters";
 import { ESTHER } from "./esther";
+import { MENTION_EDITIONS, toMentionEntities, toMentions, withKnownEntities } from "./mentions";
 import type { Access, Book, Chapter, Edition, EditionIndex, IntroBlock, IntroHeading, Introduction, Note, NoteMarker, NoteRef, PrintedPiece, Sic, VerseRow } from "./types";
 
 export class ApiUnavailable extends Error {
@@ -369,6 +370,7 @@ type RawRow = {
   text_tradition?: string | null;
   omitted?: boolean;
   notes?: RawMarker[];
+  mentions?: unknown;
 };
 
 type RawMarker = { id: string; kind: string; marker: string | null; field: string; position: number | null };
@@ -380,7 +382,7 @@ type RawRef = {
 };
 type RawNote = { kind: string; marker: string | null; label: string | null; title: string | null; body: string; refs: RawRef[] };
 type RawNotes = Record<string, RawNote>;
-type QuoteBody = { results?: RawRow[]; errors?: unknown[]; notes?: RawNotes; notices?: { code?: string; version?: string }[] };
+type QuoteBody = { entities?: unknown; results?: RawRow[]; errors?: unknown[]; notes?: RawNotes; notices?: { code?: string; version?: string }[] };
 
 function toNote(id: string, n: RawNote): Note {
   return {
@@ -438,6 +440,8 @@ function toRow(r: RawRow, notes?: RawNotes): VerseRow {
   if (r.omitted === true) row.omitted = true;
   const markers = toMarkers(r, notes);
   if (markers) row.notes = markers;
+  const mentions = toMentions(r.mentions);
+  if (mentions) row.mentions = mentions;
   return row;
 }
 
@@ -448,12 +452,15 @@ export type ChapterParams = {
   access: Access;
   tradition?: string;
   numbering?: "edition" | "hebrew";
+  /** Set false to not ask for mentions (asked by default for the editions in MENTION_EDITIONS, never in Hebrew numbering). */
+  mentions?: boolean;
 };
 
-function quoteRequest(p: ChapterParams, query: string): Promise<QuoteBody> {
+function quoteRequest(p: ChapterParams, query: string, mentions = false): Promise<QuoteBody> {
   const qs = new URLSearchParams({ query, version: p.sigla });
   if (p.numbering !== "hebrew") qs.set("numbering", "edition");
   qs.set("return", "json");
+  if (mentions) qs.set("mentions", "1");
   if (p.tradition) qs.set("text_tradition", p.tradition);
   // Notes are for signed-in readers: the API gives them to the reader key only (403 to any other).
   if (p.access === "reader") qs.set("footnotes", "full");
@@ -491,8 +498,9 @@ export async function getChapter(p: ChapterParams): Promise<Chapter> {
   // In Hebrew mode the requested chapter is a Hebrew psalm number, which maps to a different edition chapter
   // (or two), so the index cannot be consulted by it. The interlinear second edition is shown as returned;
   // the cap notice belongs to the main edition.
+  const asksMentions = !hebrew && p.mentions !== false && MENTION_EDITIONS.has(p.sigla);
   const [body, index] = await Promise.all([
-    quoteRequest(p, `${p.bookAbbrev}${p.chapter}`),
+    quoteRequest(p, `${p.bookAbbrev}${p.chapter}`, asksMentions),
     hebrew ? Promise.resolve(null) : getIndex(p.sigla),
   ]);
   const results = body.results ?? [];
@@ -500,7 +508,16 @@ export async function getChapter(p: ChapterParams): Promise<Chapter> {
     throw new NotFound((body.errors?.length ?? 0) > 0 ? "the endpoint rejected the query" : "no verses returned");
   }
   const rows = results.map((r) => toRow(r, body.notes));
-  if (!index) return { rows, truncated: false, expectedVerses: rows.length };
+  const entities = asksMentions ? toMentionEntities(body.entities) : undefined;
+  if (entities) {
+    for (const row of rows) {
+      const known = withKnownEntities(row.mentions, entities);
+      if (known) row.mentions = known;
+      else delete row.mentions;
+    }
+  }
+  const extra = entities ? { entities } : {};
+  if (!index) return { rows, truncated: false, expectedVerses: rows.length, ...extra };
   const book = index.books.find((b) => b.abbrev === p.bookAbbrev);
   // Esther with both texts: count the verses of the text requested (Greek, the API's default, unless HEBREW).
   const expectedVerses = book && versesIn(book, p.chapter, p.tradition);
@@ -508,7 +525,7 @@ export async function getChapter(p: ChapterParams): Promise<Chapter> {
   // The API's notice is the authority: a chapter with lettered verses (NVBSE Esther 4, 17a-17z) can be cut at a
   // row whose verse number already equals the index's count. The count stays as a fallback.
   const capped = (body.notices ?? []).some((n) => n.code === "VERSES_CAPPED" && n.version === p.sigla);
-  return { rows, truncated: capped || rows[rows.length - 1].verse < expectedVerses, expectedVerses };
+  return { rows, truncated: capped || rows[rows.length - 1].verse < expectedVerses, expectedVerses, ...extra };
 }
 
 /**

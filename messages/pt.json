@@ -38,6 +38,23 @@
   },
   "Reader": {
     "toolbar": "Opções de leitura",
+    "annotations": { "label": "Anotações", "title": "Marcar as pessoas e os lugares nomeados no texto" },
+    "mentions": {
+      "underReview": "Esta identificação ainda está em revisão",
+      "allVerses": "{count, plural, one {# versículo no índice} other {Todos os # versículos no índice}}",
+      "uncertain": "incerto",
+      "uncertainTitle": "A identificação é incerta",
+      "imageCredit": "Imagem: {author}",
+      "imageAlt": "Imagem de {name}",
+      "wikipedia": "Wikipedia",
+      "close": "Fechar",
+      "reviewLabel": "em revisão",
+      "siteUncertain": "local incerto",
+      "mapLabel": "Mapa de {name}",
+      "mapCredits": "Créditos do mapa",
+      "zoomIn": "Aproximar",
+      "zoomOut": "Afastar"
+    },
     "edition": "Edição",
     "book": "Livro",
     "chapter": "Capítulo",

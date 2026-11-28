@@ -9,9 +9,10 @@ const raw = (verse: number, extra: object = {}) => ({
 });
 const rows = (n: number) => Array.from({ length: n }, (_, i) => raw(i + 1));
 const quote = (results: object[], errors: object[] = []) => ({ results, errors, notices: [], info: {} });
-const index = (verses: number) => ({
-  indexes: { DRB: { abbreviations: ["Ws"], biblebooks: ["Wisdom"], chapter_limit: [11], verse_limit: [Array(10).fill(10).concat([verses])], book_num: [27] } },
-});
+const index = (verses: number) => {
+  const wisdom = { abbreviations: ["Ws"], biblebooks: ["Wisdom"], chapter_limit: [11], verse_limit: [Array(10).fill(10).concat([verses])], book_num: [27] };
+  return { indexes: { DRB: wisdom, NVBSE: wisdom } };
+};
 const json = (body: unknown, status = 200, type = "application/json") =>
   new Response(JSON.stringify(body), { status, headers: { "content-type": type } });
 
@@ -119,6 +120,57 @@ describe("getChapter", () => {
     mockFetch(() => json(quote([raw(1, { title1: "Mid", title_position: 12 })])), 1);
     const [r] = (await getChapter(base)).rows;
     expect(r).toMatchObject({ titles: ["Mid"], titlePosition: 12 });
+  });
+
+  it("asksForMentionsOnlyWhenTheEditionHasThem", async () => {
+    const fn = mockFetch(() => json(quote(rows(48))));
+    await getChapter(base);
+    expect(quoteCall(fn)[0]).not.toContain("mentions=");
+    const fn2 = mockFetch(() => json(quote(rows(48))));
+    await getChapter({ ...base, sigla: "NVBSE" });
+    expect(quoteCall(fn2)[0]).toContain("mentions=1");
+    const fn3 = mockFetch(() => json(quote(rows(48))));
+    await getChapter({ ...base, sigla: "NVBSE", access: "reader" });
+    expect(quoteCall(fn3)[0]).toContain("mentions=1");
+    const fn4 = mockFetch(() => json(quote(rows(48))));
+    await getChapter({ ...base, sigla: "NVBSE", numbering: "hebrew" });
+    expect(quoteCall(fn4)[0]).not.toContain("mentions=");
+  });
+
+  it("keepsARowsMentions", async () => {
+    const good = { start: 0, end: 4, entry: "P1" };
+    const cand = { start: 5, end: 9, candidates: ["P1", "P2"] };
+    mockFetch(() => json({ ...quote([raw(1, { mentions: [good, cand, { start: 3, end: 3, entry: "P1" }, { start: 0, end: 2, entry: "P1", candidates: ["P2"] }, { start: 0, end: 2, candidates: [] }, { start: -1, end: 2, entry: "P1" }, "x"] }), raw(2, { mentions: [] }), raw(3)]), entities: { P1: { type: "person", kind: "x" }, P2: { type: "person", kind: "x" } } }), 3);
+    const [a, b, c] = (await getChapter({ ...base, sigla: "NVBSE" })).rows;
+    expect(a.mentions).toEqual([good, cand]);
+    expect(b.mentions).toBeUndefined();
+    expect(c.mentions).toBeUndefined();
+  });
+
+  it("mapsTheEntities", async () => {
+    mockFetch(() => json({ ...quote([raw(1)]), entities: {
+      P1: { type: "person", kind: "prophet", names: { la: "Ionas", en: "Jonah", fr: "x" }, description: { en: "A prophet" }, uncertain: false, verse_count: 4,
+        image: { file: "J.jpg", author: "A", license: "CC0", license_url: "https://l" }, wikipedia: { en: "Jonah" }, coords: { lat: 1.5, lon: 2.5 } },
+      L1: { type: "place", kind: "city", names: {}, description: {}, uncertain: true, verse_count: 1 },
+      E1: { type: "event", kind: "x", names: {}, description: {}, uncertain: false, verse_count: 1 },
+    } }), 1);
+    const { entities } = await getChapter({ ...base, sigla: "NVBSE" });
+    expect(Object.keys(entities!)).toEqual(["P1", "L1"]);
+    expect(entities!.P1).toEqual({
+      id: "P1", type: "person", kind: "prophet", names: { la: "Ionas", en: "Jonah" }, description: { en: "A prophet" }, uncertain: false, verseCount: 4,
+      image: { file: "J.jpg", author: "A", license: "CC0", licenseUrl: "https://l" }, wikipedia: { en: "Jonah" }, coords: { lat: 1.5, lon: 2.5 },
+    });
+    expect(entities!.L1).toMatchObject({ type: "place", uncertain: true, verseCount: 1 });
+  });
+
+  it("dropsAMentionWhoseEntityIsMissing", async () => {
+    const ent = { type: "person", kind: "x", names: {}, description: {}, uncertain: false, verse_count: 1 };
+    mockFetch(() => json({ ...quote([raw(1, { mentions: [
+      { start: 0, end: 2, entry: "P1" }, { start: 3, end: 5, entry: "GONE" },
+      { start: 6, end: 8, candidates: ["GONE", "P1"] }, { start: 9, end: 11, candidates: ["GONE", "GONE2"] },
+    ] })]), entities: { P1: ent } }), 1);
+    const [r] = (await getChapter({ ...base, sigla: "NVBSE" })).rows;
+    expect(r.mentions).toEqual([{ start: 0, end: 2, entry: "P1" }, { start: 6, end: 8, candidates: ["P1"] }]);
   });
 
   it("throwsApiUnavailableOn503AndNetworkError", async () => {
@@ -500,5 +552,28 @@ describe("getApiVersion", () => {
   it("cutsAnOverlongValue", async () => {
     vi.stubGlobal("fetch", withHeader("v".repeat(200)));
     expect(await getApiVersion()).toBe("v".repeat(64));
+  });
+});
+
+describe("toMentionEntity", () => {
+  it("refusesWhatIsNotAPersonOrAPlace", async () => {
+    const { toMentionEntity } = await import("../mentions");
+    expect(toMentionEntity(null)).toBeNull();
+    expect(toMentionEntity([])).toBeNull();
+    expect(toMentionEntity({ type: "event", kind: "x" })).toBeNull();
+    expect(toMentionEntity({ type: "person" })).toBeNull();
+    expect(toMentionEntity({ type: "place", kind: "city", uncertain: "yes", verse_count: "3", image: { file: "f" }, coords: { lat: "1" } }, "L"))
+      .toEqual({ id: "L", type: "place", kind: "city", names: {}, description: {}, uncertain: false, verseCount: 0 });
+  });
+
+  it("dropsCoordinatesOutsideTheGlobe", async () => {
+    const { toMentionEntity } = await import("../mentions");
+    const place = (coords: unknown) => toMentionEntity({ type: "place", kind: "city", coords }, "L");
+    for (const bad of [{ lat: 91, lon: 0 }, { lat: -90.5, lon: 0 }, { lat: 0, lon: 180.5 }, { lat: 0, lon: -181 }, { lat: NaN, lon: 0 }, { lat: 0, lon: Infinity }]) {
+      const e = place(bad);
+      expect(e).not.toBeNull();
+      expect(e).not.toHaveProperty("coords");
+    }
+    expect(place({ lat: 90, lon: -180 })?.coords).toEqual({ lat: 90, lon: -180 });
   });
 });

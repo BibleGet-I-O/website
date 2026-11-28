@@ -34,7 +34,7 @@ const COLUMNS: Record<number, string> = { 1: "grid-cols-1", 2: "grid-cols-2", 3:
  * in its own chapter). Without `gapNotes` (Esther's two texts, where the Septuagint's additions simply have no
  * Masoretic counterpart) the empty side stays empty.
  */
-export function Spread({ sides, rows, chapter, truncated = [], view = "side-by-side", gapNotes = true, title, tools, psalms = false }: {
+export function Spread({ sides, rows, chapter, truncated = [], view = "side-by-side", gapNotes = true, title, tools, psalms = false, reviewLabel }: {
   sides: SpreadSide[]; rows: ParallelRow[]; chapter: number; truncated?: boolean[]; view?: View; gapNotes?: boolean;
   /** The Psalms: a compared column whose verses belong to another psalm ("9:22" beside Psalm 10) explains the two numberings. */
   psalms?: boolean;
@@ -42,6 +42,8 @@ export function Spread({ sides, rows, chapter, truncated = [], view = "side-by-s
   title?: string;
   /** Beside the title (the title index). */
   tools?: ReactNode;
+  /** The accessible name of a mark's "?" (a mention under review), in the interface language. */
+  reviewLabel?: string;
 }) {
   const interlinear = view === "interlinear";
   const cols = interlinear ? 1 : sides.length;
@@ -54,7 +56,7 @@ export function Spread({ sides, rows, chapter, truncated = [], view = "side-by-s
     // prints it, the main side's when it does, so one id per verse.
     // A mid-verse heading feeds its column's running head (only the main edition's, interlinear).
     const headCol = interlinear ? (s === 0 ? 0 : undefined) : s;
-    if (v) return <VerseLine row={v} chapter={chapter} headings={false} anchor={s === cellsOf(r).findIndex(Boolean)} headCol={headCol} />;
+    if (v) return <VerseLine row={v} chapter={chapter} headings={false} anchor={s === cellsOf(r).findIndex(Boolean)} headCol={headCol} reviewLabel={reviewLabel} />;
     if (truncated[s] && i > last[s]) return null;
     if (s > 0 && r.a && r.a.chapter !== chapter) return null;
     return gapNotes ? <GapNote edition={sides[s].name} /> : null;

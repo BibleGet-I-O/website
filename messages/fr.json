@@ -38,6 +38,23 @@
   },
   "Reader": {
     "toolbar": "Options de lecture",
+    "annotations": { "label": "Annotations", "title": "Marquer les personnes et les lieux nommés dans le texte" },
+    "mentions": {
+      "underReview": "Cette identification est encore en cours de révision",
+      "allVerses": "{count, plural, one {# verset dans l'index} other {Les # versets dans l'index}}",
+      "uncertain": "incertain",
+      "uncertainTitle": "L'identification est incertaine",
+      "imageCredit": "Image : {author}",
+      "imageAlt": "Image de {name}",
+      "wikipedia": "Wikipédia",
+      "close": "Fermer",
+      "reviewLabel": "en cours de révision",
+      "siteUncertain": "site incertain",
+      "mapLabel": "Carte de {name}",
+      "mapCredits": "Crédits de la carte",
+      "zoomIn": "Zoom avant",
+      "zoomOut": "Zoom arrière"
+    },
     "edition": "Édition",
     "book": "Livre",
     "chapter": "Chapitre",

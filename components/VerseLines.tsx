@@ -33,24 +33,28 @@ export function Headings({ titles, col, row }: { titles: string[]; col?: number;
  * `anchor` makes this line the one a link to the verse (#v3.16) lands on (one side of a page only); `headCol`
  * makes its headings feed that column's running head.
  */
-export function VerseLine({ row, chapter, headings = true, anchor = false, headCol }: { row: VerseRow; chapter: number; headings?: boolean; anchor?: boolean; headCol?: number }) {
+export function VerseLine({ row, chapter, headings = true, anchor = false, headCol, reviewLabel }: {
+  row: VerseRow; chapter: number; headings?: boolean; anchor?: boolean; headCol?: number;
+  /** The accessible name of a mark's "?" (a mention under review), in the interface language. */
+  reviewLabel?: string;
+}) {
   const mid = row.titlePosition != null;
   return (
     <>
       {headings && <Headings titles={headingsBefore(row)} col={headCol} row={row} />}
       <p data-testid="verse-line" id={anchor ? verseAnchor(row) : undefined} className={`bg-text bg-compact${anchor ? " verse-target" : ""}`}>
-        {renderVerse({ label: printedLabel(row, chapter), text: row.text, titles: mid ? row.titles : [], titlePosition: row.titlePosition, headingClass: midHeadingClass, headCol, notes: row.notes, at: row, hang: false, why: printedElsewhere(row, chapter) ? <WhyLink topic="printed-elsewhere" /> : undefined })}
+        {renderVerse({ label: printedLabel(row, chapter), text: row.text, titles: mid ? row.titles : [], titlePosition: row.titlePosition, headingClass: midHeadingClass, headCol, notes: row.notes, at: row, mentions: row.mentions, reviewLabel, hang: false, why: printedElsewhere(row, chapter) ? <WhyLink topic="printed-elsewhere" /> : undefined })}
       </p>
     </>
   );
 }
 
 /** An edition's chapter one verse per line, as the interlinear sets it; `headCol` feeds a running head. */
-export function VerseLines({ rows, chapter, lang, headCol }: { rows: VerseRow[]; chapter: number; lang?: string; headCol?: number }) {
+export function VerseLines({ rows, chapter, lang, headCol, reviewLabel }: { rows: VerseRow[]; chapter: number; lang?: string; headCol?: number; reviewLabel?: string }) {
   return (
     <div lang={lang} className="space-y-1 font-serif text-lg leading-relaxed">
       {rows.map((r, i) => (
-        <VerseLine key={i} row={r} chapter={chapter} headCol={headCol} />
+        <VerseLine key={i} row={r} chapter={chapter} headCol={headCol} reviewLabel={reviewLabel} />
       ))}
     </div>
   );

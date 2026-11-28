@@ -38,6 +38,23 @@
   },
   "Reader": {
     "toolbar": "Reading options",
+    "annotations": { "label": "Annotations", "title": "Mark the persons and places named in the text" },
+    "mentions": {
+      "underReview": "This identification is still under review",
+      "allVerses": "{count, plural, one {# verse in the index} other {All # verses in the index}}",
+      "uncertain": "uncertain",
+      "uncertainTitle": "The identification is uncertain",
+      "imageCredit": "Image: {author}",
+      "imageAlt": "Image of {name}",
+      "wikipedia": "Wikipedia",
+      "close": "Close",
+      "reviewLabel": "under review",
+      "siteUncertain": "site uncertain",
+      "mapLabel": "Map of {name}",
+      "mapCredits": "Map credits",
+      "zoomIn": "Zoom in",
+      "zoomOut": "Zoom out"
+    },
     "edition": "Edition",
     "book": "Book",
     "chapter": "Chapter",
