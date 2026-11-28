@@ -53,3 +53,15 @@ describe("the docs registry", () => {
     expect(headingId("Il testo ebraico")).toBe("il-testo-ebraico");
   });
 });
+
+describe("the persons, places and events page", () => {
+  it("describesTheMarksAsTheReaderDrawsThem", async () => {
+    const { readFileSync } = await import("node:fs");
+    const page = readFileSync("content/docs/en/persons-places-events.mdx", "utf8").replace(/\s+/g, " ");
+    // app/globals.css: a dotted underline, tinted on hover; components/MentionCard: the Italian or English name beside the Latin.
+    expect(page).toContain("A marked name has a dotted underline");
+    expect(page).not.toContain("A marked name is tinted");
+    expect(page).toContain("in Italian or English, where it differs");
+    expect(page).not.toContain("in the reader's language");
+  });
+});
