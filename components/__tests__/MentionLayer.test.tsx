@@ -112,6 +112,20 @@ describe("mention cards", () => {
     expect(dialog()).toBeNull();
   });
 
+  it("goingBackIntoTheOpenCardAbandonsTheOtherMarksOpening", () => {
+    const { first, review } = setup();
+    fireEvent.pointerOver(first, mouse);
+    wait(300);
+    const card = dialog()!;
+    fireEvent.pointerOut(first, { ...mouse, relatedTarget: review });
+    fireEvent.pointerOver(review, { ...mouse, relatedTarget: first });
+    wait(100);
+    fireEvent.pointerOut(review, { ...mouse, relatedTarget: card });
+    fireEvent.pointerEnter(card, { ...mouse, relatedTarget: review });
+    wait(1000);
+    expect(screen.getByRole("dialog", { name: "Petrus" })).toBeInTheDocument();
+  });
+
   it("staysOpenWhileTheCardIsHovered", () => {
     const { first } = setup();
     fireEvent.pointerOver(first, mouse);

@@ -117,9 +117,11 @@ export function MentionLayer({ marks, entities, locale, back }: MentionLayerProp
       const key = keyOf(e.target);
       if (!known(key)) return;
       const to = e.relatedTarget;
-      // Into another piece of the same mark (or a tag inside one), or into its card: still on the mark.
-      if (keyOf(to) === key || (to instanceof Node && card.current?.contains(to))) return;
+      // Into another piece of the same mark (or a tag inside one): still on the mark.
+      if (keyOf(to) === key) return;
       if (opening.current?.key === key) cancelOpen();
+      // Into the open card (this mark's, or the one the pointer came from): it stays, and this mark does not open.
+      if (to instanceof Node && card.current?.contains(to)) return;
       if (current.current?.key === key) closeSoon();
     };
     const click = (e: MouseEvent) => {
