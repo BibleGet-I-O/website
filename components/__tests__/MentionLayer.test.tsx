@@ -3,6 +3,8 @@ import { act, render, screen, fireEvent, within } from "@testing-library/react";
 import { NextIntlClientProvider } from "next-intl";
 import en from "@/messages/en.json";
 import { MentionLayer } from "@/components/MentionLayer";
+import { MentionCard } from "@/components/MentionCard";
+import { toMentionEntity } from "@/lib/mentions";
 import type { MentionEntity } from "@/lib/types";
 
 const person = (id: string, la: string, extra: Partial<MentionEntity> = {}): MentionEntity => ({
@@ -31,7 +33,7 @@ function setup() {
           <span className="bg-mention" data-mention="1.2|0" data-review="" data-mention-first="" tabIndex={0} role="button">Simon</span>
           <sup className="bg-mention-review">?</sup> <span data-testid="plain">et alii</span>
         </p>
-        <MentionLayer marks={marks} entities={entities} locale="en" />
+        <MentionLayer marks={marks} entities={entities} locale="en" back="/en/read/nvbse/acts/1?with=NABRE" />
       </main>
     </NextIntlClientProvider>,
   );
@@ -149,6 +151,13 @@ describe("mention cards", () => {
     expect(within(card).getByText("uncertain")).toBeInTheDocument();
   });
 
+  it("titlesTheUncertainMarkAsAnUncertainIdentification", () => {
+    // "Uncertain" is CBPPEDR's doubt about who is meant, not the review of the mention.
+    const { review } = setup();
+    fireEvent.click(review);
+    expect(within(screen.getByRole("dialog")).getByText("uncertain")).toHaveAttribute("title", "The identification is uncertain");
+  });
+
   it("showsNoImageOrWikipediaWithoutDetails", () => {
     const { review } = setup();
     fireEvent.click(review);
@@ -173,6 +182,79 @@ describe("mention cards", () => {
   it("linksToTheIndexEntryWithItsLetter", () => {
     const { first } = setup();
     fireEvent.click(first);
-    expect(screen.getByRole("link", { name: "All 12 verses in the index" })).toHaveAttribute("href", "/en/read/nvbse/persons?letter=P#bpers:petrus");
+    expect(screen.getByRole("link", { name: "All 12 verses in the index" })).toHaveAttribute(
+      "href",
+      `/en/read/nvbse/persons?letter=P&back=${encodeURIComponent("/en/read/nvbse/acts/1?with=NABRE")}#bpers:petrus`,
+    );
+  });
+
+  it("showsAPublicDomainImageWithoutAuthorOrLicenceLink", () => {
+    // CBPPEDR's details: license_url and author are optional (a public-domain image has neither).
+    const e = toMentionEntity({
+      type: "person", kind: "individual", names: { la: "Moyses" }, description: {}, verse_count: 0,
+      image: { file: "Moses.jpg", license: "Public domain" },
+    }, "bpers:moyses")!;
+    expect(e.image).toEqual({ file: "Moses.jpg", license: "Public domain" });
+    render(
+      <NextIntlClientProvider locale="en" messages={en}>
+        <MentionCard mark={{ entry: "bpers:moyses", ...nv }} entities={{ "bpers:moyses": e }} locale="en" />
+      </NextIntlClientProvider>,
+    );
+    expect(document.querySelector("img")).toHaveAttribute("src", "https://commons.wikimedia.org/wiki/Special:FilePath/Moses.jpg?width=160");
+    expect(screen.getByText("Public domain")).toBeInTheDocument();
+    expect(screen.queryByRole("link", { name: "Public domain" })).toBeNull();
+    expect(screen.queryByText(/^Image:/)).toBeNull();
+  });
+
+  it("syntheticClickFocusesTheCard", () => {
+    // A screen reader's activation is a click with no pointer (detail 0): it opens the card as the keyboard does.
+    const focus = vi.spyOn(HTMLElement.prototype, "focus");
+    try {
+      const { first } = setup();
+      fireEvent.click(first, { detail: 0 });
+      const card = screen.getByRole("dialog", { name: "Petrus" });
+      expect(document.activeElement).toBe(card);
+      expect(focus).toHaveBeenLastCalledWith({ preventScroll: true });
+      fireEvent.keyDown(card, { key: "Escape" });
+      expect(document.activeElement).toBe(first);
+      expect(focus).toHaveBeenLastCalledWith({ preventScroll: true });
+    } finally {
+      focus.mockRestore();
+    }
+  });
+
+  it("aMouseClickLeavesTheFocus", () => {
+    const { first } = setup();
+    fireEvent.click(first, { detail: 1 });
+    expect(screen.getByRole("dialog", { name: "Petrus" }).contains(document.activeElement)).toBe(false);
+  });
+
+  it("setsAriaExpandedOnTheOpenMark", () => {
+    const { first, second, review, plain } = setup();
+    fireEvent.click(second, { detail: 1 });
+    const card = screen.getByRole("dialog", { name: "Petrus" });
+    expect(first).toHaveAttribute("aria-expanded", "true");
+    expect(card.id).not.toBe("");
+    expect(first).toHaveAttribute("aria-controls", card.id);
+    expect(second).not.toHaveAttribute("aria-expanded");
+    expect(review).not.toHaveAttribute("aria-expanded");
+    fireEvent.pointerDown(plain);
+    expect(dialog()).toBeNull();
+    expect(first).toHaveAttribute("aria-expanded", "false");
+    expect(first).not.toHaveAttribute("aria-controls");
+  });
+
+  it("aTouchPinsTheCard", () => {
+    const { first, plain } = setup();
+    const touch = { pointerType: "touch" };
+    fireEvent.pointerOver(first, touch);
+    fireEvent.pointerDown(first, touch);
+    fireEvent.click(first, { detail: 1 });
+    expect(screen.getByRole("dialog", { name: "Petrus" })).toBeInTheDocument();
+    fireEvent.pointerOut(first, { ...touch, relatedTarget: plain });
+    wait(1000);
+    expect(dialog()).not.toBeNull();
+    fireEvent.click(first, { detail: 1 });
+    expect(dialog()).toBeNull();
   });
 });

@@ -43,7 +43,7 @@
       "underReview": "This identification is still under review",
       "allVerses": "{count, plural, one {# verse in the index} other {All # verses in the index}}",
       "uncertain": "uncertain",
-      "uncertainTitle": "Identification under review",
+      "uncertainTitle": "The identification is uncertain",
       "imageCredit": "Image: {author}",
       "imageAlt": "Image of {name}",
       "wikipedia": "Wikipedia",

@@ -43,7 +43,7 @@
       "underReview": "Diese Identifizierung wird noch geprüft",
       "allVerses": "{count, plural, one {# Vers im Register} other {Alle # Verse im Register}}",
       "uncertain": "unsicher",
-      "uncertainTitle": "Identifizierung wird geprüft",
+      "uncertainTitle": "Die Identifizierung ist unsicher",
       "imageCredit": "Bild: {author}",
       "imageAlt": "Bild von {name}",
       "wikipedia": "Wikipedia",

@@ -280,13 +280,19 @@ describe("marks in a verse", () => {
   it("marksAReviewNameWithAQuestionMark", () => {
     const root = verse("Venit Iacobus in urbem.", [{ start: 6, end: 13, candidates: ["iacobus-a", "iacobus-b"] }]);
     const [p] = pieces(root);
-    expect(p).toHaveTextContent(/^Iacobus$/);
+    expect(p).toHaveTextContent(/^Iacobusunder review$/);
     expect(p).toHaveAttribute("data-review", "");
     const sup = root.querySelector("sup.bg-mention-review")!;
     expect(sup).toHaveTextContent("?");
-    expect(sup).toHaveAttribute("aria-label", "under review");
+    // A name on a <sup> is not announced: the "?" is hidden, and the label is read with the mark, inside its last piece.
+    expect(sup).toHaveAttribute("aria-hidden", "true");
+    expect(sup).not.toHaveAttribute("aria-label");
+    const label = p.lastElementChild!;
+    expect(label.tagName).toBe("SPAN");
+    expect(label).toHaveClass("sr-only");
+    expect(label).toHaveTextContent(/^under review$/);
     expect(p.nextSibling).toBe(sup);
-    expect(root.textContent).toBe("5Venit Iacobus? in urbem.");
+    expect(root.textContent).toBe("5Venit Iacobusunder review? in urbem.");
   });
 
   it("splitsAMarkAcrossALineAndANoteMarker", () => {
@@ -349,12 +355,14 @@ describe("marks in a verse", () => {
     const outer = root.querySelector('[data-mention="2.5|1"]')!;
     const inner = outer.querySelector('[data-mention="2.5|0"]')!;
     expect(pieces(root)).toHaveLength(2);
-    expect(inner).toHaveTextContent(/^Baptista$/);
+    expect(inner).toHaveTextContent(/^Baptistaunder review$/);
     const sup = root.querySelector("sup.bg-mention-review")!;
     expect(inner.nextSibling).toBe(sup);
     expect(sup.parentElement).toBe(outer);
-    expect(outer).toHaveTextContent(/^Ioannes Baptista\?$/);
-    expect(root.textContent).toBe("5Venit Ioannes Baptista?.");
+    expect(inner.lastElementChild).toHaveClass("sr-only");
+    expect(outer.querySelectorAll(".sr-only")).toHaveLength(1);
+    expect(outer).toHaveTextContent(/^Ioannes Baptistaunder review\?$/);
+    expect(root.textContent).toBe("5Venit Ioannes Baptistaunder review?.");
   });
 
   it("marksASpanThatOpensAnInlineTagItDoesNotClose", () => {
@@ -393,7 +401,9 @@ describe("marks in a verse", () => {
     const sups = root.querySelectorAll("sup.bg-mention-review");
     expect(sups).toHaveLength(1);
     expect(ps[1].nextSibling).toBe(sups[0]);
-    expect(root.textContent).toBe("5Et Simon* Petrus? ait.");
+    expect(ps[0].querySelector(".sr-only")).toBeNull();
+    expect(ps[1].lastElementChild).toHaveClass("sr-only");
+    expect(root.textContent).toBe("5Et Simon* Petrusunder review? ait.");
   });
 
   it("namesAMarkByItsSegmentAndTradition", () => {

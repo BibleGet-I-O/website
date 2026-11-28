@@ -62,7 +62,8 @@
   }
 
   /* Marked persons and places (the Annotations switch sets data-annotations on the reader): invisible while off. */
-  .bg-mention-review { display: none; }
+  .bg-mention-review, .bg-mention-review-label { display: none; }
+  [data-annotations="on"] .bg-mention-review-label { display: inline; }
   [data-annotations="on"] .bg-mention {
     cursor: pointer;
     text-decoration: underline dotted;

@@ -297,7 +297,16 @@ export default async function ChapterPage({ params, searchParams }: { params: Pr
         indices={!edition.copyright || info.access === "reader"}
         annotations={hasMentions}
       />
-      {hasMentions && <MentionLayer marks={marks} entities={entities} locale={locale} />}
+      {/* Keyed by the page (edition, book and chapter), so a card pinned on one chapter is not carried to the next. */}
+      {hasMentions && (
+        <MentionLayer
+          key={`mentions:${base}/${slugFor(book, index.books)}/${chapter}`}
+          marks={marks}
+          entities={entities}
+          locale={locale}
+          back={`/${locale}${base}/${slugFor(book, index.books)}/${chapter}${qs}`}
+        />
+      )}
       {/* Keyed by the chapter (and its query), so each chapter mounts a fresh, unturned page. */}
       <PageTurn key={`${base}/${slugFor(book, index.books)}/${chapter}${qs}`} {...turnTargets}>
         {shown && compared.length > 0 && await TraditionSwitch({

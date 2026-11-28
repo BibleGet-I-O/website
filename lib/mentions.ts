@@ -57,8 +57,14 @@ export function toMentionEntity(x: unknown, id = ""): MentionEntity | null {
     verseCount: Number.isInteger(x.verse_count) ? (x.verse_count as number) : 0,
   };
   const img = x.image;
-  if (isRecord(img) && str(img.file) && str(img.author) && str(img.license) && str(img.license_url)) {
-    e.image = { file: img.file, author: img.author, license: img.license, licenseUrl: img.license_url };
+  // CBPPEDR's details make the author and the licence link optional (a public-domain image may have neither).
+  if (isRecord(img) && str(img.file) && str(img.license)) {
+    e.image = {
+      file: img.file,
+      license: img.license,
+      ...(str(img.author) ? { author: img.author } : {}),
+      ...(str(img.license_url) ? { licenseUrl: img.license_url } : {}),
+    };
   }
   if (isRecord(x.wikipedia)) {
     const w: Record<string, string> = {};

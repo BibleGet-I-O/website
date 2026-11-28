@@ -123,7 +123,8 @@ export type MentionEntity = {
   description: Partial<Record<"it" | "en", string>>;
   uncertain: boolean;
   verseCount: number;
-  image?: { file: string; author: string; license: string; licenseUrl: string };
+  /** A Commons image; a public-domain one may have no author and no licence link. */
+  image?: { file: string; author?: string; license: string; licenseUrl?: string };
   wikipedia?: Record<string, string>;
   coords?: { lat: number; lon: number };
 };

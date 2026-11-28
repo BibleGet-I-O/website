@@ -43,7 +43,7 @@
       "underReview": "Questa identificazione è ancora in revisione",
       "allVerses": "{count, plural, one {# versetto nell'indice} other {Tutti i # versetti nell'indice}}",
       "uncertain": "incerto",
-      "uncertainTitle": "Identificazione in revisione",
+      "uncertainTitle": "L'identificazione è incerta",
       "imageCredit": "Immagine: {author}",
       "imageAlt": "Immagine di {name}",
       "wikipedia": "Wikipedia",

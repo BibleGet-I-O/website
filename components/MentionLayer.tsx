@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useLayoutEffect, useRef, useState, useSyncExternalStore, type PointerEvent as ReactPointerEvent } from "react";
+import { useCallback, useEffect, useId, useLayoutEffect, useRef, useState, useSyncExternalStore, type PointerEvent as ReactPointerEvent } from "react";
 import { createPortal } from "react-dom";
 import { useTranslations } from "next-intl";
 import { cardLabel, MentionCard, type MarkTarget } from "@/components/MentionCard";
@@ -18,9 +18,11 @@ export type MentionLayerProps = {
   entities: Record<string, MentionEntity>;
   /** The interface language. */
   locale: string;
+  /** The reader page (with its locale and query), for the way back from the cards' index links. */
+  back?: string;
 };
 
-/** The open card: its mark's key, whether a tap or the keyboard pinned it, whether the keyboard opened it. */
+/** The open card: its mark's key, whether a tap or the keyboard pinned it, whether the keyboard (or a screen reader) opened it. */
 type Open = { key: string; pinned: boolean; keyboard: boolean };
 
 /** The key of the mark a node is in (its innermost piece), if any. */
@@ -43,11 +45,12 @@ function firstPiece(root: ParentNode, key: string): HTMLElement | null {
  * focus inside. Escape or a pointer down outside the card and the mark closes it, focus going back to the mark when it
  * was in the card. While the Annotations switch is off nothing answers.
  */
-export function MentionLayer({ marks, entities, locale }: MentionLayerProps) {
+export function MentionLayer({ marks, entities, locale, back }: MentionLayerProps) {
   const t = useTranslations("Reader.mentions");
   const on = useSyncExternalStore(subscribeAnnotations, loadAnnotations, () => false);
   const here = useRef<HTMLSpanElement>(null);
   const card = useRef<HTMLDivElement>(null);
+  const cardId = useId();
   const [open, setOpen] = useState<Open | null>(null);
   // The listeners read the card's state and timers here, not from a render's closure.
   const current = useRef<Open | null>(null);
@@ -74,7 +77,7 @@ export function MentionLayer({ marks, entities, locale }: MentionLayerProps) {
     if (!was) return;
     const focusInCard = card.current?.contains(document.activeElement) ?? false;
     show(null);
-    if (focusInCard) firstPiece(root(), was.key)?.focus();
+    if (focusInCard) firstPiece(root(), was.key)?.focus({ preventScroll: true });
   }, [cancelClose, cancelOpen, root, show]);
   const closeSoon = useCallback(() => {
     if (!current.current || current.current.pinned) return;
@@ -120,8 +123,9 @@ export function MentionLayer({ marks, entities, locale }: MentionLayerProps) {
       if (!known(key)) return;
       cancelOpen();
       cancelClose();
+      // No pointer behind it (detail 0): a screen reader's activation, which opens the card as the keyboard does.
       if (current.current?.key === key && current.current.pinned) close();
-      else show({ key, pinned: true, keyboard: false });
+      else show({ key, pinned: true, keyboard: e.detail === 0 });
     };
     const keydown = (e: KeyboardEvent) => {
       if (e.key !== "Enter" && e.key !== " ") return;
@@ -192,8 +196,22 @@ export function MentionLayer({ marks, entities, locale }: MentionLayerProps) {
     };
   }, [open, place]);
   useEffect(() => {
-    if (open?.keyboard) card.current?.focus();
+    if (open?.keyboard) card.current?.focus({ preventScroll: true });
   }, [open]);
+  // The open mark's first piece says so, and which card is its.
+  const openKey = open && marks[open.key] ? open.key : null;
+  useEffect(() => {
+    const anchor = openKey ? firstPiece(root(), openKey) : null;
+    if (!anchor) return;
+    anchor.setAttribute("aria-expanded", "true");
+    anchor.setAttribute("aria-controls", cardId);
+    return () => {
+      anchor.removeAttribute("aria-controls");
+      // Still a button while the marks are on (components/AnnotationsSwitch); a plain span once they are off.
+      if (loadAnnotations()) anchor.setAttribute("aria-expanded", "false");
+      else anchor.removeAttribute("aria-expanded");
+    };
+  }, [openKey, cardId, root]);
 
   const mark = open ? marks[open.key] : undefined;
   const several = (mark?.candidates?.length ?? 0) > 1;
@@ -209,6 +227,7 @@ export function MentionLayer({ marks, entities, locale }: MentionLayerProps) {
       {open && mark && createPortal(
         <div
           ref={card}
+          id={cardId}
           role="dialog"
           aria-label={cardLabel(mark, entities)}
           tabIndex={-1}
@@ -221,7 +240,7 @@ export function MentionLayer({ marks, entities, locale }: MentionLayerProps) {
             "focus-visible:ring-2 focus-visible:ring-slate-500/60 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100"
           }
         >
-          <MentionCard mark={mark} entities={entities} locale={locale} />
+          <MentionCard mark={mark} entities={entities} locale={locale} back={back} />
           <button
             type="button"
             onClick={close}

@@ -19,6 +19,8 @@ export type MentionCardProps = {
   entities: Record<string, MentionEntity>;
   /** The interface language. */
   locale: string;
+  /** The reader page the card is on (with its locale and query), for the index's way back. */
+  back?: string;
 };
 
 /** The entities a mark names that the quote sent, in order. */
@@ -44,7 +46,7 @@ const isWeb = (url: string) => /^https?:\/\//i.test(url);
  * article and a link to its entry on the index. A mention under review opens with the review line, then a section per
  * candidate (two columns where the card has room).
  */
-export function MentionCard({ mark, entities, locale }: MentionCardProps) {
+export function MentionCard({ mark, entities, locale, back }: MentionCardProps) {
   const t = useTranslations("Reader.mentions");
   const shown = markEntities(mark, entities);
   const review = mark.entry === undefined;
@@ -59,7 +61,7 @@ export function MentionCard({ mark, entities, locale }: MentionCardProps) {
       <div className={shown.length > 1 ? "grid gap-3 sm:grid-cols-2 sm:divide-x sm:divide-slate-200 dark:sm:divide-slate-700" : ""}>
         {shown.map((e, i) => (
           <div key={e.id} className={i > 0 ? "border-t border-slate-200 pt-3 sm:border-t-0 sm:pl-3 sm:pt-0 dark:border-slate-700" : ""}>
-            <EntitySection e={e} sigla={mark.sigla} editionLang={mark.lang} locale={locale} />
+            <EntitySection e={e} sigla={mark.sigla} editionLang={mark.lang} locale={locale} back={back} />
           </div>
         ))}
       </div>
@@ -67,7 +69,7 @@ export function MentionCard({ mark, entities, locale }: MentionCardProps) {
   );
 }
 
-function EntitySection({ e, sigla, editionLang, locale }: { e: MentionEntity; sigla: string; editionLang: string; locale: string }) {
+function EntitySection({ e, sigla, editionLang, locale, back }: { e: MentionEntity; sigla: string; editionLang: string; locale: string; back?: string }) {
   const t = useTranslations("Reader.mentions");
   const name = displayName(e, editionLang);
   const other = otherName(e, editionLang, locale);
@@ -101,9 +103,13 @@ function EntitySection({ e, sigla, editionLang, locale }: { e: MentionEntity; si
             />
           </a>
           <figcaption className="mt-1 text-xs text-slate-500 dark:text-slate-400">
-            <span>{t("imageCredit", { author: e.image.author })}</span>
-            {" · "}
-            {isWeb(e.image.licenseUrl) ? (
+            {e.image.author && (
+              <>
+                <span>{t("imageCredit", { author: e.image.author })}</span>
+                {" · "}
+              </>
+            )}
+            {e.image.licenseUrl && isWeb(e.image.licenseUrl) ? (
               <a href={e.image.licenseUrl} target="_blank" rel="noopener noreferrer license" className="underline">{e.image.license}</a>
             ) : (
               e.image.license
@@ -119,7 +125,7 @@ function EntitySection({ e, sigla, editionLang, locale }: { e: MentionEntity; si
       {(e.verseCount > 0 || wiki) && (
         <p className="mt-2 flex flex-wrap gap-x-3 gap-y-1 text-sm">
           {e.verseCount > 0 && (
-            <Link href={indexEntryHref(e, e.type, sigla, editionLang)} className={linkClass}>{t("allVerses", { count: e.verseCount })}</Link>
+            <Link href={indexEntryHref(e, e.type, sigla, editionLang, back)} className={linkClass}>{t("allVerses", { count: e.verseCount })}</Link>
           )}
           {wiki && (
             <a href={wiki} hrefLang={wikiLang!} target="_blank" rel="noopener noreferrer" className={linkClass}>{t("wikipedia")}</a>

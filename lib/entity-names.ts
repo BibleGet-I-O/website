@@ -49,7 +49,8 @@ export function letterOf(e: Named, editionLang: string): string {
 /** The index page of a type (persons, places, events) of an edition, locale-less. */
 export const INDEX_PATHS: Record<EntityType, string> = { person: "persons", place: "places", event: "events" };
 
-/** Where an entry is on its edition's index: its type's page, at its letter, at its anchor (`#<id>`). */
-export function indexEntryHref(e: Named, type: EntityType, sigla: string, editionLang: string): string {
-  return `/read/${editionSlug(sigla)}/${INDEX_PATHS[type]}?letter=${encodeURIComponent(letterOf(e, editionLang))}#${e.id}`;
+/** Where an entry is on its edition's index: its type's page, at its letter, at its anchor (`#<id>`); `back`, the reader page it is opened from. */
+export function indexEntryHref(e: Named, type: EntityType, sigla: string, editionLang: string, back?: string): string {
+  const keep = back ? `&back=${encodeURIComponent(back)}` : "";
+  return `/read/${editionSlug(sigla)}/${INDEX_PATHS[type]}?letter=${encodeURIComponent(letterOf(e, editionLang))}${keep}#${e.id}`;
 }

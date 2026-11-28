@@ -164,11 +164,19 @@ function renderMarked(s: string, opts: Opts, marks: Marks, key: string): ReactNo
       const at = stack.findIndex((f) => f !== root && f.n === b.n);
       if (at < 0) continue;
       const inner = stack.slice(at + 1).map((f) => f.n);
-      while (stack.length > at) closeTop();
+      while (stack.length > at + 1) closeTop();
+      // A mention under review: a question mark after its last piece, hidden from screen readers (a name on a <sup>
+      // is not announced), which read the review label inside that piece, with the mark.
+      const review = (marks.mentions[b.n].candidates?.length ?? 0) > 0;
+      const label = review && <span key={`${key}.l${b.n}`} className="bg-mention-review-label sr-only">{marks.reviewLabel}</span>;
+      const inLast = review && stack[at].children.length > 0;
+      if (inLast) stack[at].children.push(label);
+      closeTop();
       marks.open.splice(marks.open.indexOf(b.n), 1);
-      // A mention under review: a question mark after its last piece.
-      if (marks.mentions[b.n].candidates?.length) {
-        stack[stack.length - 1].children.push(<sup key={`${key}.r${b.n}`} className="bg-mention-review" aria-label={marks.reviewLabel}>?</sup>);
+      if (review) {
+        // The last piece ended in an earlier text node: the label goes beside the question mark.
+        if (!inLast) stack[stack.length - 1].children.push(label);
+        stack[stack.length - 1].children.push(<sup key={`${key}.r${b.n}`} className="bg-mention-review" aria-hidden="true">?</sup>);
       }
       for (const n of inner) stack.push({ n, children: [] });
     } else if (SPLIT.test(part) && part.length === 1) {

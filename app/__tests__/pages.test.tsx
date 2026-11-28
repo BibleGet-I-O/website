@@ -409,7 +409,38 @@ describe("chapter", () => {
       const card = screen.getByRole("dialog", { name: "Petrus" });
       expect(within(card).getByText("(Peter)")).toBeInTheDocument();
       expect(within(card).getByText("Petrus")).toHaveAttribute("lang", "la");
-      expect(within(card).getByRole("link", { name: "All 7 verses in the index" })).toHaveAttribute("href", "/en/read/nvbse/persons?letter=P#bpers:petrus");
+      expect(within(card).getByRole("link", { name: "All 7 verses in the index" })).toHaveAttribute(
+        "href",
+        `/en/read/nvbse/persons?letter=P&back=${encodeURIComponent("/en/read/cei2008/tobias/2?with=NVBSE")}#bpers:petrus`,
+      );
+    } finally {
+      localStorage.clear();
+    }
+  });
+
+  it("aPinnedCardDoesNotSurviveTheNextPage", async () => {
+    // Tobias 2 and Wisdom 2 both mark their verse 1's first name ("2.1|0"): the layer is keyed by the page, so a card
+    // pinned on one is not shown over the other.
+    localStorage.setItem("reader.annotations", "1");
+    getEditions.mockResolvedValue([ed("NVBSE", "la", "Nova Vulgata", "1979", "Holder", false)]);
+    getIndex.mockImplementation(async (sigla: string) => ({ sigla, books: [book(17, "Tobias", "Tob", 14), book(27, "Sapientia", "Sap", 19)] }));
+    const person = (id: string, la: string) => ({ id, type: "person", kind: "individual", names: { la }, description: {}, uncertain: false, verseCount: 2 });
+    getChapter.mockImplementation(async (p: { bookAbbrev: string }) => {
+      const tobias = p.bookAbbrev === "Tob";
+      const id = tobias ? "bpers:tobias" : "bpers:salomon";
+      return { rows: [verse(2, 1, { text: tobias ? "Dixit Tobias." : "Dixit Salomon.", mentions: [{ start: 6, end: tobias ? 12 : 13, entry: id }] })], truncated: false, expectedVerses: 1, entities: { [id]: person(id, tobias ? "Tobias" : "Salomon") } };
+    });
+    getVerses.mockResolvedValue([]);
+    try {
+      const { container, rerender } = render(wrap(await ChapterPage(params("nvbse", "tobias", "2"))));
+      fireEvent.click(container.querySelector('[data-mention="2.1|0"]')!);
+      expect(screen.getByRole("dialog", { name: "Tobias" })).toBeInTheDocument();
+      expect(screen.getByRole("link", { name: "All 2 verses in the index" }).getAttribute("href")).toBe(
+        `/en/read/nvbse/persons?letter=T&back=${encodeURIComponent("/en/read/nvbse/tobias/2")}#bpers:tobias`,
+      );
+      rerender(wrap(await ChapterPage(params("nvbse", "sapientia", "2"))));
+      expect(container.textContent).toContain("Dixit Salomon.");
+      expect(screen.queryByRole("dialog")).toBeNull();
     } finally {
       localStorage.clear();
     }
