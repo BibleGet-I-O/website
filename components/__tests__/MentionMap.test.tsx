@@ -2,6 +2,7 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 import { NextIntlClientProvider } from "next-intl";
 import en from "@/messages/en.json";
+import it_ from "@/messages/it.json";
 import type { MentionEntity } from "@/lib/types";
 
 // Leaflet stands in for itself: the test sees what the map is asked to draw, not jsdom's lack of layout.
@@ -14,6 +15,7 @@ const leaflet = vi.hoisted(() => {
       map: vi.fn((_el: HTMLElement, _options: object) => map),
       tileLayer: vi.fn((_url: string, _options: object) => added()),
       circleMarker: vi.fn((_at: [number, number], _options: object) => added()),
+      control: { zoom: vi.fn((_options: object) => added()) },
     },
   };
 });
@@ -42,11 +44,19 @@ describe("MentionMap", () => {
     await waitFor(() => expect(leaflet.map.setView).toHaveBeenCalledWith([31.7, 35.2], 8));
     const options = leaflet.L.map.mock.calls[0][1];
     expect(options).toMatchObject({ dragging: false, scrollWheelZoom: false, doubleClickZoom: false, boxZoom: false, keyboard: false, touchZoom: false, attributionControl: false });
-    expect(options).not.toHaveProperty("zoomControl", false);
+    // Leaflet's own zoom control is replaced by one with the interface language's titles (its buttons' names).
+    expect(options).toHaveProperty("zoomControl", false);
+    expect(leaflet.L.control.zoom).toHaveBeenCalledWith(expect.objectContaining({ zoomInTitle: "Zoom in", zoomOutTitle: "Zoom out" }));
+    expect(leaflet.L.control.zoom.mock.results[0].value.addTo).toHaveBeenCalledWith(leaflet.map);
     expect(leaflet.L.tileLayer.mock.calls[0][0]).toContain("arcgisonline.com/ArcGIS/rest/services/World_Street_Map");
     expect(leaflet.L.circleMarker.mock.calls[0][0]).toEqual([31.7, 35.2]);
     expect(screen.getByRole("group", { name: "Map of Bethlehem" })).toBeInTheDocument();
     expect(screen.queryByText("site uncertain")).toBeNull();
+  });
+
+  it("titlesTheZoomButtonsInTheInterfaceLanguage", async () => {
+    render(<NextIntlClientProvider locale="it" messages={it_}><MentionMap lat={1} lon={2} label="Mappa" uncertain={false} /></NextIntlClientProvider>);
+    await waitFor(() => expect(leaflet.L.control.zoom).toHaveBeenCalledWith({ zoomInTitle: "Ingrandisci", zoomOutTitle: "Riduci" }));
   });
 
   it("creditsEsriCompactlyAndInFullOnRequest", () => {

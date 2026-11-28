@@ -57,12 +57,37 @@ describe("annotations switch", () => {
     expect(sw()).toBeChecked();
   });
 
-  it("staysOffWhenStorageThrows", () => {
-    vi.spyOn(Storage.prototype, "getItem").mockImplementation(() => { throw new Error("denied"); });
-    vi.spyOn(Storage.prototype, "setItem").mockImplementation(() => { throw new Error("denied"); });
+  it("keepsTheChoiceWhenStorageThrows", () => {
+    const get = vi.spyOn(Storage.prototype, "getItem").mockImplementation(() => { throw new Error("denied"); });
+    const set = vi.spyOn(Storage.prototype, "setItem").mockImplementation(() => { throw new Error("denied"); });
     render(wrap(<AnnotationsSwitch />));
     expect(sw()).not.toBeChecked();
+    // Not remembered, but kept as chosen while the page lasts, either way.
     fireEvent.click(sw()!);
+    expect(sw()).toBeChecked();
+    expect(screen.getByTestId("reader")).toHaveAttribute("data-annotations", "on");
+    fireEvent.click(sw()!);
+    expect(sw()).not.toBeChecked();
+    fireEvent.click(sw()!);
+    expect(sw()).toBeChecked();
+    // Once a write succeeds, storage is the choice again.
+    get.mockRestore();
+    set.mockRestore();
+    fireEvent.click(sw()!);
+    expect(sw()).not.toBeChecked();
+    expect(localStorage.getItem("reader.annotations")).toBe("0");
+  });
+
+  it("followsAnotherTabAfterAFailedWrite", () => {
+    const set = vi.spyOn(Storage.prototype, "setItem").mockImplementation(() => { throw new Error("denied"); });
+    render(wrap(<AnnotationsSwitch />));
+    fireEvent.click(sw()!);
+    expect(sw()).toBeChecked();
+    set.mockRestore();
+    act(() => {
+      localStorage.setItem("reader.annotations", "0");
+      window.dispatchEvent(new StorageEvent("storage", { key: "reader.annotations", newValue: "0" }));
+    });
     expect(sw()).not.toBeChecked();
   });
 

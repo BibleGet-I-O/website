@@ -281,6 +281,11 @@ function renderNodes(nodes: Node[], opts: Opts, key: string, lead?: ReactNode): 
   return nodes.map((n, i) => {
     const k = `${key}.${i}`;
     if (n.k === "text") return <Fragment key={k}>{renderText(n.s, opts, k)}</Fragment>;
+    // A speaker tag explains itself (who speaks; "?" = uncertain): its text is the label, as printed. Handled before
+    // any rendering of its children, so the marks' boundaries in it are passed over once (not opened, then skipped).
+    if (n.tag === "speaker" && n.children.every((c) => c.k === "text")) {
+      return <SpeakerTag key={k} tag={skipMarks(n.children.map((c) => (c.k === "text" ? c.s : "")).join(""), opts.marks).trim()} />;
+    }
     const children = renderNodes(n.children, opts, k);
     if (LINE_TAGS.has(n.tag)) {
       const first = n.children.find((c) => !(c.k === "text" && MARKS_ONLY.test(c.s)));
@@ -294,10 +299,6 @@ function renderNodes(nodes: Node[], opts: Opts, key: string, lead?: ReactNode): 
     }
     if (n.tag === "i") return <i key={k}>{children}</i>;
     if (n.tag === "sup") return <sup key={k}>{children}</sup>;
-    // A speaker tag explains itself (who speaks; "?" = uncertain): its text is the label, as printed.
-    if (n.tag === "speaker" && n.children.every((c) => c.k === "text")) {
-      return <SpeakerTag key={k} tag={skipMarks(n.children.map((c) => (c.k === "text" ? c.s : "")).join(""), opts.marks).trim()} />;
-    }
     return (
       <span key={k} className={`bg-${n.tag}`}>
         {children}

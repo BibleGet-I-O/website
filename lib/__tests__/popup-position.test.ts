@@ -14,6 +14,11 @@ describe("card position", () => {
     expect(popupPosition(box(500, 40), size, view)).toEqual({ top: 294, left: 40 });
   });
 
+  it("staysInsideTheWindowWhenTheMarkIsScrolledBelowIt", () => {
+    // A pinned card whose mark has scrolled out under the window: above the mark would be off screen too.
+    expect(popupPosition(box(900, 40), size, view).top).toBe(392);
+  });
+
   it("staysInsideTheWindowSideways", () => {
     expect(popupPosition(box(100, 350), size, view).left).toBe(92);
     expect(popupPosition(box(100, -20), size, view).left).toBe(8);

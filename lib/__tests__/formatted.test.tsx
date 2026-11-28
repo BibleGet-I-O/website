@@ -406,6 +406,15 @@ describe("marks in a verse", () => {
     expect(root.textContent).toBe("5Et Simon* Petrusunder review? ait.");
   });
 
+  it("aMarkStartingInASpeakerTagOpensOnceAfterIt", () => {
+    // The mark runs from inside the speaker tag (its label, not marked) to "Petrus".
+    const root = verse("<speaker>Simon</speaker> Petrus ait.", [{ start: 9, end: 31, entry: "petrus" }]);
+    const ps = pieces(root);
+    expect(ps.map((p) => p.textContent)).toEqual([" Petrus"]);
+    expect(ps[0]).toHaveAttribute("data-mention-first", "");
+    expect(ps[0].parentElement?.closest(".bg-mention")).toBeNull();
+  });
+
   it("namesAMarkByItsSegmentAndTradition", () => {
     const root = render(<div>{renderVerse({ label: "5", text: "Petrus ait.", at: { chapter: 2, verse: 5, segment: "a", tradition: "LXX" }, mentions: [{ start: 0, end: 6, entry: "petrus" }] })}</div>).container;
     expect(root.querySelector(".bg-mention")).toHaveAttribute("data-mention", "2.5a-lxx|0");

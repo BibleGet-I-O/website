@@ -51,7 +51,9 @@
       "reviewLabel": "em revisão",
       "siteUncertain": "local incerto",
       "mapLabel": "Mapa de {name}",
-      "mapCredits": "Créditos do mapa"
+      "mapCredits": "Créditos do mapa",
+      "zoomIn": "Aproximar",
+      "zoomOut": "Afastar"
     },
     "edition": "Edição",
     "book": "Livro",

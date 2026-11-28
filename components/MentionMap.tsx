@@ -23,6 +23,8 @@ export default function MentionMap({ lat, lon, label, uncertain }: MentionMapPro
   const t = useTranslations("Reader.mentions");
   const el = useRef<HTMLDivElement>(null);
   const [credits, setCredits] = useState(false);
+  const zoomIn = t("zoomIn");
+  const zoomOut = t("zoomOut");
   useEffect(() => {
     let map: LeafletMap | null = null;
     let cancelled = false;
@@ -31,8 +33,10 @@ export default function MentionMap({ lat, lon, label, uncertain }: MentionMapPro
       if (cancelled || !el.current) return;
       map = L.map(el.current, {
         dragging: false, scrollWheelZoom: false, doubleClickZoom: false, boxZoom: false, keyboard: false, touchZoom: false,
-        attributionControl: false,
+        attributionControl: false, zoomControl: false,
       });
+      // Leaflet's own zoom buttons are titled (and named, the title being their aria-label) in English only.
+      L.control.zoom({ zoomInTitle: zoomIn, zoomOutTitle: zoomOut }).addTo(map);
       L.tileLayer(ESRI_STREET_TILES, { maxZoom: 18, attribution: ESRI_ATTRIBUTION }).addTo(map);
       L.circleMarker([lat, lon], { color: "#b91c1c", fillColor: "#ef4444", radius: 7, weight: 2, fillOpacity: 0.8 }).addTo(map);
       map.setView([lat, lon], 8);
@@ -41,7 +45,7 @@ export default function MentionMap({ lat, lon, label, uncertain }: MentionMapPro
       cancelled = true;
       map?.remove();
     };
-  }, [lat, lon]);
+  }, [lat, lon, zoomIn, zoomOut]);
   return (
     <div className="relative mt-2 h-40 w-full">
       <div ref={el} role="group" aria-label={label} className="h-full w-full rounded border border-slate-300 dark:border-slate-700" />

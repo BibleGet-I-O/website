@@ -51,7 +51,9 @@
       "reviewLabel": "en cours de révision",
       "siteUncertain": "site incertain",
       "mapLabel": "Carte de {name}",
-      "mapCredits": "Crédits de la carte"
+      "mapCredits": "Crédits de la carte",
+      "zoomIn": "Zoom avant",
+      "zoomOut": "Zoom arrière"
     },
     "edition": "Édition",
     "book": "Livre",

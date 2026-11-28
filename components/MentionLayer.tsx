@@ -70,20 +70,24 @@ export function MentionLayer({ marks, entities, locale, back }: MentionLayerProp
     if (closing.current) clearTimeout(closing.current);
     closing.current = null;
   }, []);
-  const close = useCallback(() => {
-    cancelOpen();
+  // Closes the open card only: an opening another mark has pending goes on (the pointer moved straight to it).
+  const closeCard = useCallback(() => {
     cancelClose();
     const was = current.current;
     if (!was) return;
     const focusInCard = card.current?.contains(document.activeElement) ?? false;
     show(null);
     if (focusInCard) firstPiece(root(), was.key)?.focus({ preventScroll: true });
-  }, [cancelClose, cancelOpen, root, show]);
+  }, [cancelClose, root, show]);
+  const close = useCallback(() => {
+    cancelOpen();
+    closeCard();
+  }, [cancelOpen, closeCard]);
   const closeSoon = useCallback(() => {
     if (!current.current || current.current.pinned) return;
     cancelClose();
-    closing.current = setTimeout(close, CLOSE_DELAY);
-  }, [cancelClose, close]);
+    closing.current = setTimeout(closeCard, CLOSE_DELAY);
+  }, [cancelClose, closeCard]);
 
   // The marks answer only while the switch is on.
   useEffect(() => {
@@ -171,7 +175,7 @@ export function MentionLayer({ marks, entities, locale, back }: MentionLayerProp
     };
   }, [open, close]);
 
-  // Beside the mark's first piece, following it as the page scrolls or the window resizes.
+  // Beside the mark's first piece, following it as the page scrolls, the window resizes or the card changes size.
   const place = useCallback(() => {
     const node = card.current;
     const anchor = current.current && firstPiece(root(), current.current.key);
@@ -190,9 +194,14 @@ export function MentionLayer({ marks, entities, locale, back }: MentionLayerProp
     if (!open) return;
     window.addEventListener("scroll", place, true);
     window.addEventListener("resize", place);
+    // And as the card itself changes size (its image loading after it was placed).
+    const node = card.current;
+    const resized = node && typeof ResizeObserver !== "undefined" ? new ResizeObserver(() => place()) : null;
+    if (node) resized?.observe(node);
     return () => {
       window.removeEventListener("scroll", place, true);
       window.removeEventListener("resize", place);
+      resized?.disconnect();
     };
   }, [open, place]);
   useEffect(() => {

@@ -565,4 +565,15 @@ describe("toMentionEntity", () => {
     expect(toMentionEntity({ type: "place", kind: "city", uncertain: "yes", verse_count: "3", image: { file: "f" }, coords: { lat: "1" } }, "L"))
       .toEqual({ id: "L", type: "place", kind: "city", names: {}, description: {}, uncertain: false, verseCount: 0 });
   });
+
+  it("dropsCoordinatesOutsideTheGlobe", async () => {
+    const { toMentionEntity } = await import("../mentions");
+    const place = (coords: unknown) => toMentionEntity({ type: "place", kind: "city", coords }, "L");
+    for (const bad of [{ lat: 91, lon: 0 }, { lat: -90.5, lon: 0 }, { lat: 0, lon: 180.5 }, { lat: 0, lon: -181 }, { lat: NaN, lon: 0 }, { lat: 0, lon: Infinity }]) {
+      const e = place(bad);
+      expect(e).not.toBeNull();
+      expect(e).not.toHaveProperty("coords");
+    }
+    expect(place({ lat: 90, lon: -180 })?.coords).toEqual({ lat: 90, lon: -180 });
+  });
 });

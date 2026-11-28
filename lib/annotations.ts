@@ -2,7 +2,12 @@
 const KEY = "reader.annotations";
 const CHANGED = "bibleget:annotations";
 
+// The choice a failed write could not remember (private mode, storage full): kept here until a write succeeds or
+// another tab saves one, so the marks stay as chosen until the page changes. Null while storage holds the choice.
+let unsaved: boolean | null = null;
+
 export function loadAnnotations(): boolean {
+  if (unsaved !== null) return unsaved;
   try {
     return localStorage.getItem(KEY) === "1";
   } catch {
@@ -13,18 +18,24 @@ export function loadAnnotations(): boolean {
 export function saveAnnotations(on: boolean): void {
   try {
     localStorage.setItem(KEY, on ? "1" : "0");
+    unsaved = null;
   } catch {
-    // Not remembered (private mode, storage full): the marks stay as chosen until the page changes.
+    unsaved = on;
   }
   window.dispatchEvent(new Event(CHANGED));
 }
 
 /** For useSyncExternalStore: the choice changes when this or another tab saves it. */
 export function subscribeAnnotations(onChange: () => void): () => void {
+  const other = (e: StorageEvent) => {
+    if (e.key !== null && e.key !== KEY) return;
+    unsaved = null;
+    onChange();
+  };
   window.addEventListener(CHANGED, onChange);
-  window.addEventListener("storage", onChange);
+  window.addEventListener("storage", other);
   return () => {
     window.removeEventListener(CHANGED, onChange);
-    window.removeEventListener("storage", onChange);
+    window.removeEventListener("storage", other);
   };
 }

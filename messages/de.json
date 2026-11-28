@@ -51,7 +51,9 @@
       "reviewLabel": "wird geprüft",
       "siteUncertain": "Ort unsicher",
       "mapLabel": "Karte von {name}",
-      "mapCredits": "Kartennachweise"
+      "mapCredits": "Kartennachweise",
+      "zoomIn": "Vergrößern",
+      "zoomOut": "Verkleinern"
     },
     "edition": "Ausgabe",
     "book": "Buch",

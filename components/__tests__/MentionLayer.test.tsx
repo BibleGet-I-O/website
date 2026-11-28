@@ -85,6 +85,33 @@ describe("mention cards", () => {
     expect(screen.getByRole("dialog", { name: "Petrus" })).toBeInTheDocument();
   });
 
+  it("movingStraightToAnotherMarkOpensItsCard", () => {
+    const { first, review } = setup();
+    fireEvent.pointerOver(first, mouse);
+    wait(300);
+    fireEvent.pointerOut(first, { ...mouse, relatedTarget: review });
+    fireEvent.pointerOver(review, { ...mouse, relatedTarget: first });
+    // The first card's close, due first, leaves the other mark's opening alone.
+    wait(200);
+    expect(dialog()).toBeNull();
+    wait(100);
+    expect(within(dialog()!).getByText("This identification is still under review")).toBeInTheDocument();
+  });
+
+  it("leavingTheOtherMarkBeforeItOpensStillClosesTheCard", () => {
+    const { first, review, plain } = setup();
+    fireEvent.pointerOver(first, mouse);
+    wait(300);
+    fireEvent.pointerOut(first, { ...mouse, relatedTarget: review });
+    fireEvent.pointerOver(review, { ...mouse, relatedTarget: first });
+    wait(100);
+    fireEvent.pointerOut(review, { ...mouse, relatedTarget: plain });
+    wait(100);
+    expect(dialog()).toBeNull();
+    wait(1000);
+    expect(dialog()).toBeNull();
+  });
+
   it("staysOpenWhileTheCardIsHovered", () => {
     const { first } = setup();
     fireEvent.pointerOver(first, mouse);
@@ -242,6 +269,34 @@ describe("mention cards", () => {
     expect(dialog()).toBeNull();
     expect(first).toHaveAttribute("aria-expanded", "false");
     expect(first).not.toHaveAttribute("aria-controls");
+  });
+
+  it("movesTheCardWhenItsSizeChanges", () => {
+    // An image loading in the card makes it taller: placed again, it goes above a mark low in the window.
+    let resized: (() => void) | null = null;
+    const observed: Element[] = [];
+    const disconnect = vi.fn();
+    vi.stubGlobal("ResizeObserver", class {
+      constructor(cb: () => void) { resized = cb; }
+      observe(el: Element) { observed.push(el); }
+      unobserve() {}
+      disconnect = disconnect;
+    });
+    try {
+      const { first, plain } = setup();
+      vi.spyOn(first, "getBoundingClientRect").mockReturnValue({ top: 700, bottom: 720, left: 40, right: 90 } as DOMRect);
+      fireEvent.click(first);
+      const card = dialog()!;
+      expect(card.style.top).toBe("726px");
+      expect(observed).toContain(card);
+      Object.defineProperty(card, "offsetHeight", { configurable: true, value: 200 });
+      act(() => resized!());
+      expect(card.style.top).toBe(`${700 - 6 - 200}px`);
+      fireEvent.pointerDown(plain);
+      expect(disconnect).toHaveBeenCalled();
+    } finally {
+      vi.unstubAllGlobals();
+    }
   });
 
   it("aTouchPinsTheCard", () => {

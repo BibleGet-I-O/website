@@ -71,8 +71,10 @@ export function toMentionEntity(x: unknown, id = ""): MentionEntity | null {
     for (const [k, v] of Object.entries(x.wikipedia)) if (str(v)) w[k] = v;
     if (Object.keys(w).length) e.wikipedia = w;
   }
+  // A site off the globe (or not a number) would be drawn somewhere else: the card goes without its map.
   const c = x.coords;
-  if (isRecord(c) && typeof c.lat === "number" && typeof c.lon === "number") e.coords = { lat: c.lat, lon: c.lon };
+  const within = (v: unknown, max: number): v is number => typeof v === "number" && Number.isFinite(v) && Math.abs(v) <= max;
+  if (isRecord(c) && within(c.lat, 90) && within(c.lon, 180)) e.coords = { lat: c.lat, lon: c.lon };
   return e;
 }
 
